@@ -1,8 +1,28 @@
+# Python
 .venv/
 __pycache__/
 *.pyc
-data/
-outputs/
-.DS_Store
+.pytest_cache/
 
+# OS / editors / deploy tooling
+.DS_Store
+.vercel/
+
+# Local data (root-level only): MaleCNS source tables (CC BY 4.0, downloaded by
+# `python -m flysweeper.prepare`) and the compiled graph / installed weights.
+/data/
+*.part
+
+# Local experiment outputs: training runs, checkpoints, validation reports, screenshots.
+# Curated copies live in docs/results/, docs/img/ and models/.
+/outputs/
+
+# Browser export of the connectome (~205 MB; hosted separately, see docs/deploy.md)
 web/data/
+
+# Tracked on purpose (listed explicitly so a future broader rule cannot swallow them)
+!models/
+!models/*.npz
+!docs/results/
+!docs/img/
+!web/weights/

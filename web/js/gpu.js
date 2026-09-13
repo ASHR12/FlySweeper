@@ -112,8 +112,9 @@ export class FlySim {
 
     this.bufIndptr = storage(arrays.in_indptr);
     this.bufIndices = storage(arrays.in_indices);
-    this.bufWeights = storage(arrays.in_weights);
-    const meta = new Uint32Array(2 * n);
+    this.bufWeights = storage(arrays.in_weights, GPUBufferUsage.COPY_DST);   // COPY_DST: trained weight sets patch rows in place
+    // nmeta: [0,n) visit order, [n,2n) pool id, [2n,3n) per-neuron bias (f32 bits; zero unless a weight set sets it)
+    const meta = new Uint32Array(3 * n);
     meta.set(arrays.order, 0);
     meta.set(arrays.pool_id, n);
     this.bufMeta = storage(meta, GPUBufferUsage.COPY_DST);
@@ -319,6 +320,38 @@ export class FlySim {
     const ids = new Uint32Array(this.n).fill(NO_POOL);
     pools.forEach((idx, k) => { for (const j of idx) ids[j] = k; });
     return this._serial(async () => { this.device.queue.writeBuffer(this.bufMeta, this.n * 4, ids); });
+  }
+
+  /**
+   * Per-neuron bias (Float32Array(n)), added to the external drive of every neuron on every step
+   * (flysweeper/sim.py `self.ext += self.bias`). Used by the fly-mb condition for kc_bias / pn_bias.
+   */
+  setBias(bias) {
+    if (bias.length !== this.n) throw new Error(`bias has ${bias.length} entries, need ${this.n}`);
+    const words = new Uint32Array(bias.buffer, bias.byteOffset, bias.length);
+    return this._serial(async () => { this.device.queue.writeBuffer(this.bufMeta, 2 * this.n * 4, words); });
+  }
+
+  /**
+   * Re-upload the in-edge weight rows of the given postsynaptic neurons from the (already patched)
+   * CPU copy `arrays.in_weights`. Rows are contiguous CSR segments, so each is one writeBuffer;
+   * consecutive rows are coalesced. This is how trained weight sets edit the resident graph.
+   */
+  patchWeightRows(rows, arrays) {
+    const indptr = arrays.in_indptr, w = arrays.in_weights;
+    const sorted = Array.from(new Set(rows)).sort((a, b) => a - b);
+    const spans = [];
+    for (const j of sorted) {
+      const a = indptr[j], b = indptr[j + 1];
+      if (b <= a) continue;
+      const last = spans[spans.length - 1];
+      if (last && last[1] === a) last[1] = b; else spans.push([a, b]);
+    }
+    return this._serial(async () => {
+      for (const [a, b] of spans) this.device.queue.writeBuffer(this.bufWeights, a * 4, w.buffer, w.byteOffset + a * 4, (b - a) * 4);
+      await this.device.queue.onSubmittedWorkDone();
+      return { rows: sorted.length, spans: spans.length, edges: spans.reduce((s, [a, b]) => s + (b - a), 0) };
+    });
   }
 
   /** Zero all dynamic state (v, ext, spikes, activity, stats) and the step counter. */

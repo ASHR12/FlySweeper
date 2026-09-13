@@ -1,0 +1,80 @@
+cff-version: 1.2.0
+message: >-
+  If you use FlySweeper, please cite it as below. Any use of the neural wiring it simulates
+  must also cite the MaleCNS v1.0 dataset (Berg et al., Cell 2026, CC BY 4.0), listed under
+  "references"; see DATA-LICENSE.md.
+type: software
+title: "FlySweeper: the MaleCNS v1.0 fruit-fly connectome wired to Minesweeper"
+abstract: >-
+  A whole-connectome leaky integrate-and-fire simulation of the MaleCNS v1.0 Drosophila male
+  central nervous system (166,700 neurons, 25,582,938 directed edges) wired to a 9x9 Minesweeper
+  board: engineered sensors paint the board onto lamina cells, descending-neuron pools are read as
+  buttons, and a helper's board facts are injected as odors so that Kenyon-cell to
+  mushroom-body-output-neuron synapses can be trained with a three-factor rule. Includes a
+  numba engine, a WebGPU browser port, a seeded validation harness and the trained weight sets.
+authors:
+  - family-names: Shrivastava
+    given-names: Ashutosh
+    alias: ASHR12
+repository-code: "https://github.com/ASHR12/FlySweeper"
+url: "https://github.com/ASHR12/FlySweeper"
+license: MIT
+date-released: "2026-09-13"
+keywords:
+  - connectome
+  - Drosophila
+  - MaleCNS
+  - spiking neural network
+  - leaky integrate-and-fire
+  - mushroom body
+  - three-factor learning
+  - Minesweeper
+  - WebGPU
+  - numba
+references:
+  - type: article
+    title: "Sexual dimorphism in the complete connectome of the Drosophila male central nervous system"
+    authors:
+      - family-names: Berg
+        given-names: Stuart
+      - name: "et al. (full author list at the DOI)"
+    journal: Cell
+    year: 2026
+    doi: 10.1016/j.cell.2026.08.015
+    url: "https://doi.org/10.1016/j.cell.2026.08.015"
+    license: CC-BY-4.0
+    notes: >-
+      Source of the MaleCNS v1.0 connectome (neurons, connections, cell types, transmitter
+      predictions, soma positions, optic-lobe column annotations). Data portal:
+      https://male-cns.janelia.org/. FlySweeper redistributes only derived weight files, not
+      the source tables.
+  - type: article
+    title: "A Drosophila computational brain model reveals sensorimotor processing"
+    authors:
+      - family-names: Shiu
+        given-names: Philip K.
+      - name: "et al."
+    journal: Nature
+    year: 2024
+    doi: 10.1038/s41586-024-07763-9
+    notes: "Whole-brain leaky integrate-and-fire modelling; transmitter sign convention; sensory-input removal."
+  - type: software
+    title: "Fly64"
+    authors:
+      - family-names: Paquette
+        given-names: Jessica
+    url: "https://github.com/ornata/fly"
+    notes: "20 ms LIF cartoon, normalized weights, Bernoulli noise, retinal drive formula."
+  - type: software
+    title: "fly.ai"
+    authors:
+      - name: alextitonis
+    url: "https://github.com/alextitonis/fly.ai"
+    notes: "tonic 0.14 / gain 3.0 preset, sensory-input fix, frozen-brain + trained-readout framing."
+  - type: software
+    title: "DOOMFLY"
+    authors:
+      - family-names: Wormuth
+        given-names: Alex
+    url: "https://github.com/nftechie/doomfly"
+    notes: "Photoreceptor-to-column mapping via hex-annotated lamina targets, DNpe017 button, PPL1/PAM dopamine poke."

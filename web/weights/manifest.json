@@ -1,0 +1,45 @@
+{
+  "format": 1,
+  "default": "round2",
+  "sets": [
+    {
+      "id": "round1",
+      "label": "Round 1 - 200 teacher games - 0% wins (30 held-out boards)",
+      "round": 1,
+      "win_rate": 0.0,
+      "eval_games": 30,
+      "games_trained": 200,
+      "notes": "Round 1: one MBON type per action, dense KC code, 300 teacher-driven warm-start games then RL (checkpoint at 200 games). 0/30 held-out wins, 46.9 safe cells (docs/training.md section 3.5).",
+      "json": "round1.json",
+      "bin": "round1.bin",
+      "plastic_edges": 16167,
+      "edges_changed": 15055,
+      "bytes": 160955,
+      "sha256": {
+        "json": "7c4a3b18010ac5ae2c9e49133b04af32d84a5b3f0943760e1a0b1d118d3bb12d",
+        "bin": "fdf9ba3422358de74fe0736cf7b4db54313624c397cd890aab603657fd904ea9"
+      },
+      "created": "2026-09-13T13:43:42"
+    },
+    {
+      "id": "round2",
+      "label": "Round 2 - 1,500 teacher games - 48% wins (100 held-out boards)",
+      "round": 2,
+      "win_rate": 0.48,
+      "eval_games": 100,
+      "games_trained": 1500,
+      "notes": "Round 2: 34 MBON types in six pools, sparse KC code (kc_bias -0.3, pn_bias -0.3, pn_kc_gain 3), perceptron warm start on 1,500 teacher games, reveal margin 0.25. 48/100 held-out wins, 66.7 +- 0.8 safe cells (docs/training.md section 4.1).",
+      "json": "round2.json",
+      "bin": "round2.bin",
+      "plastic_edges": 59334,
+      "edges_changed": 55832,
+      "bytes": 468399,
+      "sha256": {
+        "json": "59f06dc69ed33df87a056df67597796b9a9319adca90a0734470c6effbc47fde",
+        "bin": "9a809ae194eba16f2d4eaeccc5b755e0140ade1412ce90863ccccb453ca08dda"
+      },
+      "created": "2026-09-13T13:43:43"
+    }
+  ],
+  "updated": "2026-09-13T13:43:43"
+}

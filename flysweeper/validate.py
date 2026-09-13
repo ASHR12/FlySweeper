@@ -135,7 +135,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--games", type=int, default=20)
     ap.add_argument("--seed0", type=int, default=0)
     ap.add_argument("--conditions", nargs="+", default=["fly", "fly-blind", "random-walk", "random-click", "solver"],
-                    choices=ALL_CONDITIONS + ["fly-mb-alt"], help="fly-mb-alt = fly-mb played by a second brain loaded from --mb-weights-alt")
+                    choices=list(ALL_CONDITIONS) + ["fly-mb-alt"], help="fly-mb-alt = fly-mb played by a second brain loaded from --mb-weights-alt")
     ap.add_argument("--mb-weights-alt", default=None, help="weights for the fly-mb-alt condition (a second FlyPlayer, same seeds)")
     ap.add_argument("--preset", default="flyai", choices=sorted(PRESETS))
     ap.add_argument("--route", default="lamina", choices=["retina", "lamina"])

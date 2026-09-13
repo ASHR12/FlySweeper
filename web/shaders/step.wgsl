@@ -13,7 +13,7 @@
 @group(0) @binding(1) var<storage, read> indptr: array<u32>;          // n+1, in-edge CSR by post neuron
 @group(0) @binding(2) var<storage, read> indices: array<u32>;         // E, presynaptic index
 @group(0) @binding(3) var<storage, read> weights: array<f32>;         // E, signed normalized weight
-@group(0) @binding(4) var<storage, read> nmeta: array<u32>;            // [0,n): visit order, [n,2n): pool id
+@group(0) @binding(4) var<storage, read> nmeta: array<u32>;            // [0,n): visit order, [n,2n): pool id, [2n,3n): bias (f32 bits)
 @group(0) @binding(5) var<storage, read_write> state: array<f32>;     // [0,n): v, [n,2n): external drive (self-clearing)
 @group(0) @binding(6) var<storage, read_write> spikes: array<u32>;    // 2n, ping-pong 0/1 masks
 @group(0) @binding(7) var<storage, read_write> activity: array<u32>;  // n, decayed spike counter for the brain map
@@ -52,7 +52,9 @@ fn step(@builtin(local_invocation_id) lid: vec3<u32>, @builtin(workgroup_id) wid
     // background kicks: Bernoulli(noise_rate*dt) * noise_amp, per neuron per step
     let u = hash_unit(j, P.step, P.seed);
     let noise = select(0.0, P.noise_amp, u < P.noise_p);
-    let ext = state[P.n + j];
+    // per-neuron bias (sim.py: ext += bias every step); zero for every cell unless a trained
+    // weight set (fly-mb) sets kc_bias / pn_bias on Kenyon cells / antennal-lobe PNs
+    let ext = state[P.n + j] + bitcast<f32>(nmeta[2u * P.n + j]);
     state[P.n + j] = 0.0;
     var vi = state[j] * P.decay + P.gain * s + P.tonic + noise + ext;
     var spk: u32 = 0u;

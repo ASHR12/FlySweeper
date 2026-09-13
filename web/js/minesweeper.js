@@ -10,7 +10,7 @@ export const HIDDEN = -1;
 export const FLAG = 9;
 export const MINE = 10;
 
-const NEIGHBORS = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
+export const NEIGHBORS = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
 
 export class Minesweeper {
   /**

@@ -1,0 +1,92 @@
+[
+ {
+  "file": "outputs/mb/r2_error_sparse/weights_001500.npz",
+  "games_trained": 1500,
+  "margin": 0.0,
+  "pool_ratio": {
+   "up": 1.4095,
+   "down": 1.2441,
+   "left": 1.412,
+   "right": 1.1265,
+   "reveal": 1.8699,
+   "jump": 1.6224
+  },
+  "weights": {
+   "edges": 59334,
+   "changed": 55832,
+   "mean_ratio": 1.45,
+   "at_floor": 5152,
+   "at_ceiling": 0
+  },
+  "heldout": {
+   "games": 15,
+   "win_rate": 0.067,
+   "wins": 1,
+   "mean_safe": 58.8,
+   "sem_safe": 2.75,
+   "mean_turns": 43.5,
+   "mean_reveals": 8.9,
+   "timeouts": 0
+  }
+ },
+ {
+  "file": "outputs/mb/r2_error_sparse/weights_001500.npz",
+  "games_trained": 1500,
+  "margin": 0.1,
+  "pool_ratio": {
+   "up": 1.4095,
+   "down": 1.2441,
+   "left": 1.412,
+   "right": 1.1265,
+   "reveal": 1.8699,
+   "jump": 1.6224
+  },
+  "weights": {
+   "edges": 59334,
+   "changed": 55832,
+   "mean_ratio": 1.45,
+   "at_floor": 5152,
+   "at_ceiling": 0
+  },
+  "heldout": {
+   "games": 15,
+   "win_rate": 0.333,
+   "wins": 5,
+   "mean_safe": 66.73,
+   "sem_safe": 1.63,
+   "mean_turns": 69.4,
+   "mean_reveals": 13.2,
+   "timeouts": 0
+  }
+ },
+ {
+  "file": "outputs/mb/r2_error_sparse/weights_001500.npz",
+  "games_trained": 1500,
+  "margin": 0.25,
+  "pool_ratio": {
+   "up": 1.4095,
+   "down": 1.2441,
+   "left": 1.412,
+   "right": 1.1265,
+   "reveal": 1.8699,
+   "jump": 1.6224
+  },
+  "weights": {
+   "edges": 59334,
+   "changed": 55832,
+   "mean_ratio": 1.45,
+   "at_floor": 5152,
+   "at_ceiling": 0
+  },
+  "heldout": {
+   "games": 15,
+   "win_rate": 0.4,
+   "wins": 6,
+   "mean_safe": 67.27,
+   "sem_safe": 1.58,
+   "mean_turns": 69.6,
+   "mean_reveals": 13.7,
+   "timeouts": 0
+  }
+ }
+]

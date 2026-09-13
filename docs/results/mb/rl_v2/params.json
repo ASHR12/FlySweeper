@@ -1,0 +1,89 @@
+{
+ "mb": {
+  "action_mbons": [
+   [
+    "up",
+    "MBON01"
+   ],
+   [
+    "down",
+    "MBON05"
+   ],
+   [
+    "left",
+    "MBON06"
+   ],
+   [
+    "right",
+    "MBON03"
+   ],
+   [
+    "reveal",
+    "MBON11"
+   ],
+   [
+    "jump",
+    "MBON09"
+   ]
+  ],
+  "odor_amp": 1.0,
+  "kc_kc_gain": 0.0,
+  "kc_bias": -0.2,
+  "pn_kc_gain": 1.0,
+  "pn_bias": 0.0,
+  "eta": 0.03,
+  "other_credit": 0.2,
+  "w_min_ratio": 0.1,
+  "w_max_ratio": 5.0,
+  "trace_decay": 0.5,
+  "baseline_alpha": 0.05,
+  "centered": true,
+  "kc_mean_alpha": 0.05,
+  "temperature": 1.0,
+  "dopamine_amount": 0.8,
+  "dopamine_steps": 2,
+  "r_safe": 0.1,
+  "r_cap": 1.0,
+  "r_mine": -1.0,
+  "r_noop": -0.05,
+  "r_win": 1.0,
+  "jump_distance": 5
+ },
+ "game": {
+  "rows": 9,
+  "cols": 9,
+  "mines": 10,
+  "turn_steps": 15,
+  "max_turns": 400,
+  "settle_steps": 25,
+  "idle_steps": 500,
+  "reward_scale": 0.25
+ },
+ "args": {
+  "games": 1200,
+  "seed0": 10000,
+  "out": "outputs/mb/rl",
+  "checkpoint_every": 200,
+  "warmstart_games": 0,
+  "warmstart_follow": false,
+  "shuffle_reward": false,
+  "init": null,
+  "no_install": true,
+  "eta": 0.03,
+  "other_credit": 0.2,
+  "trace_decay": 0.5,
+  "temperature": 1.0,
+  "temperature_min": 0.2,
+  "anneal_games": 900,
+  "kc_bias": -0.2,
+  "pn_bias": 0.0,
+  "pn_kc_gain": 1.0,
+  "raw_eligibility": false,
+  "kc_kc_gain": 0.0,
+  "w_max_ratio": 5.0,
+  "turn_steps": 15,
+  "max_turns": 400,
+  "blind": false,
+  "report_every": 25
+ }
+}

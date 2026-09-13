@@ -1,0 +1,62 @@
+[
+ {
+  "games": "0-99",
+  "n": 100,
+  "win_rate": 0.01,
+  "mean_safe": 48.63,
+  "mean_turns": 50.0,
+  "mean_reward": 0.161,
+  "mean_abs_dw": 0.2893,
+  "temperature": 0.894,
+  "mean_ratio": 1.0032,
+  "teacher_agreement": 0.169
+ },
+ {
+  "games": "100-199",
+  "n": 100,
+  "win_rate": 0.0,
+  "mean_safe": 48.84,
+  "mean_turns": 41.3,
+  "mean_reward": 0.073,
+  "mean_abs_dw": 0.2906,
+  "temperature": 0.681,
+  "mean_ratio": 0.9922,
+  "teacher_agreement": 0.155
+ },
+ {
+  "games": "200-299",
+  "n": 100,
+  "win_rate": 0.0,
+  "mean_safe": 49.09,
+  "mean_turns": 44.2,
+  "mean_reward": -0.05,
+  "mean_abs_dw": 0.289,
+  "temperature": 0.468,
+  "mean_ratio": 0.9951,
+  "teacher_agreement": 0.159
+ },
+ {
+  "games": "300-399",
+  "n": 100,
+  "win_rate": 0.0,
+  "mean_safe": 51.96,
+  "mean_turns": 44.2,
+  "mean_reward": 0.201,
+  "mean_abs_dw": 0.2801,
+  "temperature": 0.261,
+  "mean_ratio": 0.9908,
+  "teacher_agreement": 0.171
+ },
+ {
+  "games": "400-499",
+  "n": 100,
+  "win_rate": 0.0,
+  "mean_safe": 52.08,
+  "mean_turns": 34.9,
+  "mean_reward": 0.363,
+  "mean_abs_dw": 0.267,
+  "temperature": 0.2,
+  "mean_ratio": 0.9898,
+  "teacher_agreement": 0.186
+ }
+]

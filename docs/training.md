@@ -339,7 +339,87 @@ turns: 75 turns per game vs 26 for the solver); the `jump` action is almost neve
 teacher (2 of 619 turns) so its pool is untrained; RL fine-tuning from this checkpoint is untested;
 and the win rate is still well below the 0.84-0.87 ceiling of the facts it is given.
 
-## 5. Reproduce
+## 5. Round 3: reward redesign, movement, RL fine-tuning
+
+Baseline to beat: the installed round-2 policy, 48/100 wins on seeds 5000-5099 (66.7 safe cells,
+~75 turns per game). The review of three Minesweeper-RL references (`docs/rl_references.md`)
+motivated the changes below.
+
+**Why reward-only learning failed in round 1 ("a guess has positive expected value").** Under the
+round-1 reward (+0.1 per newly revealed cell capped at +1, -1 on a mine, -0.05 for a no-op) a
+reveal on an unproven cell was nearly free in expectation. Measured on 324 realistic mid-game states
+where a provably-safe cell existed (first click + 0-11 solver moves, seeds 0-399): a random
+*unproven* reveal hits a mine 28% of the time and otherwise opens 3.6 cells (14% open a cascade of
+>= 10), for a mean round-1 reward of **-0.07** -- indistinguishable from zero against a proven-safe
+reveal's +0.1 to +0.3, so the reward carried almost no gradient between guessing and playing
+correctly (the references' back-of-envelope figure of +0.19 assumes a fresh-board isolated cell with
+P(mine) = 10/81). Under the round-3 reward the same action is worth **-0.50** versus +0.3 for the
+proven-safe reveal.
+
+Round-3 changes (`mb_policy.py`, all in `MBParams`, all saved with the weights):
+
+1. **Rewards, RL phase only** (`reward_scheme="r3"`): +0.3 per successful reveal *decision* on a
+   provably-safe cell or a forced guess (no provable move anywhere, or the untouched first click);
+   -0.3 for an unproven reveal while a provably-safe cell exists, even if it succeeds; -1 mine;
+   +1 win; -0.1 for hold / no-op reveal / move into a wall. Eligibility trace decay 0.6 per turn
+   (about one reveal cycle, 3-5 turns; the round-1 value was 0.5 but the reward was the problem).
+2. **Reveal mask** (decoder engineering, disclosed; `mask_reveal`): "reveal" is not selectable when
+   the helper says the cursor cell is already revealed or provably a mine, in both the greedy and
+   the exploratory branch. It does not touch "unproven but hidden" cells -- those the MBON pools must
+   refuse on their own (the -0.3 reward is what teaches that).
+3. **Exploration** epsilon-greedy over valid actions (epsilon 0.2 -> 0.02 over 300 games), instead
+   of the softmax temperature.
+4. **Direction channels strengthened** (`extra_orn=2`): the eight graded 1/distance direction
+   channels (nearest provably-safe cell, guess target) get a second ORN type each (12 more ORN types;
+   41 -> 49 of the 53 ORN types now used).
+5. **Teacher phase continued from the installed round-2 weights** (not from scratch): 1,000
+   teacher-driven games (seeds 14000-14999), perceptron rule with **argmax decisions** (temperature
+   0, so only true errors are corrected; the round-2 phase sampled at T = 1 -> 0.2, which is fine
+   from scratch but would have "corrected" random sampling errors of a good policy), move-vs-move
+   errors weighted 2x (`sup_move_weight`). Two variants: `r3_teacher_l2` (direction channels
+   strengthened) and `r3_teacher_l1` (round-2 odor map, control).
+6. **RL fine-tune** (`r3_rl`): from the level-2 teacher checkpoint at 500 games, 400 games (seeds
+   16000-16399) with the round-3 rewards, epsilon 0.2 -> 0.02, eta 0.01, the reveal margin 0.25 and
+   the mask active during training so the behaviour policy matches the evaluated one.
+7. Turn window 20-25 steps: not tried (time; every game would cost 33-67% more).
+
+### 5.1 Curriculum check of the installed round-2 policy (before round 3)
+
+30 held-out games each, seeds 5000-5029, argmax + margin 0.25 (`outputs/mb/curriculum_r2_6x6_*.md`):
+6x6 / 3 mines **24/30 wins (0.80)**, 32.7 +- 0.1 of 33 safe cells, 33 turns; 6x6 / 4 mines
+**21/30 (0.70)**, 31.2 +- 0.4 of 32, 34 turns. (9x9 / 10: 0.48 on 100 seeds.)
+
+### 5.2 Checkpoints (seeds 5000-5029, argmax, margin 0.25, mask on; agreement on 600 teacher turns)
+
+`outputs/mb/eval_r3_250.md`, `eval_r3_ckpts.md`, `eval_r3_rl.md`. "agree" = argmax agreement with
+the teacher (with margin and mask active); held-out = 30 games, seeds 5000-5029.
+
+| checkpoint | phase | games | agree | move recall (u/d/l/r) | reveal recall | reveal FPR | wins /30 | safe cells | turns |
+|---|---|---|---|---|---|---|---|---|---|
+| round 2 installed | teacher 1500 | -- | 0.722 | .50/.57/.68/.70 | 0.952 | 0.002 | 18 (0.60) | 67.1 +- 1.8 | 74.7 |
+| `r3_teacher_l1` 1000 (odor map unchanged, control) | teacher | 1000 | 0.707 | .59/.52/.72/.75 | 0.830 | 0.002 | 16 (0.53) | 63.4 +- 1.9 | 83.4 |
+| `r3_teacher_l2` 250 | teacher | 250 | 0.732 | .59/.50/.74/.81 | 0.872 | 0.000 | 21 (0.70) | 63.8 +- 2.9 | 88.5 |
+| **`r3_teacher_l2` 500** | teacher | 500 | 0.763 | .57/.58/.82/.80 | 0.899 | 0.000 | **25 (0.83)** | **69.0 +- 1.3** | 82.8 |
+| `r3_teacher_l2` 750 | teacher | 750 | **0.783** | .62/.74/.79/.75 | 0.899 | 0.002 | 22 (0.73) | 62.7 +- 2.9 | 59.1 |
+| `r3_teacher_l2` 1000 | teacher | 1000 | 0.770 | .66/.53/.78/.82 | 0.910 | 0.000 | 23 (0.77) | 66.6 +- 1.8 | 71.7 |
+| `r3_rl` 200 (from l2-500) | RL r3 rewards | +200 | 0.714 | .53/.58/.67/.71 | 0.910 | 0.000 | 26 (0.87) | 68.6 +- 2.0 | 96.1 |
+| `r3_rl` 300 | RL | +300 | 0.678 | .44/.48/.70/.62 | 0.910 | 0.000 | 25 (0.83) | 67.7 +- 1.8 | 103.8 |
+| **`r3_rl` 400** | RL | +400 | 0.641 | .38/.52/.64/.54 | 0.899 | 0.000 | **27 (0.90)** | 67.8 +- 2.2 | 100.2 |
+
+Reading: (i) strengthening the direction channels is the lever -- the control with the round-2
+odor map and the same extra 1,000 teacher games got *worse* (16/30), the level-2 map reached
+25/30 at 500 games; (ii) the RL phase with the round-3 rewards raised held-out wins further
+(26-27/30) while *lowering* teacher agreement (0.76 -> 0.64) and lengthening games (83 -> 100
+turns): reward learning makes the fly slower and more cautious rather than a better imitator --
+on the training seeds its per-100-game win rate under exploration was 0.75 / 0.83 / 0.81 (curve in
+`outputs/mb/r3_rl/curve.md`). RL weight changes were small per game (|dw| 2.5-2.7 vs 10-13 in
+the teacher phase) but steadily silenced more synapses (2,673 -> 7,649 at the floor).
+
+### 5.3 Final 100-seed comparison and full table
+
+ROUND3_FINAL_TABLE
+
+## 6. Reproduce
 
 ```bash
 # approach A

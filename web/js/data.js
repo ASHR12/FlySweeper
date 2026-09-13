@@ -111,10 +111,11 @@ export async function clearDataCache() {
   if ('caches' in window) await caches.delete(CACHE_NAME);
 }
 
-export async function loadShaders(baseUrl) {
+export async function loadShaders(baseUrl, version = '') {
   const names = ['common', 'step', 'scatter', 'pack'];
+  const q = version ? `?v=${encodeURIComponent(version)}` : '';
   const srcs = await Promise.all(names.map(async (n) => {
-    const r = await fetch(`${baseUrl}${n}.wgsl`, { cache: 'no-store' });
+    const r = await fetch(`${baseUrl}${n}.wgsl${q}`, { cache: 'no-store' });
     if (!r.ok) throw new Error(`HTTP ${r.status} fetching ${n}.wgsl`);
     return r.text();
   }));

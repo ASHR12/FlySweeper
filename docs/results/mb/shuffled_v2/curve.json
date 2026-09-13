@@ -1,0 +1,26 @@
+[
+ {
+  "games": "0-99",
+  "n": 100,
+  "win_rate": 0.0,
+  "mean_safe": 48.71,
+  "mean_turns": 45.5,
+  "mean_reward": 0.161,
+  "mean_abs_dw": 0.2977,
+  "temperature": 0.894,
+  "mean_ratio": 0.9949,
+  "teacher_agreement": 0.159
+ },
+ {
+  "games": "100-199",
+  "n": 100,
+  "win_rate": 0.0,
+  "mean_safe": 47.25,
+  "mean_turns": 31.5,
+  "mean_reward": 0.211,
+  "mean_abs_dw": 0.2786,
+  "temperature": 0.681,
+  "mean_ratio": 0.9886,
+  "teacher_agreement": 0.164
+ }
+]

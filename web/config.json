@@ -1,0 +1,5 @@
+{
+  "_comment": "Where the app fetches its files from. data_base: the ~205 MB connectome export (manifest.json + binaries) - './data/' for a local export, or an absolute URL (GitHub Release assets, Hugging Face, a bucket) that serves CORS headers; window.FLYSWEEPER_DATA_BASE and ?data= override it. weights_base: the small trained KC->MBON weight sets (shipped with the repo).",
+  "data_base": "./data/",
+  "weights_base": "./weights/"
+}

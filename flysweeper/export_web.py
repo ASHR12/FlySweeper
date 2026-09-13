@@ -25,6 +25,21 @@ flysweeper/encoder.py (route "lamina"), and cross-checked against RetinaEncoder 
 
 Usage:
     python -m flysweeper.export_web [--out web/data] [--rows 9 --cols 9]
+
+Trained mushroom-body weight sets (condition "fly-mb", see mb_policy.py) are exported separately,
+one small JSON + binary pair per set plus a manifest, into web/weights/ (shipped with the repo):
+
+    python -m flysweeper.export_web --weights data/compiled/mb_weights.npz --name round2 --round 2 \
+        --winrate 0.48 --eval-games 100 --games-trained 1500 --default
+
+    web/weights/<name>.json   pools (MBON cells per action), odor map (channel -> ORN cells + amp),
+                              KC / PN cell lists and the fly-mb model settings (kc_kc_gain, kc_bias,
+                              pn_kc_gain, pn_bias), decision settings (centred scores + saved running
+                              means, reveal margin, mask_reveal), metadata and weight statistics
+    web/weights/<name>.bin    plastic KC->MBON edges: u16 KC index (into "kc"), u8 MBON index (into
+                              "mbon"), f32 trained weight; the frozen weight is the one in the graph
+    web/weights/manifest.json every exported set (label, win rate, games trained, notes) + default
+Re-running with the same --name replaces that entry (idempotent).
 """
 from __future__ import annotations
 
@@ -201,13 +216,230 @@ def write_json(path: Path, obj) -> dict:
     return {"bytes": len(data), "sha256": hashlib.sha256(data).hexdigest(), "dtype": "json", "count": 1}
 
 
+# ---------------------------------------------------------------------------------------------
+# trained mushroom-body weight sets (fly-mb) -> web/weights/<name>.{json,bin} + manifest.json
+# ---------------------------------------------------------------------------------------------
+MB_CHANNELS = (  # flysweeper/oracle.py CHANNELS, cross-checked against the file's own list
+    "cursor_hidden", "cursor_revealed", "cursor_flagged", "cursor_safe", "cursor_mine", "cursor_frontier", "cursor_free",
+    "adj_numbers_0", "adj_numbers_1_2", "adj_numbers_3p",
+    "adj_hidden_0", "adj_hidden_1_3", "adj_hidden_4p",
+    "adj_max_0", "adj_max_1_2", "adj_max_3p",
+    "safe_up", "safe_down", "safe_left", "safe_right", "no_safe_known",
+    "guess_up", "guess_down", "guess_left", "guess_right", "guess_here", "guess_far",
+    "cleared_lt_third", "cleared_mid", "cleared_gt_two_thirds", "untouched",
+)
+
+
+def export_weights(args) -> int:
+    """Convert one MBPolicy.save() npz into web/weights/<name>.json + .bin and update manifest.json.
+
+    Everything the browser needs to rebuild the fly-mb condition is derived here from the compiled
+    graph + the file, exactly as mb_policy.MBPolicy does it: pools = MBON cells of the saved
+    action_mbons types (concatenated per type, in order); plastic edges = every KC -> pool-MBON edge
+    (recomputed and checked against the file's edge_pos); odor cells = the file's own orn_types per
+    channel; KC / PN cell lists for the documented model changes."""
+    src = Path(args.weights)
+    out = Path(args.weights_out)
+    out.mkdir(parents=True, exist_ok=True)
+    name = args.name
+    if not name or any(ch in name for ch in "/\\ ."):
+        raise SystemExit("--name must be a simple identifier (used as the file name), e.g. round2")
+    neurons = ft.read_feather(COMPILED / "neurons.feather")
+    types = neurons["type"].fillna("").to_numpy().astype(str)
+    sides = neurons["side"].to_numpy().astype(str)
+    cls = neurons["class"].fillna("").to_numpy().astype(str)
+    n = len(types)
+    g = np.load(COMPILED / "graph.npz")
+    indptr, indices, data = g["indptr"], g["indices"], g["data"]
+    z = np.load(src, allow_pickle=False)
+    saved = json.loads(str(z["params"])) if "params" in z else {}
+    meta = json.loads(str(z["meta"])) if "meta" in z else {}
+    actions = [str(a) for a in z["actions"]]
+    channels = [str(c) for c in z["channels"]] if "channels" in z else list(MB_CHANNELS)
+    if tuple(channels) != MB_CHANNELS:
+        raise SystemExit(f"{src}: channel list differs from the one this exporter (and web/js/oracle.js) knows: {channels}")
+    log(f"weights {src}: {len(z['edge_pos']):,} plastic edges, {int(z['games_trained'][0])} games trained")
+
+    # ---- pools: MBON cells per action, concatenated per type in the saved order (MBPolicy.__init__)
+    mb = {a: ((t,) if isinstance(t, str) else tuple(t)) for a, t in saved["action_mbons"]}
+    pool_idx = {}
+    for a in actions:
+        parts = [np.flatnonzero(types == t).astype(np.int64) for t in mb[a]]
+        pool_idx[a] = np.concatenate(parts) if parts else np.zeros(0, np.int64)
+        if len(pool_idx[a]) == 0:
+            raise SystemExit(f"pool {a} ({mb[a]}) matched no cells")
+    pool_of = np.full(n, -1, dtype=np.int64)
+    for k, a in enumerate(actions):
+        if (pool_of[pool_idx[a]] >= 0).any():
+            raise SystemExit(f"pool {a} overlaps another pool")
+        pool_of[pool_idx[a]] = k
+    mbon = np.concatenate([pool_idx[a] for a in actions])            # "mbon" list, u8 index space
+    if len(mbon) > 255:
+        raise SystemExit("more than 255 pool MBON cells; widen the mbon index")
+    mbon_pos = {int(j): i for i, j in enumerate(mbon)}
+
+    # ---- plastic edges, recomputed like MBPolicy and checked against the file
+    kc = np.flatnonzero(np.char.startswith(types, "KC")).astype(np.int64)
+    is_kc = np.zeros(n, dtype=bool); is_kc[kc] = True
+    pn = np.flatnonzero(cls == "ALPN").astype(np.int64)
+    is_pn = np.zeros(n, dtype=bool); is_pn[pn] = True
+    pre = np.repeat(np.arange(n, dtype=np.int64), np.diff(indptr).astype(np.int64))
+    sel = is_kc[pre] & (pool_of[indices] >= 0)
+    edge_pos = np.flatnonzero(sel).astype(np.int64)
+    if not np.array_equal(edge_pos, z["edge_pos"]):
+        raise SystemExit(f"{src}: plastic edge set does not match this graph / pool assignment "
+                         f"({len(edge_pos):,} recomputed vs {len(z['edge_pos']):,} in the file)")
+    e_pre, e_post = pre[edge_pos], indices[edge_pos].astype(np.int64)
+    w = z["w"].astype(np.float32)
+    w_frozen = data[edge_pos].astype(np.float32)
+    if not np.allclose(np.abs(w_frozen), z["w0"], atol=1e-7):
+        raise SystemExit(f"{src}: w0 differs from the compiled graph weights")
+    if "edge_kc" in z and not np.array_equal(z["edge_kc"], e_pre):
+        raise SystemExit(f"{src}: edge_kc mismatch")
+    kc_index = np.searchsorted(kc, e_pre)
+    assert np.array_equal(kc[kc_index], e_pre)
+    mbon_index = np.array([mbon_pos[int(j)] for j in e_post], dtype=np.uint8)
+    edge_pool = pool_of[e_post]
+    if "edge_pool" in z and not np.array_equal(z["edge_pool"].astype(np.int64), edge_pool):
+        raise SystemExit(f"{src}: edge_pool mismatch")
+    onto_kc = is_kc[indices]
+    n_kc2kc = int((onto_kc & is_kc[pre]).sum())
+    n_pn2kc = int((onto_kc & is_pn[pre]).sum())
+    del pre
+
+    # ---- odor map: the file's own channel -> ORN types ("+"-joined), cells concatenated per type
+    if "orn_types" in z:
+        orn_types = [str(t).split("+") for t in z["orn_types"]]
+    else:  # very old files: fall back to the module table
+        from .mb_policy import ORN_TYPES
+        orn_types = [[t] for t in ORN_TYPES[:len(channels)]]
+    odor_cells = []
+    for ts in orn_types:
+        parts = [np.flatnonzero(types == t).astype(np.int64) for t in ts]
+        c = np.concatenate(parts) if parts else np.zeros(0, np.int64)
+        if len(c) == 0:
+            raise SystemExit(f"ORN types {ts} matched no cells")
+        odor_cells.append(c)
+    all_odor = np.concatenate(odor_cells)
+    if len(np.unique(all_odor)) != len(all_odor):
+        raise SystemExit("an ORN cell belongs to two channels; the browser would double-drive it")
+
+    # ---- settings that travel with the weights (mb_policy.MBPolicy.load / params_from_file)
+    center_scores = bool(saved.get("center_scores", False)) if saved else True
+    ratio = np.abs(w) / np.maximum(np.abs(w_frozen), 1e-12)
+    changed = int((np.abs(np.abs(w) - np.abs(w_frozen)) > 1e-7).sum())
+    games_trained = int(args.games_trained if args.games_trained is not None else z["games_trained"][0])
+    round_no = int(args.round) if args.round is not None else None
+    label = args.label
+    if not label:
+        parts = [f"Round {round_no}" if round_no is not None else name, f"{games_trained:,} teacher games"]
+        if args.winrate is not None:
+            parts.append(f"{round(100 * args.winrate)}% wins" + (f" ({args.eval_games} held-out boards)" if args.eval_games else ""))
+        label = " - ".join(parts)
+
+    # ---- binary: u16 kc index | u8 mbon index | f32 trained weight (little-endian, in that order)
+    bin_bytes = (kc_index.astype("<u2").tobytes() + mbon_index.astype("u1").tobytes() + w.astype("<f4").tobytes())
+    bin_path = out / f"{name}.bin"
+    bin_path.write_bytes(bin_bytes)
+    bin_info = {"bytes": len(bin_bytes), "sha256": hashlib.sha256(bin_bytes).hexdigest(),
+                "layout": ["kc_index:u16", "mbon_index:u8", "w:f32"], "count": int(len(w))}
+
+    spec = {
+        "format": 1,
+        "id": name,
+        "label": label,
+        "round": round_no,
+        "win_rate": args.winrate,
+        "eval_games": args.eval_games,
+        "games_trained": games_trained,
+        "notes": args.notes or "",
+        "source": str(src),
+        "created": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "condition": "fly-mb",
+        "actions": actions,
+        "channels": channels,
+        "n_neurons": int(n),
+        "edges": {"file": f"{name}.bin", **bin_info},
+        "kc": kc.tolist(),
+        "pn": pn.tolist(),
+        "mbon": mbon.tolist(),
+        "pools": {a: {"types": list(mb[a]), "idx": pool_idx[a].tolist(),
+                      "cells": [f"{types[i]}/{sides[i]}" for i in pool_idx[a]]} for a in actions},
+        "odor": {"amp": float(saved.get("odor_amp", 1.0)), "extra_orn": int(saved.get("extra_orn", 0)),
+                 "types": orn_types, "cells": [c.tolist() for c in odor_cells]},
+        "kc_model": {"kc_kc_gain": float(saved.get("kc_kc_gain", 0.0)), "kc_bias": float(saved.get("kc_bias", -0.2)),
+                     "pn_kc_gain": float(saved.get("pn_kc_gain", 1.0)), "pn_bias": float(saved.get("pn_bias", 0.0)),
+                     "kc_cells": int(len(kc)), "pn_cells": int(len(pn)), "kc_kc_edges": n_kc2kc, "pn_kc_edges": n_pn2kc},
+        "decision": {"temperature": 0.0, "center_scores": center_scores,
+                     "score_mean_alpha": float(saved.get("score_mean_alpha", 0.02)),
+                     "score_mean": [float(x) for x in z["score_mean"]] if "score_mean" in z else None,
+                     "reveal_margin": float(saved.get("reveal_margin", 0.0)),
+                     "mask_reveal": bool(saved.get("mask_reveal", False)),
+                     "jump_distance": int(saved.get("jump_distance", 5)), "epsilon": 0.0},
+        "stats": {"plastic_edges": int(len(w)), "edges_changed": changed, "mean_weight_ratio": float(ratio.mean()),
+                  "min_weight_ratio": float(ratio.min()), "max_weight_ratio": float(ratio.max()),
+                  "pool_ratio": {a: float(ratio[edge_pool == k].mean()) for k, a in enumerate(actions)},
+                  "plastic_edges_per_pool": {a: int((edge_pool == k).sum()) for k, a in enumerate(actions)},
+                  "pool_cells": {a: int(len(pool_idx[a])) for a in actions},
+                  "baseline": float(z["baseline"][0]) if "baseline" in z else None},
+        "train_meta": meta,
+        "train_params": saved,
+    }
+    json_info = write_json(out / f"{name}.json", spec)
+    log(f"pools: " + ", ".join(f"{a} {len(pool_idx[a])} cells" for a in actions)
+        + f"; {len(w):,} plastic edges ({changed:,} changed, mean ratio {ratio.mean():.3f}); "
+        f"odor {len(all_odor)} ORN cells over {len(channels)} channels (extra_orn {spec['odor']['extra_orn']}); "
+        f"KC {len(kc)} (kc->kc {n_kc2kc:,} edges x {spec['kc_model']['kc_kc_gain']}, bias {spec['kc_model']['kc_bias']}), "
+        f"PN {len(pn)} (pn->kc {n_pn2kc:,} edges x {spec['kc_model']['pn_kc_gain']}, bias {spec['kc_model']['pn_bias']}); "
+        f"reveal margin {spec['decision']['reveal_margin']}, centred {center_scores}")
+    log(f"wrote {name}.json ({json_info['bytes'] / 1e3:.0f} KB) + {name}.bin ({bin_info['bytes'] / 1e3:.0f} KB) -> {out}")
+
+    # ---- manifest (idempotent: replace the entry with the same id)
+    man_path = out / "manifest.json"
+    manifest = json.loads(man_path.read_text()) if man_path.exists() else {"format": 1, "default": None, "sets": []}
+    entry = {"id": name, "label": label, "round": round_no, "win_rate": args.winrate, "eval_games": args.eval_games,
+             "games_trained": games_trained, "notes": args.notes or "", "json": f"{name}.json", "bin": f"{name}.bin",
+             "plastic_edges": int(len(w)), "edges_changed": changed, "bytes": json_info["bytes"] + bin_info["bytes"],
+             "sha256": {"json": json_info["sha256"], "bin": bin_info["sha256"]}, "created": spec["created"]}
+    manifest["sets"] = [s for s in manifest.get("sets", []) if s.get("id") != name] + [entry]
+    manifest["sets"].sort(key=lambda s: ((s.get("round") is None), s.get("round") or 0, s["id"]))
+    if args.default or manifest.get("default") not in {s["id"] for s in manifest["sets"]}:
+        manifest["default"] = name
+    manifest["updated"] = spec["created"]
+    man_path.write_text(json.dumps(manifest, indent=2) + "\n")
+    log(f"manifest: {len(manifest['sets'])} set(s), default '{manifest['default']}'")
+
+    # ---- read back and verify the binary
+    raw = bin_path.read_bytes()
+    m = len(w)
+    ki = np.frombuffer(raw[: 2 * m], dtype="<u2"); mi = np.frombuffer(raw[2 * m: 3 * m], dtype="u1"); ww = np.frombuffer(raw[3 * m:], dtype="<f4")
+    assert np.array_equal(kc[ki], e_pre) and np.array_equal(mbon[mi], e_post) and np.array_equal(ww, w), "binary readback mismatch"
+    log("readback: plastic edge list round-trips (pre KC, post MBON, weight): OK")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--out", default=str(ROOT / "web" / "data"))
     ap.add_argument("--rows", type=int, default=GAME["rows"])
     ap.add_argument("--cols", type=int, default=GAME["cols"])
     ap.add_argument("--keep-sensory-input", action="store_true", help="keep synapses onto sensory neurons (Python default is to silence them)")
+    wg = ap.add_argument_group("trained weight sets (fly-mb)", "with --weights only the weight set is exported")
+    wg.add_argument("--weights", default=None, help="MBPolicy.save() npz, e.g. data/compiled/mb_weights.npz")
+    wg.add_argument("--name", default=None, help="set id / file stem, e.g. round2")
+    wg.add_argument("--label", default=None, help='display label; default "Round k - N teacher games - P% wins (M held-out boards)"')
+    wg.add_argument("--round", type=int, default=None)
+    wg.add_argument("--winrate", type=float, default=None, help="held-out win rate, e.g. 0.48")
+    wg.add_argument("--eval-games", type=int, default=None, help="number of held-out boards behind --winrate")
+    wg.add_argument("--games-trained", type=int, default=None, help="override the file's games_trained")
+    wg.add_argument("--notes", default=None)
+    wg.add_argument("--default", action="store_true", help="make this set the manifest default")
+    wg.add_argument("--weights-out", default=str(ROOT / "web" / "weights"))
     args = ap.parse_args(argv)
+    if args.weights:
+        if not args.name:
+            ap.error("--weights needs --name")
+        return export_weights(args)
     t0 = time.time()
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)

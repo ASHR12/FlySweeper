@@ -10,11 +10,14 @@ import { RNG } from './rng.js';
 import { BrainMap, harmonise } from './brainmap.js';
 import { BoardView } from './boardview.js';
 import { idleTest, loomTest, boardTest } from './tests.js';
+import { MBPolicy, loadWeightSet, loadWeightManifest } from './mbpolicy.js';
 
 const $ = (id) => document.getElementById(id);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const GAME_OVER_HOLD_MS = 2500;   // finished board stays on screen this long (same as server.py --game-over-hold)
 const query = new URLSearchParams(location.search);
+const VERSION = window.FLYSWEEPER_VERSION || query.get('v') || '';   // cache-busting token for shaders / weight files
+const FROZEN_ID = 'frozen';       // selector entry for the untrained connectome (the original "fly" condition)
 
 // FEATURE FLAG: the human-playable "YOU" board (same mines, click to reveal / right-click to flag,
 // safe first click, own scoreboard row). Hidden by default so the whole UI fits one screen; open the
@@ -25,6 +28,12 @@ document.body.classList.toggle('no-human', !SHOW_HUMAN_BOARD);
 
 const app = {
   model: null, sim: null, encoder: null, decoder: null, brainMap: null, flyView: null, youView: null,
+  arrays: null,         // CPU copies of the graph arrays the GPU was built from (patched by weight sets)
+  config: { data_base: 'data/', weights_base: 'weights/' },
+  // trained fly: manifest of exported KC->MBON weight sets, the selected id ('frozen' = untrained), the
+  // loaded set and the MBPolicy built from it (null while frozen)
+  weights: { manifest: null, id: FROZEN_ID, set: null, entry: null },
+  mb: null,
   rng: null,
   seed0: Number(query.get('seed') ?? 1000),
   gameNumber: 0,
@@ -57,7 +66,47 @@ function showError(title, detail, hints = []) {
   box.innerHTML = `<b>${title}</b><div>${escapeHtml(detail)}</div>` + (hints.length ? `<ul>${hints.map((h) => `<li>${h}</li>`).join('')}</ul>` : '');
 }
 
-function escapeHtml(s) { return String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
+function escapeHtml(s) { return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+/**
+ * Where the big connectome files live. Precedence: window.FLYSWEEPER_DATA_BASE (set in index.html or
+ * by the host page) > ?data= query > web/config.json "data_base" > ./data/. A remote base (GitHub
+ * Release assets, Hugging Face, any bucket) must serve CORS headers; the Cache API keeps a local copy.
+ */
+async function loadConfig() {
+  const cfg = { ...app.config };
+  try {
+    const r = await fetch(`config.json${VERSION ? `?v=${encodeURIComponent(VERSION)}` : ''}`, { cache: 'no-store' });
+    if (r.ok) Object.assign(cfg, await r.json());
+  } catch { /* no config.json: defaults */ }
+  if (window.FLYSWEEPER_DATA_BASE) cfg.data_base = window.FLYSWEEPER_DATA_BASE;
+  if (query.get('data')) cfg.data_base = query.get('data');
+  for (const k of ['data_base', 'weights_base']) if (cfg[k] && !cfg[k].endsWith('/')) cfg[k] += '/';
+  app.config = cfg;
+  return cfg;
+}
+
+/** Read web/weights/manifest.json and pick the set: ?weights=<id> > manifest default; 'frozen' = untrained. */
+async function chooseWeights() {
+  const w = app.weights;
+  try {
+    w.manifest = await loadWeightManifest(app.config.weights_base);
+  } catch (e) {
+    overlayLog(`no trained weight sets (${e.message}); running the frozen connectome`);
+    w.manifest = { default: FROZEN_ID, sets: [] };
+  }
+  const wanted = query.get('weights') || w.manifest.default || FROZEN_ID;
+  const entry = w.manifest.sets.find((s) => s.id === wanted) || null;
+  if (wanted !== FROZEN_ID && !entry) overlayLog(`weight set "${wanted}" is not in the manifest; running the frozen connectome`);
+  w.id = entry ? entry.id : FROZEN_ID;
+  w.entry = entry;
+  if (entry) {
+    $('load-title').textContent = 'Loading the trained synapses';
+    w.set = await loadWeightSet(app.config.weights_base, entry.id, { log: overlayLog, version: VERSION });
+    app.mb = new MBPolicy(w.set);
+  }
+  return w;
+}
 
 async function boot() {
   if (!('gpu' in navigator)) {
@@ -72,10 +121,13 @@ async function boot() {
     const adapter = await navigator.gpu.requestAdapter({ powerPreference: 'high-performance' });
     if (!adapter) throw new WebGPUUnavailable('navigator.gpu.requestAdapter() returned null (no compatible GPU adapter).');
     if (query.has('clearcache')) { await clearDataCache(); overlayLog('cache cleared'); }
+    await loadConfig();
+    overlayLog(`data base ${app.config.data_base}${VERSION ? ` · version ${VERSION}` : ''}`);
+    await chooseWeights();
     $('load-title').textContent = 'Loading the connectome';
-    const shaders = await loadShaders('shaders/');
+    const shaders = await loadShaders('shaders/', VERSION);
     const t0 = performance.now();
-    const { manifest, arrays, fromCache } = await loadData('data/', {
+    const { manifest, arrays, fromCache } = await loadData(app.config.data_base, {
       log: overlayLog,
       useCache: !query.has('nocache'),
       onProgress: ({ done, total, name }) => {
@@ -88,14 +140,16 @@ async function boot() {
     app.model = model;
     $('load-title').textContent = 'Uploading to the GPU';
     $('load-text').textContent = `${model.n_neurons.toLocaleString()} neurons · ${model.n_edges_active.toLocaleString()} active synaptic edges`;
+    app.arrays = {
+      in_indptr: arrays['in_indptr.u32'], in_indices: arrays['in_indices.u32'], in_weights: arrays['in_weights.f32'],
+      order: arrays['order.u32'], pool_id: arrays['pool_id.u32'], plot_idx: arrays['plot_idx.u32'],
+    };
     app.sim = await FlySim.create({
       model,
-      arrays: {
-        in_indptr: arrays['in_indptr.u32'], in_indices: arrays['in_indices.u32'], in_weights: arrays['in_weights.f32'],
-        order: arrays['order.u32'], pool_id: arrays['pool_id.u32'], plot_idx: arrays['plot_idx.u32'],
-      },
+      arrays: app.arrays,
       shaders,
       seed: Number(query.get('simseed') ?? 0),
+      maxDrive: 16384,      // retina (~4.5k lamina + R7/R8) + looming + up to ~2.4k ORN odor cells per step
       log: overlayLog,
     });
     app.encoder = new Encoder(model);
@@ -256,14 +310,19 @@ async function playFlyGame() {
   await runBlankBoard(g.settle_steps);
   fly.phase = 'playing';
   let outcome = 'timeout';
+  const mb = app.mb;
   for (let turn = 0; turn < g.max_turns; turn++) {
     await waitIfBlocked({ allowSuspend: true });
     if (fly.abort) { outcome = 'aborted'; break; }
     fly.turn = turn;
     const visible = game.visible();
+    if (mb) mb.beginTurn(visible, g.rows, g.cols, fly.cursor, g.mines);   // the helper's facts -> odor for this turn
     const base = app.sim.stepCount;
     const drives = [];
-    for (let s = 0; s < g.turn_steps; s++) drives.push(app.encoder.stepDrive(visible, fly.cursor, base + s));
+    for (let s = 0; s < g.turn_steps; s++) {
+      const d = app.encoder.stepDrive(visible, fly.cursor, base + s);
+      drives.push(mb ? mb.stepDrive(d) : d);
+    }
     fly.danger = app.encoder.lastDanger;
     let left = g.turn_steps, first = true, res = null;
     while (left > 0) {
@@ -277,6 +336,7 @@ async function playFlyGame() {
     applyFlyAction(action);
     if (game.over) { outcome = game.won ? 'won' : 'lost'; break; }
   }
+  if (mb) mb.endGame();                                  // no odor while the screen is blank
   fly.outcome = outcome;
   fly.phase = 'over';
   const t = app.totals.fly;
@@ -307,12 +367,41 @@ function applyFlyAction(action) {
     if (hidden.length) fly.cursor = hidden[app.rng.int(hidden.length)];
     text += ` from (${r},${c})`;
   } else if (action === 'reveal') {
+    if (game.safeRevealed === 0 && !game.revealed[r * g.cols + c]) relocateMineForFlyFirstClick(r, c);
     const { result, newly } = game.reveal(r, c);
     text += ` → ${result}` + (newly ? ` (+${newly})` : '');
     fly.lastResult = result;
   }
   fly.lastAction = action;
   if (action !== 'hold' || fly.turn % 10 === 0) addEvent(text, true);
+}
+
+/**
+ * The Python game places its mines on the first reveal (so the fly's first click is safe wherever it
+ * lands); the shared layout here is only guaranteed mine-free around the centre. If the fly's first
+ * reveal is elsewhere and on a mine, move that mine (on both boards, unless the human has already
+ * uncovered the target) to a cell hidden on both boards and away from the click.
+ */
+function relocateMineForFlyFirstClick(r, c) {
+  const fly = app.fly.game, human = app.human.game, g = app.model.game;
+  const from = r * g.cols + c;
+  if (!fly.mines[from]) return null;
+  const near = new Set([from]);
+  for (const [rr, cc] of fly.neighbors(r, c)) near.add(rr * g.cols + cc);
+  const humanLive = human && !human.over;
+  const candidates = [];
+  for (let i = 0; i < g.rows * g.cols; i++) {
+    if (fly.mines[i] || near.has(i) || fly.revealed[i]) continue;
+    if (humanLive && (human.revealed[i] || human.flagged[i])) continue;
+    candidates.push(i);
+  }
+  if (!candidates.length) return null;
+  const to = candidates[new RNG(fly.seed * 37 + from).int(candidates.length)];
+  fly.moveMine(from, to);
+  if (humanLive && human.mines[from] && !human.revealed[from]) human.moveMine(from, to);
+  const rc = (i) => `(${Math.floor(i / g.cols)},${i % g.cols})`;
+  addEvent(`fly's first click on a mine: moved it ${rc(from)} → ${rc(to)} (first click is safe, as in the Python game)`);
+  return { from, to };
 }
 
 /**
@@ -340,8 +429,28 @@ async function waitForNextGame() {
   }
 }
 
+/**
+ * Switch the simulator to the trained fly: patch the GPU graph with the fly-mb model changes and the
+ * trained KC->MBON weights, set the KC / PN bias, count MBON pools instead of descending neurons, and
+ * make the mushroom-body policy the decision maker. (Python: MBPolicy.attach() before each fly-mb game.)
+ */
+async function attachTrainedFly() {
+  const mb = app.mb;
+  app.fly.phase = 'attaching';
+  app.fly.lastResult = 'applying trained KC→MBON synapses';
+  const a = await mb.apply(app.sim, app.arrays);
+  const km = mb.spec.kc_model;
+  app.decoder = mb;
+  addEvent(`fly-mb weights "${mb.id}": ${a.replaced.toLocaleString()} KC→MBON synapses set (${a.changed.toLocaleString()} differ from the wiring), ` +
+    `${a.kc2kc.toLocaleString()} KC→KC edges ×${km.kc_kc_gain}, ${a.pn2kc.toLocaleString()} PN→KC edges ×${km.pn_kc_gain}, ` +
+    `KC bias ${km.kc_bias}, PN bias ${km.pn_bias}; ${a.rows.toLocaleString()} rows patched in ${a.ms.toFixed(0)} ms`);
+  addEvent('MBON pools (cells): ' + mb.actions.map((x, i) => `${x} ${mb.sizes[i]}`).join(', ') +
+    ` · reveal margin ${mb.revealMargin} · centred scores ${mb.centerScores ? 'on' : 'off'}`);
+}
+
 async function flyLoop() {
   await calibrateIdle();
+  if (app.mb) await attachTrainedFly();
   for (;;) {
     newSharedGame();
     await playFlyGame();
@@ -432,9 +541,8 @@ function setupUi(model) {
   app.flyView = new BoardView($('fly-board'), g.rows, g.cols, { eyeSplit: true });
   app.youView = new BoardView($('you-board'), g.rows, g.cols, { onReveal: humanReveal, onFlag: humanFlag });
   $('boards-title').textContent = SHOW_HUMAN_BOARD ? 'Same mines, two players' : 'Fly';
-  $('cond-chip').textContent = `fly · frozen connectome`;
   $('legend').innerHTML = model.regions.map((r) => `<span><i style="background:rgb(${harmonise(r.color).join(',')})"></i>${r.name}</span>`).join('');
-  $('label').textContent = model.label;
+  setupWeightsUi(model);
   $('subtitle').textContent = `${model.dataset} · ${model.n_neurons.toLocaleString()} neurons · ${model.n_edges_total.toLocaleString()} connections (${model.n_edges_silenced.toLocaleString()} onto sensory cells silenced) · simulated on your GPU`;
   const s = model.sim;
   $('preset').textContent = `dt ${s.dt}s τ ${s.tau}s gain ${s.gain} tonic ${s.tonic} noise ${s.noise_rate}Hz×${s.noise_amp}`;
@@ -459,6 +567,47 @@ function setupUi(model) {
   brain.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
   window.addEventListener('keydown', (ev) => { if (ev.key === ' ' && ev.target === document.body) { ev.preventDefault(); $('pause').click(); } });
   setupResize();
+}
+
+/**
+ * Header chip, honest label, pools help text and the weight-set selector. Choosing another set does a
+ * forced full reload (`location.assign` with ?weights=<id>&v=<timestamp>): the import map, shaders and
+ * weight files are re-fetched under the new version token and the GPU state is rebuilt from scratch.
+ */
+function setupWeightsUi(model) {
+  const w = app.weights, mb = app.mb, sel = $('weights-select');
+  const frozenLabel = 'Frozen connectome (no training)';
+  const opts = [{ id: FROZEN_ID, label: frozenLabel, title: 'The original condition "fly": untrained wiring, descending-neuron pools decode the actions.' }]
+    .concat((w.manifest?.sets || []).map((s) => ({ id: s.id, label: s.label, title: s.notes || s.label })));
+  sel.innerHTML = opts.map((o) => `<option value="${o.id}" title="${escapeHtml(o.title)}"${o.id === w.id ? ' selected' : ''}>${escapeHtml(o.label)}</option>`).join('');
+  sel.disabled = false;
+  sel.onchange = () => {
+    const id = sel.value;
+    if (id === w.id) return;
+    const u = new URL(location.href);
+    u.searchParams.set('weights', id);
+    u.searchParams.set('v', String(Date.now()));
+    location.assign(u.href);            // full navigation: fresh module graph, shaders, GPU buffers
+  };
+  if (mb) {
+    const e = w.entry, s = mb.spec, st = s.stats, round = e.round != null ? `round ${e.round}` : e.id;
+    $('cond-chip').textContent = `fly-mb · ${round}`;
+    $('cond-chip').title = `${e.label}\n${e.notes || ''}`.trim();
+    $('label').textContent = `${model.label.replace(/ Not a trained Minesweeper player\. Connectome frozen\.$/, '')} ` +
+      `Connectome frozen except ${st.plastic_edges.toLocaleString()} KC→MBON synapses trained (${round}). A helper reads the board into ${s.channels.length} facts, injected as odours.`;
+    $('label').title = `fly-mb, ${e.label}: ${s.games_trained.toLocaleString()} teacher-driven games trained the ${st.plastic_edges.toLocaleString()} Kenyon-cell → MBON synapses onto the six action pools; ` +
+      `everything else is the published wiring. The helper's ${s.channels.length} facts (hidden / provably safe / provably mine / frontier / direction to the nearest safe cell, …) drive one group of olfactory receptor neurons each. ` +
+      `Documented model changes for this condition only: KC→KC synapses ×${s.kc_model.kc_kc_gain}, PN→KC ×${s.kc_model.pn_kc_gain}, KC bias ${s.kc_model.kc_bias}, PN bias ${s.kc_model.pn_bias}; decision = argmax over centred MBON-pool scores with reveal margin ${s.decision.reveal_margin}. Learning is off in the browser.`;
+    $('chips').innerHTML = `<span class="chip gold" title="${escapeHtml(`Trained KC→MBON synapses (learning is off in the browser): ${st.plastic_edges.toLocaleString()} plastic edges, ${st.edges_changed.toLocaleString()} differ from the wiring, mean |w|/|w0| ${st.mean_weight_ratio.toFixed(3)} (min ${st.min_weight_ratio.toFixed(2)}, max ${st.max_weight_ratio.toFixed(2)}); per pool: ${Object.entries(st.pool_ratio).map(([a, r]) => `${a} ×${r.toFixed(2)}`).join(', ')}. Odour amp ${s.odor.amp}, extra ORN types level ${s.odor.extra_orn}.`)}">` +
+      `KC→MBON · ${st.plastic_edges.toLocaleString()} plastic · ${st.edges_changed.toLocaleString()} changed · ×${st.mean_weight_ratio.toFixed(2)}</span>`;
+    document.querySelector('.panel h2 .help[title^="Bars"]')?.setAttribute('title',
+      `Bars: per-cell spike rate of each MBON pool this turn (Hz); the tick is the pool's running mean (centred scores). Gold = the action taken. Pools are real MaleCNS mushroom-body output neuron types (${mb.actions.map((a, i) => `${a}: ${s.pools[a].types.join('+')}`).join('; ')}); the button assignment and the trained KC→MBON weights are ours.`);
+  } else {
+    $('cond-chip').textContent = `fly · frozen connectome`;
+    $('cond-chip').title = 'Untrained wiring; descending-neuron pools decode the actions.';
+    $('label').textContent = model.label;
+    $('chips').innerHTML = '';
+  }
 }
 
 // ------------------------------------------------------------------------------------------
@@ -675,7 +824,11 @@ window.flysweeper = {
     step: app.sim.stepCount, time: app.sim.time, phase: app.fly.phase, cursor: app.fly.cursor, lastAction: app.fly.lastAction,
     rates: Array.from(app.decoder.lastRates), scores: Array.from(app.decoder.lastScores), idle: app.idleRates && Array.from(app.idleRates),
     stats: { ...app.stats }, totals: app.totals, flySafe: app.fly.game?.safeRevealed, gameNumber: app.gameNumber, events: app.events.slice(-10),
+    weights: app.weights.id, condition: app.mb ? 'fly-mb' : 'fly', history: app.history.slice(),
+    mb: app.mb ? { applied: app.mb.applied, features: Array.from(app.mb.features), oracle: app.mb.oracle.last, scoreMean: Array.from(app.mb.scoreMean), turns: app.mb.turnsSeen } : null,
   }),
+  /** The helper's 31 facts for the fly's current board and cursor (fly-mb only). */
+  facts: () => (app.mb ? Object.fromEntries(app.mb.oracle.features(app.fly.game.visible(), app.model.game.rows, app.model.game.cols, app.fly.cursor, app.model.game.mines).map((v, i) => [app.mb.spec.channels[i], v]).filter(([, v]) => v > 0)) : null),
 };
 
 boot();

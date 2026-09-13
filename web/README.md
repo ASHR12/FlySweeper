@@ -6,11 +6,19 @@ browser on your GPU**, wired to Minesweeper. The fly plays the left board; you p
 with the same mines.
 
 > MaleCNS v1.0 wiring (Berg et al., Cell 2026, CC BY 4.0) with engineered dynamics, sensors and
-> buttons. Not a validated fly. Not a trained Minesweeper player. Connectome frozen.
+> buttons. Not a validated fly. Connectome frozen except 59,334 KC→MBON synapses trained (round 2).
+> A helper reads the board into 31 facts, injected as odours.
 
-Everything is vanilla JS modules + WGSL; there is no build step. The dynamics, encoder and decoder
-are line-by-line ports of the Python package in `flysweeper/` (`sim.py`, `encoder.py`,
-`decoder.py`, `agent.py`, `minesweeper.py`), so the two implementations can be compared.
+By default the page runs the **trained fly** (the Python `fly-mb` condition: a helper turns the board
+into 31 facts that are injected as odours into olfactory receptor neurons, and six pools of
+mushroom-body output neurons are the buttons, with the Kenyon-cell → MBON synapses onto them trained
+by `flysweeper/train_mb.py`). A selector in the header switches between exported weight sets and the
+original **frozen connectome** (descending-neuron pools decode the actions, nothing trained).
+
+Everything is vanilla JS modules + WGSL; there is no build step. The dynamics, encoder, decoders,
+helper and mushroom-body policy are line-by-line ports of the Python package in `flysweeper/`
+(`sim.py`, `encoder.py`, `decoder.py`, `oracle.py`, `mb_policy.py`, `agent.py`, `minesweeper.py`),
+so the two implementations can be compared.
 
 ## Run it
 
@@ -22,10 +30,16 @@ Nightly with WebGPU should also work but were not tested.
 # 1. export the compiled graph into browser-friendly binaries (web/data/, ~205 MB, gitignored; ~8 s)
 ./.venv/bin/python -m flysweeper.export_web
 
-# 2. serve the web/ folder (any static server works; WebGPU needs localhost or https)
+# 2. export the trained weight sets (web/weights/, ~0.6 MB total, committed; already done for rounds 1-2)
+./.venv/bin/python -m flysweeper.export_web --weights outputs/mb/warm/weights_000200.npz \
+    --name round1 --round 1 --winrate 0.0 --eval-games 30 --notes "..."
+./.venv/bin/python -m flysweeper.export_web --weights data/compiled/mb_weights.npz \
+    --name round2 --round 2 --winrate 0.48 --eval-games 100 --default --notes "..."
+
+# 3. serve the web/ folder (any static server works; WebGPU needs localhost or https)
 ./.venv/bin/python -m http.server 8780 --directory web --bind 127.0.0.1
 
-# 3. open in Chrome
+# 4. open in Chrome
 open http://127.0.0.1:8780/
 ```
 
@@ -34,8 +48,36 @@ SHA-256 against `data/manifest.json`, and stores the files in the browser Cache 
 from the cache in ~100 ms. Re-running the export changes the hashes, which invalidates the cache
 automatically. `?clearcache=1` wipes it, `?nocache=1` bypasses it.
 
-URL parameters: `?speed=0.5|1|4|0` (0 = as fast as the GPU allows), `?seed=1000` (first board seed),
-`?simseed=0` (GPU noise seed), `?human=1` (show the human-playable board, see below).
+URL parameters: `?weights=round2|round1|frozen` (weight set; default = `web/weights/manifest.json`
+`"default"`), `?speed=0.5|1|4|0` (0 = as fast as the GPU allows), `?seed=1000` (first board seed),
+`?simseed=0` (GPU noise seed), `?human=1` (show the human-playable board, see below), `?data=<url>`
+(connectome base URL, see *Deploying*), `?v=<token>` (cache-busting version, set automatically when
+you switch weight sets).
+
+### Trained weight sets (`web/weights/`)
+
+`flysweeper.export_web --weights <npz> --name <id> [--round k --winrate 0.48 --eval-games 100
+--games-trained n --label "..." --notes "..." --default]` converts one `MBPolicy.save()` file (the
+self-describing npz `train_mb.py` writes, e.g. `data/compiled/mb_weights.npz`) into
+
+* `web/weights/<id>.json` — the six MBON pools (cells per action, types), the odour map (channel →
+  ORN cells, taken from the file's own `orn_types`, and the amplitude), the Kenyon-cell and
+  antennal-lobe-PN index lists with the fly-mb model settings (`kc_kc_gain`, `kc_bias`, `pn_kc_gain`,
+  `pn_bias`), the decision settings (centred scores + the saved running means, `reveal_margin`,
+  `mask_reveal`, temperature 0), metadata (label, round, win rate, games trained, notes, training
+  args) and weight statistics;
+* `web/weights/<id>.bin` — the plastic edge list: `u16` KC index (into `kc`), `u8` MBON index (into
+  `mbon`), `f32` trained weight, in that order (415 KB for the 59,334 round-2 edges). The frozen
+  weight of each edge is the one already in the graph export;
+* `web/weights/manifest.json` — every set with `label`, `win_rate`, `eval_games`, `games_trained`,
+  `notes`, file names and hashes, plus `"default"`. Re-running with the same `--name` replaces that
+  entry; `--default` (or the first export) sets the default. When round 3 lands:
+  `--weights <round3.npz> --name round3 --round 3 --winrate 0.52 --eval-games 100 --default`.
+
+The export recomputes the plastic edge set from the graph exactly as `mb_policy.MBPolicy` does
+(every KC → pool-MBON edge) and refuses files whose `edge_pos`, `w0`, `edge_kc`, `edge_pool` or
+channel list disagree; it reads the binary back and checks the round trip. The label defaults to
+`"Round k - N teacher games - P% wins (M held-out boards)"`.
 
 ### Using the page
 
@@ -95,8 +137,30 @@ markers hold the longer explanations (pool anatomy; anatomy vs. engineered; cons
   `CNS_ASPECT` in `js/brainmap.js`) fitted to the panel with a 3 % margin. Quiet somas are a faint
   region-tinted dust; a spike adds a soft 3×3 glow in the region colour that decays over a few frames
   (additive `ImageData`, ~20 fps). Hover to see a neuron's type and region.
-* **Header**: the chip after the product name is the condition (always the frozen connectome here);
-  the dot on the right pulses green while the step counter advances and turns grey when paused.
+* **Header**: the chip after the product name is the condition — `fly-mb · round 2` for a trained
+  weight set, `fly · frozen connectome` otherwise — followed by the **weights** selector (entries
+  from `web/weights/manifest.json`, e.g. "Round 2 - 1,500 teacher games - 48% wins (100 held-out
+  boards)", plus "Frozen connectome (no training)"). Choosing another entry does a *forced full
+  reload*: `location.assign(?weights=<id>&v=<timestamp>)`; an import map written by `index.html`
+  gives every JS module `?v=<token>`, and the shaders, `config.json` and weight files are fetched with
+  the same token, so no stale code or brain state survives the switch (the 205 MB connectome stays in
+  the Cache API, keyed by content hash). The honesty line at the bottom changes to "Connectome frozen
+  except N KC→MBON synapses trained (round k). A helper reads the board into 31 facts, injected as
+  odours." with the full description in its tooltip. The dot on the right pulses green while the step
+  counter advances and turns grey when paused.
+* **Trained fly (fly-mb)**: each turn `js/oracle.js` computes the 31 facts about the cell under the
+  cursor (hidden / revealed / provably safe / provably mine / frontier / free, neighbour counts,
+  direction to the nearest provably-safe cell or guess target, cleared fraction, untouched — the same
+  single-point inference as the Python helper), `js/mbpolicy.js` turns them into odour current
+  (`odor_amp × value` into every ORN cell of that channel, 2,362 cells over 31 channels for round 2,
+  added to the retinal drive on every step of the turn), the GPU counts the six MBON pools over the
+  15-step window, and the decision is the Python one: per-cell counts minus each pool's running mean
+  (α 0.02, initialised from the means saved in the file), reveal only if it beats the runner-up by
+  `reveal_margin` (0.25 for round 2, otherwise the runner-up is taken), stable argmax with a random
+  tie-break, learning off. The pools panel then shows the MBON pools (the tick is the running mean)
+  and a gold chip with the weight statistics; `flysweeper.facts()` prints the active facts.
+  The fly's first reveal is made safe wherever it lands (the Python game places its mines on the first
+  click): if it is on a mine, that mine is moved, as for the human's first click.
 * **Pace**: ½×, 1×, 4× real time, `max`, `pause` (space bar). Speed is the simulated time per wall
   second; at 1× a brain step happens every 20 ms.
 * **Stats**: step count, simulated time, spikes in the last step and the corresponding mean firing
@@ -110,7 +174,8 @@ await flysweeper.idleTest()      // 100 warm-up + 500 blind steps -> mean firing
 await flysweeper.loomTest()      // pulse left LC4+LPLC2 (amp 0.8, every other step): DNp01 L/R rates vs. silent
 await flysweeper.boardTest()     // a mid-game board, cursor far left: L1-L3 lamina rate, whole-brain rate
 await flysweeper.benchmark(300)  // ms/step at full speed
-flysweeper.state()               // current cursor, phase, rates, timing, totals
+flysweeper.state()               // current cursor, phase, rates, timing, totals, weight set, MB state
+flysweeper.facts()               // fly-mb: the helper's active facts for the current board and cursor
 ```
 
 The tests take over the simulator at the fly's next turn boundary (unpause first if paused) and
@@ -143,7 +208,12 @@ Engineered (ours, ported from the Python package, all constants in `data/model.j
   DNa02+DNa11+DNg13 by side, reveal DNpe017+DNp10, jump DNp01), the 15-step turn window, the running
   baseline (EMA α 0.1, initialised from a 500-step blank-screen idle measurement), argmax with random
   tie-break, hold when nothing rises above baseline;
-* the game rules, the shared-mines layout with a safe centre cell.
+* the game rules, the shared-mines layout with a safe centre cell;
+* for the trained fly (`fly-mb`, same as the Python condition): the helper's 31 facts and which ORN
+  type is which fact, the Kenyon-cell sparsening (KC→KC synapses × 0, PN→KC × 3, KC bias −0.3, PN
+  bias −0.3 for round 2 — the constants travel with the weight file), which MBON types are which
+  button, the centred-score decision with the reveal margin, and the trained values of the KC→MBON
+  synapses themselves (the only thing that was learned; 55,832 of 59,334 differ from the wiring).
 
 ## How it works
 
@@ -175,6 +245,29 @@ Up to 32 steps are encoded into one command buffer (a whole 15-step turn at `max
 per-batch readback is a 256-byte stats block (pool counts + spikes per step), plus 140 KB of packed
 activity at ≤ 25 Hz for the brain map. All neuron and synapse state stays resident on the GPU
 (≈209 MB).
+
+### How the mushroom-body model changes are implemented
+
+The kernel stays a plain gather; the fly-mb condition is a one-off **edit of the resident graph** plus
+one extra per-neuron term, applied by `MBPolicy.apply()` after the idle calibration (Python:
+`MBPolicy.attach()`):
+
+* *Weights, patched in place.* The in-edge CSR is indexed by postsynaptic neuron, so every change is a
+  contiguous row: for each of the 4,064 Kenyon cells, in-edges whose presynaptic cell is a KC are
+  multiplied by `kc_kc_gain` (0 → the 642,933 KC→KC synapses are silenced) and those from the 686
+  antennal-lobe PNs by `pn_kc_gain` (22,586 edges); for each of the 91 pool MBONs, the in-edges from
+  KCs (exactly the 59,334 plastic edges) are overwritten with the trained weights. The CPU copy of
+  `in_weights` is edited and the affected rows (4,155 rows, coalesced into contiguous spans) are
+  re-uploaded with `queue.writeBuffer` — 23 ms, no kernel change, no per-edge mask to read on every
+  step. Switching back to the frozen graph is a page reload (which the selector forces anyway).
+* *Bias.* `step.wgsl` adds `bitcast<f32>(nmeta[2n + j])` to the external drive of neuron `j` on every
+  step — a third segment of the existing metadata buffer that is zero unless a weight set sets
+  `kc_bias` on the KCs and `pn_bias` on the PNs (`FlySim.setBias`). One extra 4-byte read per neuron
+  per step, i.e. 0.67 MB against the ~200 MB the gather reads; ms/step is unchanged (1.7–1.9 ms live
+  at `max` with the odour drive, vs. 1.6–1.9 ms frozen).
+* *Pools.* `FlySim.setPools` rewrites the pool-id segment so the atomic counters count the MBON pools
+  instead of the descending neurons; the odour current joins the retinal (index, amount) list that
+  `scatter.wgsl` adds before each step (≈7 k pairs per step at most; `maxDrive` is 16,384).
 
 ## Performance (Apple M5 Max, Chrome 152, macOS)
 

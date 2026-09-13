@@ -1,0 +1,305 @@
+[
+ {
+  "file": "outputs/mb/r2_error/weights_000250.npz",
+  "games_trained": 250,
+  "margin": 0.0,
+  "pool_ratio": {
+   "up": 1.2439,
+   "down": 1.2535,
+   "left": 1.7688,
+   "right": 1.2617,
+   "reveal": 1.928,
+   "jump": 1.5079
+  },
+  "weights": {
+   "edges": 59334,
+   "changed": 56626,
+   "mean_ratio": 1.494,
+   "at_floor": 4060,
+   "at_ceiling": 0
+  },
+  "agreement": {
+   "turns": 608,
+   "accuracy": 0.607,
+   "recall": {
+    "up": 0.371,
+    "down": 0.398,
+    "left": 0.545,
+    "right": 0.477,
+    "reveal": 0.947,
+    "jump": 0.5
+   },
+   "precision": {
+    "up": 0.493,
+    "down": 0.349,
+    "left": 0.574,
+    "right": 0.554,
+    "reveal": 0.957,
+    "jump": 0.028
+   },
+   "confusion": [
+    [
+     36,
+     29,
+     15,
+     9,
+     2,
+     6
+    ],
+    [
+     13,
+     37,
+     14,
+     22,
+     2,
+     5
+    ],
+    [
+     12,
+     22,
+     66,
+     10,
+     3,
+     8
+    ],
+    [
+     11,
+     18,
+     17,
+     51,
+     1,
+     9
+    ],
+    [
+     0,
+     0,
+     3,
+     0,
+     178,
+     7
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1
+    ]
+   ],
+   "reveal_false_positive_rate": 0.019
+  },
+  "heldout": {
+   "games": 30,
+   "win_rate": 0.0,
+   "wins": 0,
+   "mean_safe": 50.2,
+   "sem_safe": 2.18,
+   "mean_turns": 23.1,
+   "mean_reveals": 5.5,
+   "timeouts": 0
+  }
+ },
+ {
+  "file": "outputs/mb/r2_teacher/weights_000250.npz",
+  "games_trained": 250,
+  "margin": 0.0,
+  "pool_ratio": {
+   "up": 1.1207,
+   "down": 1.4945,
+   "left": 1.8896,
+   "right": 1.6241,
+   "reveal": 2.225,
+   "jump": 1.7464
+  },
+  "weights": {
+   "edges": 59334,
+   "changed": 56606,
+   "mean_ratio": 1.683,
+   "at_floor": 2885,
+   "at_ceiling": 0
+  },
+  "agreement": {
+   "turns": 608,
+   "accuracy": 0.564,
+   "recall": {
+    "up": 0.371,
+    "down": 0.333,
+    "left": 0.521,
+    "right": 0.374,
+    "reveal": 0.915,
+    "jump": 0.5
+   },
+   "precision": {
+    "up": 0.404,
+    "down": 0.33,
+    "left": 0.583,
+    "right": 0.519,
+    "reveal": 0.935,
+    "jump": 0.018
+   },
+   "confusion": [
+    [
+     36,
+     24,
+     12,
+     10,
+     3,
+     12
+    ],
+    [
+     24,
+     31,
+     13,
+     18,
+     2,
+     5
+    ],
+    [
+     14,
+     23,
+     63,
+     9,
+     3,
+     9
+    ],
+    [
+     14,
+     16,
+     20,
+     40,
+     4,
+     13
+    ],
+    [
+     0,
+     0,
+     0,
+     0,
+     172,
+     16
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1
+    ]
+   ],
+   "reveal_false_positive_rate": 0.029
+  },
+  "heldout": {
+   "games": 30,
+   "win_rate": 0.0,
+   "wins": 0,
+   "mean_safe": 48.67,
+   "sem_safe": 2.12,
+   "mean_turns": 26.4,
+   "mean_reveals": 4.5,
+   "timeouts": 0
+  }
+ },
+ {
+  "file": "outputs/mb/r2_error_sparse/weights_000250.npz",
+  "games_trained": 250,
+  "margin": 0.0,
+  "pool_ratio": {
+   "up": 1.254,
+   "down": 1.1893,
+   "left": 1.3761,
+   "right": 1.2997,
+   "reveal": 2.4074,
+   "jump": 1.5474
+  },
+  "weights": {
+   "edges": 59334,
+   "changed": 55623,
+   "mean_ratio": 1.515,
+   "at_floor": 4906,
+   "at_ceiling": 0
+  },
+  "agreement": {
+   "turns": 608,
+   "accuracy": 0.717,
+   "recall": {
+    "up": 0.639,
+    "down": 0.484,
+    "left": 0.603,
+    "right": 0.645,
+    "reveal": 0.984,
+    "jump": 1.0
+   },
+   "precision": {
+    "up": 0.596,
+    "down": 0.608,
+    "left": 0.689,
+    "right": 0.719,
+    "reveal": 0.954,
+    "jump": 0.059
+   },
+   "confusion": [
+    [
+     62,
+     9,
+     10,
+     7,
+     1,
+     8
+    ],
+    [
+     13,
+     45,
+     14,
+     14,
+     2,
+     5
+    ],
+    [
+     18,
+     9,
+     73,
+     6,
+     6,
+     9
+    ],
+    [
+     11,
+     11,
+     8,
+     69,
+     0,
+     8
+    ],
+    [
+     0,
+     0,
+     1,
+     0,
+     185,
+     2
+    ],
+    [
+     0,
+     0,
+     0,
+     0,
+     0,
+     2
+    ]
+   ],
+   "reveal_false_positive_rate": 0.021
+  },
+  "heldout": {
+   "games": 30,
+   "win_rate": 0.133,
+   "wins": 4,
+   "mean_safe": 50.33,
+   "sem_safe": 2.55,
+   "mean_turns": 20.8,
+   "mean_reveals": 6.4,
+   "timeouts": 0
+  }
+ }
+]
