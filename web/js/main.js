@@ -442,14 +442,10 @@ function setupUi(model) {
   $('gpu').textContent = [app.sim.adapterInfo.vendor, app.sim.adapterInfo.architecture, app.sim.adapterInfo.description].filter(Boolean).join(' ') || 'WebGPU';
   $('you-hint').textContent = `Left click reveals, right click (or ⌥/⌃-click) flags. Same mines as the fly. Your first click is always safe: if it lands on a mine, that mine is moved (on both boards) to a cell hidden on both and away from your click. The dot marks the fly's start cell, where a 3×3 zone is mine-free.`;
   document.querySelectorAll('button[data-speed]').forEach((b) => {
-    b.classList.toggle('on', Number(b.dataset.speed) === app.pace.speed);
-    b.onclick = () => {
-      app.pace.speed = Number(b.dataset.speed); app.pace.paused = false; pacer.reset();
-      document.querySelectorAll('button[data-speed]').forEach((x) => x.classList.toggle('on', x === b));
-      $('pause').classList.remove('on');
-    };
+    b.onclick = () => { app.pace.speed = Number(b.dataset.speed); app.pace.paused = false; pacer.reset(); reflectPace(); };
   });
-  $('pause').onclick = () => { app.pace.paused = !app.pace.paused; $('pause').classList.toggle('on', app.pace.paused); if (!app.pace.paused) pacer.reset(); };
+  $('pause').onclick = () => { app.pace.paused = !app.pace.paused; if (!app.pace.paused) pacer.reset(); reflectPace(); };
+  reflectPace();
   $('new-game').onclick = () => { app.newGameRequested = true; app.fly.abort = true; };
   const brain = $('brain'), tip = $('brain-tip'), brainBox = $('brain-box');
   brain.addEventListener('mousemove', (ev) => {
@@ -599,6 +595,7 @@ function updateDom() {
   $('ms').textContent = st.msPerStep == null ? '–' : `${st.msPerStep.toFixed(2)} ms/step (${st.msSource === 'gpu' ? 'GPU' : 'wall'})`;
   $('ms').title = st.msSource === 'gpu' ? 'GPU timestamp queries' : 'wall time including readback';
   $('rtf').textContent = app.pace.paused ? 'paused' : `${st.rtf.toFixed(1)}× realtime`;
+  reflectPace();
   // live indicator: green + pulsing while the step counter advances
   const advancing = sim.stepCount !== live.lastStep;
   if (advancing) live.lastChange = performance.now();
@@ -610,6 +607,15 @@ function updateDom() {
 }
 
 const live = { lastStep: -1, lastChange: 0 };
+
+/** Highlight the pace button matching app.pace.speed (0 = max) and the pause state; show the numeric speed if no button matches (e.g. ?speed=2). */
+function reflectPace() {
+  const speed = Number(app.pace.speed);
+  let matched = false;
+  document.querySelectorAll('button[data-speed]').forEach((b) => { const on = Number(b.dataset.speed) === speed; matched ||= on; b.classList.toggle('on', on); });
+  $('pause').classList.toggle('on', !!app.pace.paused);
+  $('speed-label').textContent = matched ? '' : `${Number.isInteger(speed) ? speed : speed.toFixed(2).replace(/0+$/, '')}×`;
+}
 function eventClass(text) {
   if (/→ mine|\blost\b|BOOM|crashed/.test(text)) return 'bad';
   if (/\bwon\b/.test(text)) return 'good';

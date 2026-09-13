@@ -79,16 +79,17 @@
   .spark canvas { flex:1; height:26px; min-width:0; display:block; }
   .spark .s { color:var(--dim); font:11px/1 var(--mono); white-space:nowrap; }
   /* pools */
-  .pools { display:grid; grid-template-columns:44px 1fr 56px; gap:5px 8px; align-items:center; }
-  .pools .name { font:500 11.5px/1.2 var(--mono); color:var(--ink); }
-  .pools .name small { color:var(--faint); font-size:9.5px; margin-left:3px; }
+  .pools { display:grid; grid-template-columns:64px minmax(0,1fr) 56px; gap:5px 8px; align-items:center; }
+  .pools .name { font:500 11.5px/1.2 var(--mono); color:var(--ink); white-space:nowrap; overflow:hidden; }
+  .pools .name small { color:var(--faint); font-size:9px; margin-left:3px; }
   .pools .rate { font:500 11.5px/1.2 var(--mono); color:var(--dim); text-align:right; white-space:nowrap; }
   .pools .rate b { color:var(--ink); font-weight:500; }
   .bar { position:relative; height:8px; background:rgba(0,0,0,0.45); border-radius:999px; overflow:visible; border:1px solid var(--line); }
   .bar i { display:block; height:100%; border-radius:999px; background:linear-gradient(90deg, #3f6fd6, var(--blue)); transition:width .18s ease-out; }
   .bar i.win { background:linear-gradient(90deg, #c9964a, var(--accent)); box-shadow:0 0 10px rgba(242,193,92,0.35); }
   .bar s { position:absolute; top:-3px; bottom:-3px; width:1px; background:var(--line-2); border-radius:1px; transform:translateX(-0.5px); }
-  .chips { margin-top:7px; display:flex; flex-wrap:wrap; gap:5px; }
+  .chips { margin-top:7px; display:flex; flex-wrap:wrap; gap:5px; min-width:0; }
+  .chips .chip { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; text-overflow:ellipsis; white-space:normal; max-width:100%; min-width:0; border-radius:8px; padding:3px 9px; line-height:1.35; overflow-wrap:anywhere; }
   .chips:empty { display:none; }
   .mono { font-family:var(--mono); font-size:11.5px; }
   .dim { color:var(--dim); }
@@ -108,6 +109,8 @@
   .legend i { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; vertical-align:0; }
   .controls { display:flex; align-items:center; gap:3px; }
   .controls .dim { font-size:10.5px; letter-spacing:1px; text-transform:uppercase; color:var(--faint); margin-right:4px; }
+  .controls .speed-label { font:500 11.5px/1.4 var(--mono); color:var(--accent); margin-left:4px; }
+  .controls .speed-label:empty { display:none; }
   .controls button, .btn { background:var(--tile); color:var(--dim); border:1px solid var(--line); border-radius:6px; padding:2px 9px; cursor:pointer; font:500 11.5px/1.4 var(--mono); transition:all .15s; }
   .controls button:hover, .btn:hover { color:var(--ink); border-color:var(--line-2); }
   .controls button.on { border-color:rgba(242,193,92,0.5); color:var(--accent); background:var(--accent-soft); }
@@ -183,7 +186,7 @@
         <div class="kv"><span>route</span> <b id="route"></b></div>
         <span class="controls"><span class="dim">pace</span>
           <button data-speed="0.5">½×</button><button data-speed="1">1×</button><button data-speed="4">4×</button><button data-speed="0">max</button>
-          <button id="pause" title="space">pause</button></span>
+          <button id="pause" title="space">pause</button><span class="speed-label" id="speed-label" title="actual pace (no button matches this speed)"></span></span>
       </div>
     </div>
   </div>
@@ -560,7 +563,7 @@ function drawPools(s) {
   if (pl && typeof pl === 'object') {
     const fmt = (v) => typeof v === 'number' ? (Number.isInteger(v) ? v.toLocaleString() : v.toFixed(3)) : String(v);
     const text = 'kc_mbon_edges' in pl
-      ? `KC→MBON plastic ${fmt(pl.kc_mbon_edges)} · changed ${fmt(pl.edges_changed ?? 0)} · ratio ${fmt(pl.mean_weight_ratio ?? 1)}` + (pl.attached === false ? ' · detached' : '')
+      ? `KC→MBON · ${fmt(pl.kc_mbon_edges)} plastic · ${fmt(pl.edges_changed ?? 0)} changed · ×${Number(pl.mean_weight_ratio ?? 1).toFixed(2)}` + (pl.attached === false ? ' · detached' : '')
       : 'plasticity · ' + Object.entries(pl).map(([k, v]) => `${k} ${fmt(v)}`).join(' · ');
     $('chips').innerHTML = `<span class="chip gold" title="${esc(Object.entries(pl).map(([k, v]) => `${k}: ${fmt(v)}`).join('\n'))}">${esc(text)}</span>`;
   } else {
@@ -570,8 +573,13 @@ function drawPools(s) {
 
 // ---------------------------------------------------------------- polling (10 Hz)
 function reflectControls(sim) {
-  document.querySelectorAll('button[data-speed]').forEach((b) => b.classList.toggle('on', !sim.paused && Number(b.dataset.speed) === Number(sim.speed)));
+  // highlight the button matching the server's actual speed (0 = max) and the pause state; if no
+  // button matches (e.g. --speed 2) show the numeric speed next to the buttons
+  const speed = Number(sim.speed);
+  let matched = false;
+  document.querySelectorAll('button[data-speed]').forEach((b) => { const on = Number(b.dataset.speed) === speed; matched ||= on; b.classList.toggle('on', on); });
   $('pause').classList.toggle('on', !!sim.paused);
+  $('speed-label').textContent = matched ? '' : `${Number.isInteger(speed) ? speed : speed.toFixed(2).replace(/0+$/, '')}×`;
 }
 async function tick() {
   try {
