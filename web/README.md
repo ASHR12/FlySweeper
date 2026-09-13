@@ -66,6 +66,15 @@ markers hold the longer explanations (pool anatomy; anatomy vs. engineered; cons
   the log says so). If the fly has already finished its game when you click, only your board changes,
   so the fly's recorded result stays honest. The small gold dot marks the fly's start cell, whose 3×3
   neighbourhood is mine-free (a hint, not the only safe start). The timer starts at your first click.
+* **Game end**: every game ends visibly. On a loss the mine the fly revealed bursts (red rings and
+  particles, ~0.6 s), the other mines pop into view nearest-first, the cursor ring turns red and a
+  small LOST tag appears in the board's corner and in the panel title. On a win the remaining hidden
+  cells flip to flags one after another under a gold glow pulse on the board border, with a WON tag.
+  The finished board then stays on screen for 2.5 s (`GAME_OVER_HOLD_MS` in `js/main.js`; skipped at
+  `max` pace, like the Python server's `--game-over-hold`) before the next board; the stat tiles
+  update the moment the game ends, not after the hold. Console: `flysweeper.forceWin()` /
+  `flysweeper.forceLoss()` end the current game programmatically (debug only). The same effects run on
+  the Python spectator page (`renderBoard`/`makeEndFx` are copied verbatim there).
 * **Stat tiles**: safe cells revealed on the current board, finished games (wins) with the number of
   *abandoned* games underneath, mean safe cells per finished game, and the last result; the sparkline
   under them is safe cells per finished game over the last 50 games (dotted line = their mean),

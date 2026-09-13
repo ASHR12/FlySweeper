@@ -13,6 +13,7 @@ import { idleTest, loomTest, boardTest } from './tests.js';
 
 const $ = (id) => document.getElementById(id);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const GAME_OVER_HOLD_MS = 2500;   // finished board stays on screen this long (same as server.py --game-over-hold)
 const query = new URLSearchParams(location.search);
 
 // FEATURE FLAG: the human-playable "YOU" board (same mines, click to reveal / right-click to flag,
@@ -314,14 +315,27 @@ function applyFlyAction(action) {
   if (action !== 'hold' || fly.turn % 10 === 0) addEvent(text, true);
 }
 
+/**
+ * Keep the finished board on screen (phase 'over', brain ticking on a blank screen) so the end-of-game
+ * animation can be seen. Like the Python server's --game-over-hold, only honoured when paced (not at max).
+ */
+async function holdGameOver() {
+  const fly = app.fly;
+  if (fly.outcome === 'aborted') return;
+  const t0 = performance.now();
+  while (performance.now() - t0 < GAME_OVER_HOLD_MS) {
+    if (app.newGameRequested) break;
+    if (app.pace.speed === 0 && !app.pace.paused) break;
+    await runBlankBoard(pacer.batchSize(5));
+  }
+}
+
 async function waitForNextGame() {
   const fly = app.fly, human = app.human;
   fly.phase = 'waiting';
-  const tOver = performance.now();
   for (;;) {
     const humanDone = !human.started || human.game.over;
-    if (app.newGameRequested) break;
-    if (humanDone && performance.now() - tOver > 3000) break;
+    if (app.newGameRequested || humanDone) break;
     await runBlankBoard(pacer.batchSize(5));
   }
 }
@@ -331,6 +345,7 @@ async function flyLoop() {
   for (;;) {
     newSharedGame();
     await playFlyGame();
+    await holdGameOver();
     await waitForNextGame();
     finishHumanBoard();
   }
@@ -497,6 +512,7 @@ let lastDom = 0, lastBrain = 0;
 function frame(now) {
   requestAnimationFrame(frame);
   if (now - lastDom > 66) { lastDom = now; updateDom(); }
+  else for (const v of [app.flyView, app.youView]) if (v && v.animating && v.state) v.draw(v.state);   // smooth end-of-game animation
   if (now - lastBrain > 40 && app.sim && !app.sim.lost) {
     lastBrain = now;
     app.sim.readActivity().then((a) => { if (a) app.brainMap.draw(a); }).catch(() => {});
@@ -509,26 +525,27 @@ function updateDom() {
   const fly = app.fly, human = app.human, g = app.model.game, dec = app.decoder;
   // boards
   if (fly.game) {
-    const over = fly.game.over || fly.phase === 'over' || fly.phase === 'waiting';
+    const ended = fly.outcome === 'won' || fly.outcome === 'lost';
     app.flyView.draw({
       visible: fly.game.visible(), cursor: fly.cursor, dangerous: fly.danger >= app.model.encoder.params.loom_threshold,
       mineHit: fly.game.mineHit, dim: fly.phase === 'waiting',
-      banner: over && fly.outcome ? fmtOutcome(fly.outcome) : fly.phase === 'settle' ? 'settling…' : null,
-      bannerColor: fly.outcome === 'won' ? '#5ecf8a' : fly.outcome === 'lost' ? '#f0647c' : '#e7ebf0',
+      outcome: ended ? fly.outcome : null, gameId: fly.game.seed,
+      banner: !ended && fly.outcome ? fmtOutcome(fly.outcome) : fly.phase === 'settle' ? 'settling…' : null,
+      bannerColor: '#8b95a3',
     });
   }
   if (human.game && SHOW_HUMAN_BOARD) {
     app.youView.draw({
       visible: human.game.visible(), mineHit: human.game.mineHit,
       safeStart: human.game.safeRevealed === 0 && !human.game.over ? [Math.floor(g.rows / 2), Math.floor(g.cols / 2)] : null,
-      banner: human.game.over ? (human.game.won ? 'YOU WON' : 'BOOM') : null,
-      bannerColor: human.game.won ? '#5ecf8a' : '#f0647c',
+      outcome: human.game.over ? (human.game.won ? 'won' : 'lost') : null, gameId: `${human.game.seed}h`,
+      cursor: human.game.over && !human.game.won ? human.game.mineHit : null,
     });
   }
   // fly stats
   const flyStatus = fly.phase === 'calibrating' ? 'calibrating' : fly.phase === 'waiting' ? (human.started && !human.game.over ? 'waiting for you' : 'next game soon') : fly.phase;
   $('fly-status').textContent = flyStatus;
-  $('fly-status-top').textContent = ` · ${flyStatus}`;
+  $('fly-status-top').textContent = fly.phase === 'over' && (fly.outcome === 'won' || fly.outcome === 'lost') ? '' : ` · ${flyStatus}`;
   $('last-action').textContent = fly.lastAction + (fly.lastResult && fly.lastAction === 'reveal' ? ` (${fly.lastResult})` : '');
   $('danger').textContent = fly.danger; $('danger-kv').className = 'kv' + (fly.danger >= app.model.encoder.params.loom_threshold ? ' danger' : '');
   $('fly-turn').textContent = fly.game ? `${fly.phase === 'settle' || fly.phase === 'calibrating' ? 0 : fly.turn + 1} / ${g.max_turns}` : '–';
@@ -561,7 +578,8 @@ function updateDom() {
     $('you-abandoned').textContent = String(th.abandoned);
     $('you-note').textContent = human.relocation || '';
   }
-  $('game-title').textContent = fly.game ? `fly · game ${app.gameNumber} · seed ${fly.game.seed}` : '';
+  $('game-title').innerHTML = fly.game ? `fly · game ${app.gameNumber} · seed ${fly.game.seed}` +
+    (fly.outcome === 'won' || fly.outcome === 'lost' ? ` <span class="tag ${fly.outcome}">${fly.outcome.toUpperCase()}</span>` : '') : '';
   // pools: bar = rate this turn, tick = running baseline, gold = the action taken
   const rates = dec.lastRates, base = dec.running, max = Math.max(1, ...rates, ...base) * 1.08;
   let html = '';
@@ -627,6 +645,10 @@ function drawSparkline(canvas, values, total, labelEl) {
 window.flysweeper = {
   app,
   humanReveal, humanFlag, relocateMineForFirstClick,
+  /** Debug: reveal every safe cell of the fly's current board so the win animation plays at the next turn boundary. */
+  forceWin: () => { const g = app.fly.game; if (!g || g.over) return false; for (let r = 0; r < g.rows; r++) for (let c = 0; c < g.cols; c++) if (!g.mines[r * g.cols + c]) g.reveal(r, c); return g.won; },
+  /** Debug: reveal a mine on the fly's current board so the loss animation plays at the next turn boundary. */
+  forceLoss: () => { const g = app.fly.game; if (!g || g.over) return false; for (let i = 0; i < g.rows * g.cols; i++) if (g.mines[i]) { g.reveal(Math.floor(i / g.cols), i % g.cols); app.fly.cursor = [Math.floor(i / g.cols), i % g.cols]; break; } return g.lost; },
   /** 100 warm-up + 500 blind steps -> mean firing rate; pauses the fly at its next turn boundary. */
   idleTest: (opts) => exclusive(() => idleTest(app.sim, app.decoder, opts)),
   /** Pulse left LC4+LPLC2 (amp 0.8, every other step) -> DNp01 L/R rates vs silent. */

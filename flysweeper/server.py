@@ -52,10 +52,11 @@ def region_of(superclass: str) -> int:
 
 
 class Spectator:
-    def __init__(self, player: FlyPlayer, condition: str, speed: float, seed0: int):
+    def __init__(self, player: FlyPlayer, condition: str, speed: float, seed0: int, game_over_hold: float = 2.5):
         self.player = player
         self.condition = condition
         self.speed = speed
+        self.game_over_hold = game_over_hold   # seconds the finished board stays on screen (paced runs only)
         self.paused = False
         self.seed = seed0
         self.lock = threading.Lock()
@@ -123,6 +124,12 @@ class Spectator:
         while self.running:
             self.player.play(self.condition, self.seed)
             self.seed += 1
+            # hold the finished board (player.game stays the finished object, so /state keeps reporting
+            # it with the mines shown) long enough for the end-of-game animation to be seen
+            if self.speed > 0:
+                until = time.perf_counter() + self.game_over_hold
+                while self.running and time.perf_counter() < until:
+                    time.sleep(0.05)
 
     def spikes(self) -> bytes:
         c = self.player.spike_counts[self.plot_idx]
@@ -223,6 +230,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--cols", type=int, default=9)
     ap.add_argument("--mines", type=int, default=10)
     ap.add_argument("--seed0", type=int, default=1000)
+    ap.add_argument("--game-over-hold", type=float, default=2.5, help="seconds to keep a finished board on screen before the next game (ignored at --speed 0)")
     args = ap.parse_args(argv)
 
     brain = Brain()
@@ -231,7 +239,7 @@ def main(argv: list[str] | None = None) -> int:
         brain, cfg, Params.preset(args.preset), EncoderParams(route=args.route, danger_loom=not args.no_loom),
         DecoderParams(), sensory_input=args.sensory_input, seed=args.seed0,
     )
-    spec = Spectator(player, args.condition, args.speed, args.seed0)
+    spec = Spectator(player, args.condition, args.speed, args.seed0, game_over_hold=args.game_over_hold)
     threading.Thread(target=spec.loop, daemon=True).start()
     server = ThreadingHTTPServer(("127.0.0.1", args.port), make_handler(spec))
     print(f"[server] FlySweeper live at http://127.0.0.1:{args.port}/  (condition {args.condition}, speed {args.speed}x)")

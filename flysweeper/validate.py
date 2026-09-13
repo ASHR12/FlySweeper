@@ -134,7 +134,9 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--games", type=int, default=20)
     ap.add_argument("--seed0", type=int, default=0)
-    ap.add_argument("--conditions", nargs="+", default=["fly", "fly-blind", "random-walk", "random-click", "solver"], choices=ALL_CONDITIONS)
+    ap.add_argument("--conditions", nargs="+", default=["fly", "fly-blind", "random-walk", "random-click", "solver"],
+                    choices=ALL_CONDITIONS + ["fly-mb-alt"], help="fly-mb-alt = fly-mb played by a second brain loaded from --mb-weights-alt")
+    ap.add_argument("--mb-weights-alt", default=None, help="weights for the fly-mb-alt condition (a second FlyPlayer, same seeds)")
     ap.add_argument("--preset", default="flyai", choices=sorted(PRESETS))
     ap.add_argument("--route", default="lamina", choices=["retina", "lamina"])
     ap.add_argument("--ego", action="store_true", help="egocentric encoder (eyes centred on the cursor) for all brain conditions")
@@ -164,9 +166,17 @@ def main(argv: list[str] | None = None) -> int:
         "config": asdict(cfg), "seeds": seeds, "preset": args.preset, "route": args.route,
         "sensory_input": args.sensory_input, "decoder": args.decoder,
     }
-    player = None
-    if any(c in BRAIN_CONDITIONS for c in args.conditions):
+    player = player_alt = None
+    if "fly-mb-alt" in args.conditions:
+        assert args.mb_weights_alt, "--mb-weights-alt is required for fly-mb-alt"
         brain = Brain()
+        player_alt = FlyPlayer(brain, cfg, Params.preset(args.preset), EncoderParams(route=args.route, egocentric=args.ego, ego_radius=args.ego_radius),
+                               DecoderParams(), sensory_input=args.sensory_input, seed=args.seed0, mb_weights_path=args.mb_weights_alt)
+        mb_alt = player_alt.enable_mb()
+        meta["mb_alt"] = {"weights": mb_alt.loaded_from, "trained": mb_alt.meta, "pool_ratio": mb_alt.pool_ratios(),
+                          "reveal_margin": mb_alt.p.reveal_margin, "mask_reveal": mb_alt.p.mask_reveal, "extra_orn": mb_alt.p.extra_orn}
+    if any(c in BRAIN_CONDITIONS for c in args.conditions):
+        brain = brain if player_alt is not None else Brain()
         meta["brain"] = {"n_neurons": brain.n, "n_edges": brain.graph.n_edges}
         player = FlyPlayer(
             brain, cfg, Params.preset(args.preset), EncoderParams(route=args.route, egocentric=args.ego, ego_radius=args.ego_radius),
@@ -202,7 +212,10 @@ def main(argv: list[str] | None = None) -> int:
     t0 = time.time()
     for cond in args.conditions:
         for seed in seeds:
-            if cond in BRAIN_CONDITIONS:
+            if cond == "fly-mb-alt":
+                rec = asdict(player_alt.play("fly-mb", seed))
+                rec["condition"] = cond
+            elif cond in BRAIN_CONDITIONS:
                 rec = asdict(player.play(cond, seed))
             else:
                 rec = asdict(play_scripted(cond, seed, cfg))

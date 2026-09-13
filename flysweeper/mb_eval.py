@@ -64,7 +64,7 @@ def games(player: FlyPlayer, seed0: int, n: int) -> dict:
 
 
 def evaluate_file(brain: Brain, path: Path, args, margin: float) -> dict:
-    cfg = GameConfig(turn_steps=args.turn_steps, max_turns=args.max_turns)
+    cfg = GameConfig(rows=args.rows, cols=args.cols, mines=args.mines, turn_steps=args.turn_steps, max_turns=args.max_turns)
     player = FlyPlayer(brain, cfg, Params.preset("flyai"), EncoderParams(route="lamina"), DecoderParams(), seed=args.seed0,
                        mb_weights_path=str(path))
     mb = player.enable_mb()
@@ -107,6 +107,9 @@ def main(argv=None) -> int:
     ap.add_argument("--agree-seed0", type=int, default=80000)
     ap.add_argument("--margin-sweep", type=float, nargs="*", default=None, help="evaluate these reveal margins (default: the file's)")
     ap.add_argument("--turn-steps", type=int, default=15)
+    ap.add_argument("--rows", type=int, default=9)
+    ap.add_argument("--cols", type=int, default=9)
+    ap.add_argument("--mines", type=int, default=10)
     ap.add_argument("--max-turns", type=int, default=400)
     ap.add_argument("--out", default=None, help="markdown table (json alongside)")
     ap.add_argument("--install", default=None, help="save the (single) evaluated policy with its reveal margin to this path, e.g. data/compiled/mb_weights.npz")

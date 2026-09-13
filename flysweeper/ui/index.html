@@ -47,6 +47,9 @@
   .panel h2 .status { text-transform:none; letter-spacing:0; color:var(--accent); font:500 11.5px/1.3 var(--mono); overflow:hidden; text-overflow:ellipsis; }
   .panel h2 .who { font-size:14px; letter-spacing:2px; color:var(--ink); }
   .panel h2 .controls { text-transform:none; letter-spacing:0; }
+  .tag { display:inline-block; font:600 10px/1.4 var(--mono); letter-spacing:1.2px; padding:0 6px; border-radius:4px; border:1px solid; margin-left:4px; vertical-align:1px; }
+  .tag.lost { color:var(--red); border-color:rgba(240,100,124,0.4); background:rgba(240,100,124,0.10); }
+  .tag.won { color:var(--accent); border-color:rgba(242,193,92,0.45); background:var(--accent-soft); }
   .box { position:relative; flex:1; min-height:0; min-width:0; overflow:hidden; }
   .box canvas { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); border-radius:8px; background:#07090c; display:block; }
   .boards { display:grid; grid-template-columns:1fr; gap:var(--gap); flex:0 1 auto; min-height:0; }
@@ -207,22 +210,20 @@ const brainC = $('brain'), kctx = brainC.getContext('2d');
 // The (u, v) atlas is x/z each normalised to [0,1]; true proportions of the MaleCNS soma cloud are
 // x-range / z-range = 0.733 (brain on top, nerve cord below), so the unit square is drawn at that aspect.
 const CNS_ASPECT = 0.733;
-const FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, "Segoe UI", sans-serif';
+// ---- shared board drawing (verbatim copy of web/js/boardview.js; keep in sync) ----
+const HIDDEN = -1, FLAG = 9, MINE = 10;
+// classic Minesweeper hues, muted for the dark theme
 const NUM_COLORS = ['', '#6f9bff', '#63b96a', '#e46a7e', '#a985d6', '#d0745f', '#4db8ad', '#c9d1d9', '#8b95a3'];
-let atlas = null, regions = null, palette = null, lastState = null, lastSpikes = null;
-const history = new Map();   // game number -> safe cells revealed (parsed from the server's game-over events)
-const live = { lastStep: -1, lastChange: 0 };
+const FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, "Segoe UI", sans-serif';
+const MONO = '"SF Mono", ui-monospace, "JetBrains Mono", Menlo, monospace';
 
-// ---------------------------------------------------------------- shared visual helpers (same as web/js)
-function harmonise([r, g, b]) {
-  const l = 0.3 * r + 0.59 * g + 0.11 * b, k = 0.78;
-  return [Math.round(l + (r - l) * k), Math.round(l + (g - l) * k), Math.round(l + (b - l) * k)];
-}
+/** Draw one Minesweeper cell as a soft-bevelled tile. Shared look with flysweeper/ui/index.html. */
 function drawTile(ctx, x, y, size, kind, hover = false) {
   const r = Math.max(2, size * 0.14), inset = Math.max(1, size * 0.035);
   const x0 = x + inset, y0 = y + inset, s = size - 2 * inset;
   ctx.beginPath(); ctx.roundRect(x0, y0, s, s, r);
   if (kind === 'hidden' || kind === 'flag') {
+    // raised slate: vertical gradient, light top edge, dark bottom edge
     const g = ctx.createLinearGradient(0, y0, 0, y0 + s);
     g.addColorStop(0, hover ? '#3a4758' : kind === 'flag' ? '#4a3a25' : '#2b3543');
     g.addColorStop(1, hover ? '#2e394a' : kind === 'flag' ? '#3b2d1c' : '#1f2732');
@@ -232,6 +233,7 @@ function drawTile(ctx, x, y, size, kind, hover = false) {
     ctx.strokeStyle = 'rgba(255,255,255,0.10)'; ctx.beginPath(); ctx.moveTo(x0 + r, y0 + 0.5); ctx.lineTo(x0 + s - r, y0 + 0.5); ctx.stroke();
     ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.beginPath(); ctx.moveTo(x0 + r, y0 + s - 0.5); ctx.lineTo(x0 + s - r, y0 + s - 0.5); ctx.stroke();
   } else {
+    // recessed: darker, with a soft inner shadow at the top
     ctx.fillStyle = kind === 'hit' ? '#7a2434' : kind === 'mine' ? '#3a1720' : '#0c1015';
     ctx.fill();
     const g = ctx.createLinearGradient(0, y0, 0, y0 + s * 0.35);
@@ -241,14 +243,185 @@ function drawTile(ctx, x, y, size, kind, hover = false) {
     ctx.beginPath(); ctx.roundRect(x0 + 0.5, y0 + 0.5, s - 1, s - 1, r); ctx.stroke();
   }
 }
-function drawCursor(ctx, x, y, size, dangerous) {
+
+/** Gold cursor ring with a faint outer glow (red when the looming channel is active or the game is lost). */
+function drawCursor(ctx, x, y, size, red) {
   const inset = Math.max(1, size * 0.035) + 1.5, r = Math.max(2, size * 0.14);
   ctx.save();
-  ctx.shadowColor = dangerous ? 'rgba(240,100,124,0.85)' : 'rgba(242,193,92,0.75)';
+  ctx.shadowColor = red ? 'rgba(240,100,124,0.85)' : 'rgba(242,193,92,0.75)';
   ctx.shadowBlur = Math.max(6, size * 0.28);
-  ctx.strokeStyle = dangerous ? '#f0647c' : '#f2c15c'; ctx.lineWidth = Math.max(2, size * 0.055);
+  ctx.strokeStyle = red ? '#f0647c' : '#f2c15c'; ctx.lineWidth = Math.max(2, size * 0.055);
   ctx.beginPath(); ctx.roundRect(x + inset, y + inset, size - 2 * inset, size - 2 * inset, r); ctx.stroke();
   ctx.restore();
+}
+
+/**
+ * End-of-game effect schedule, built once when a board reports `outcome` 'lost' or 'won'.
+ * lost: the hit mine bursts (~600 ms), then the other mines pop into view nearest-first (70 ms apart);
+ * won:  the remaining hidden cells flip to flags (60 ms apart) under a gold border-glow pulse (~1 s).
+ * Progress is time-based so the final frame is static once everything has played.
+ */
+function makeEndFx(kind, visible, rows, cols, origin, now) {
+  const [orow, ocol] = origin || [Math.floor(rows / 2), Math.floor(cols / 2)];
+  const dist = (i) => Math.hypot(Math.floor(i / cols) - orow, (i % cols) - ocol);
+  const cells = new Map();
+  let total;
+  if (kind === 'lost') {
+    const mines = [];
+    for (let i = 0; i < visible.length; i++) if (visible[i] === MINE && !(Math.floor(i / cols) === orow && i % cols === ocol)) mines.push(i);
+    mines.sort((a, b) => dist(a) - dist(b));
+    mines.forEach((i, k) => cells.set(i, { t0: now + 380 + k * 70, dur: 240 }));
+    total = 380 + mines.length * 70 + 240 + 300;
+  } else {
+    const hidden = [];
+    for (let i = 0; i < visible.length; i++) if (visible[i] === HIDDEN) hidden.push(i);
+    hidden.sort((a, b) => dist(a) - dist(b));
+    hidden.forEach((i, k) => cells.set(i, { t0: now + 120 + k * 60, dur: 280 }));
+    total = Math.max(1400, 120 + hidden.length * 60 + 280 + 300);
+  }
+  // deterministic burst particles (seeded from the origin cell)
+  let seed = (orow * 31 + ocol * 17 + 7) >>> 0;
+  const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+  const particles = [];
+  for (let k = 0; k < 14; k++) {
+    const a = (k / 14) * Math.PI * 2 + (rnd() - 0.5) * 0.5;
+    particles.push({ dx: Math.cos(a), dy: Math.sin(a), v: 1.3 + rnd() * 1.4, r: 1.5 + rnd() * 1.5, life: 0.7 + rnd() * 0.3 });
+  }
+  return { kind, t0: now, origin: [orow, ocol], cells, particles, total, tagAt: kind === 'lost' ? 520 : 320 };
+}
+
+const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
+const easeOut = (x) => 1 - (1 - x) * (1 - x) * (1 - x);
+
+/** Small rounded tag in the top-right corner of the board (never covers more than one cell). */
+function drawCornerTag(ctx, W, cell, pad, text, color, alpha) {
+  if (alpha <= 0) return;
+  const fs = Math.max(10, Math.round(cell * 0.24));
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.font = `600 ${fs}px ${MONO}`; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  const tw = ctx.measureText(text).width, ph = fs * 0.55, pv = fs * 0.42, h = fs + 2 * pv, w = tw + 2 * ph + fs * 0.25;
+  const x = W - pad - 4 - w, y = pad + 4;
+  ctx.fillStyle = 'rgba(7,9,12,0.88)'; ctx.beginPath(); ctx.roundRect(x, y, w, h, 6); ctx.fill();
+  ctx.strokeStyle = color; ctx.globalAlpha = alpha * 0.55; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.roundRect(x + 0.5, y + 0.5, w - 1, h - 1, 6); ctx.stroke();
+  ctx.globalAlpha = alpha; ctx.fillStyle = color;
+  ctx.fillText(text, x + w - ph, y + h / 2 + 0.5);
+  ctx.restore();
+}
+
+/**
+ * Draw a whole board. `s`: { visible, cursor, dangerous, mineHit, safeStart, dim, banner, bannerColor,
+ * outcome ('lost'|'won'|null), hover } ; `fx` is the schedule from makeEndFx (or null). Returns true
+ * while an animation is still running (the caller should redraw on the next frame).
+ */
+function renderBoard(ctx, W, H, rows, cols, s, fx, eyeSplit, now) {
+  const cell = Math.floor(W / cols), pad = Math.floor((W - cell * cols) / 2);
+  ctx.fillStyle = '#07090c'; ctx.fillRect(0, 0, W, H);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const symbol = (ch, color, x, y, scale = 1, sizeK = 0.46) => {
+    ctx.fillStyle = color; ctx.font = `${Math.floor(cell * sizeK)}px sans-serif`;
+    if (scale === 1) { ctx.fillText(ch, x + cell / 2, y + cell / 2 + 1); return; }
+    ctx.save(); ctx.translate(x + cell / 2, y + cell / 2 + 1); ctx.scale(scale, scale); ctx.fillText(ch, 0, 0); ctx.restore();
+  };
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+    const i = r * cols + c, v = s.visible[i], x = pad + c * cell, y = pad + r * cell;
+    const hit = s.mineHit && s.mineHit[0] === r && s.mineHit[1] === c;
+    const hover = v === HIDDEN && s.hover && s.hover[0] === r && s.hover[1] === c && !s.outcome;
+    const cf = fx && fx.cells.get(i);
+    if (cf) {
+      const p = clamp01((now - cf.t0) / cf.dur);
+      if (fx.kind === 'lost') {
+        // a mine popping into view: hidden tile until its time, then the mine scales in with a little overshoot
+        if (p <= 0) { drawTile(ctx, x, y, cell, 'hidden'); continue; }
+        drawTile(ctx, x, y, cell, 'mine');
+        const sc = p < 0.6 ? 0.25 + 0.95 * easeOut(p / 0.6) : 1.2 - 0.2 * ((p - 0.6) / 0.4);
+        symbol('✸', '#f0647c', x, y, sc);
+        continue;
+      }
+      // a hidden cell flipping to a flag (vertical flip, swap at the midpoint)
+      const sy = Math.max(0.06, Math.abs(Math.cos(p * Math.PI)));
+      const kind = p < 0.5 ? 'hidden' : 'flag';
+      ctx.save(); ctx.translate(0, y + cell / 2); ctx.scale(1, sy); ctx.translate(0, -(y + cell / 2));
+      drawTile(ctx, x, y, cell, kind);
+      if (kind === 'flag') symbol('⚑', '#f2c15c', x, y, 1, 0.42);
+      ctx.restore();
+      continue;
+    }
+    drawTile(ctx, x, y, cell, hit ? 'hit' : v === HIDDEN ? 'hidden' : v === FLAG ? 'flag' : v === MINE ? 'mine' : 'open', hover);
+    if (v >= 1 && v <= 8) { ctx.fillStyle = NUM_COLORS[v]; ctx.font = `600 ${Math.floor(cell * 0.46)}px ${FONT}`; ctx.fillText(String(v), x + cell / 2, y + cell / 2 + 1); }
+    if (v === FLAG) symbol('⚑', '#f2c15c', x, y, 1, 0.42);
+    if (v === MINE) symbol('✸', hit ? '#fff' : '#f0647c', x, y);
+  }
+  if (s.safeStart) {
+    const [r, c] = s.safeStart;
+    ctx.fillStyle = 'rgba(242,193,92,0.55)';
+    ctx.beginPath(); ctx.arc(pad + c * cell + cell / 2, pad + r * cell + cell / 2, Math.max(2, cell * 0.08), 0, Math.PI * 2); ctx.fill();
+  }
+  if (eyeSplit) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.09)'; ctx.lineWidth = 1; ctx.setLineDash([1.5, 5]);
+    ctx.beginPath(); ctx.moveTo(W / 2, pad + 4); ctx.lineTo(W / 2, pad + cell * rows - 4); ctx.stroke(); ctx.setLineDash([]);
+  }
+  if (s.cursor) {
+    const [cr, cc] = s.cursor;
+    drawCursor(ctx, pad + cc * cell, pad + cr * cell, cell, !!s.dangerous || s.outcome === 'lost');
+  }
+  let animating = false;
+  if (fx) {
+    const t = now - fx.t0;
+    animating = t < fx.total;
+    const [orow, ocol] = fx.origin, cx = pad + ocol * cell + cell / 2, cy = pad + orow * cell + cell / 2;
+    if (fx.kind === 'lost') {
+      // burst: a flash, three expanding rings and a handful of particles, ~600 ms
+      const e = clamp01(t / 600);
+      if (e < 1) {
+        ctx.save();
+        const flash = ctx.createRadialGradient(cx, cy, 0, cx, cy, cell * 1.6);
+        flash.addColorStop(0, `rgba(255,120,140,${0.55 * (1 - e) * (1 - e)})`); flash.addColorStop(1, 'rgba(255,120,140,0)');
+        ctx.fillStyle = flash; ctx.fillRect(cx - cell * 1.6, cy - cell * 1.6, cell * 3.2, cell * 3.2);
+        for (let k = 0; k < 3; k++) {
+          const ek = clamp01((e - k * 0.14) / (1 - k * 0.14));
+          if (ek <= 0) continue;
+          ctx.strokeStyle = `rgba(240,100,124,${0.85 * (1 - ek)})`; ctx.lineWidth = Math.max(1, cell * 0.06 * (1 - ek) + 1);
+          ctx.beginPath(); ctx.arc(cx, cy, cell * (0.25 + 2.1 * easeOut(ek)), 0, Math.PI * 2); ctx.stroke();
+        }
+        for (const p of fx.particles) {
+          const ep = clamp01(e / p.life);
+          if (ep >= 1) continue;
+          const d = cell * p.v * easeOut(ep);
+          ctx.fillStyle = `rgba(255,${Math.round(150 + 60 * (1 - ep))},120,${0.9 * (1 - ep)})`;
+          ctx.beginPath(); ctx.arc(cx + p.dx * d, cy + p.dy * d + 0.6 * cell * ep * ep, Math.max(0.8, p.r * (1 - ep * 0.6) * cell / 40), 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.restore();
+      }
+    } else {
+      // gold glow pulse along the board border, fading out over ~1.4 s
+      const g = t / 1000;
+      if (g < 1.6) {
+        const a = Math.max(0, 0.95 * Math.exp(-g * 1.4) * (0.55 + 0.45 * Math.sin(g * Math.PI * 3.5)));
+        ctx.save();
+        ctx.shadowColor = `rgba(242,193,92,${a})`; ctx.shadowBlur = Math.max(14, cell * 0.6);
+        ctx.strokeStyle = `rgba(242,193,92,${a * 0.9})`; ctx.lineWidth = Math.max(2, cell * 0.05);
+        ctx.beginPath(); ctx.roundRect(pad + 1.5, pad + 1.5, cell * cols - 3, cell * rows - 3, 8); ctx.stroke();
+        ctx.restore();
+      }
+    }
+    const tagA = clamp01((t - fx.tagAt) / 250);
+    drawCornerTag(ctx, W, cell, pad, fx.kind === 'lost' ? 'LOST' : 'WON', fx.kind === 'lost' ? '#f0647c' : '#f2c15c', tagA);
+  }
+  if (s.dim) { ctx.fillStyle = 'rgba(7,9,12,0.5)'; ctx.fillRect(0, 0, W, H); }
+  if (s.banner) drawCornerTag(ctx, W, cell, pad, s.banner, s.bannerColor || '#8b95a3', 1);
+  return animating;
+}
+
+let atlas = null, regions = null, palette = null, lastState = null, lastSpikes = null;
+const history = new Map();   // game number -> safe cells revealed (parsed from the server's game-over events)
+const live = { lastStep: -1, lastChange: 0 };
+
+// ---------------------------------------------------------------- shared visual helpers (same as web/js)
+function harmonise([r, g, b]) {
+  const l = 0.3 * r + 0.59 * g + 0.11 * b, k = 0.78;
+  return [Math.round(l + (r - l) * k), Math.round(l + (g - l) * k), Math.round(l + (b - l) * k)];
 }
 function drawSparkline(canvas, values, total, labelEl) {
   const dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -350,22 +523,26 @@ function drawBrain(spikes) {
 }
 
 // ---------------------------------------------------------------- board
+let boardFx = null, boardAnimating = false;
 function drawBoard(s) {
-  const rows = s.rows, cols = s.cols, W = boardC.width, H = boardC.height, cell = Math.floor(W / cols), pad = Math.floor((W - cell * cols) / 2);
-  bctx.fillStyle = '#07090c'; bctx.fillRect(0, 0, W, H);
-  bctx.textAlign = 'center'; bctx.textBaseline = 'middle';
-  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
-    const v = s.board ? s.board[r][c] : -1, x = pad + c * cell, y = pad + r * cell;
-    drawTile(bctx, x, y, cell, v === -1 ? 'hidden' : v === 9 ? 'flag' : v === 10 ? 'mine' : 'open');
-    if (v >= 1 && v <= 8) { bctx.fillStyle = NUM_COLORS[v]; bctx.font = `600 ${Math.floor(cell * 0.46)}px ${FONT}`; bctx.fillText(v, x + cell / 2, y + cell / 2 + 1); }
-    if (v === 9) { bctx.fillStyle = '#f2c15c'; bctx.font = `${Math.floor(cell * 0.42)}px sans-serif`; bctx.fillText('⚑', x + cell / 2, y + cell / 2 + 1); }
-    if (v === 10) { bctx.fillStyle = '#f0647c'; bctx.font = `${Math.floor(cell * 0.46)}px sans-serif`; bctx.fillText('✸', x + cell / 2, y + cell / 2 + 1); }
-  }
-  bctx.strokeStyle = 'rgba(255,255,255,0.09)'; bctx.lineWidth = 1; bctx.setLineDash([1.5, 5]);   // eye split
-  bctx.beginPath(); bctx.moveTo(W / 2, pad + 4); bctx.lineTo(W / 2, pad + cell * rows - 4); bctx.stroke(); bctx.setLineDash([]);
-  const [cr, cc] = s.cursor;
-  drawCursor(bctx, pad + cc * cell, pad + cr * cell, cell, s.danger >= (s.encoder.loom_threshold || 2));
+  const over = s.game.over, outcome = over ? (s.game.won ? 'won' : 'lost') : null;
+  const visible = Int8Array.from(s.board.flat());
+  const now = performance.now();
+  if (outcome) {
+    if (!boardFx || boardFx.gameId !== s.game.seed || boardFx.kind !== outcome) {
+      // on a loss the cursor is still on the mine that was revealed
+      boardFx = makeEndFx(outcome, visible, s.rows, s.cols, s.cursor, now);
+      boardFx.gameId = s.game.seed;
+    }
+  } else boardFx = null;
+  const st = { visible, cursor: s.cursor, dangerous: s.danger >= (s.encoder.loom_threshold || 2), mineHit: outcome === 'lost' ? s.cursor : null, outcome, gameId: s.game.seed };
+  boardAnimating = renderBoard(bctx, boardC.width, boardC.height, s.rows, s.cols, st, boardFx, true, now);
 }
+function animateBoard() {
+  requestAnimationFrame(animateBoard);
+  if (boardAnimating && lastState) drawBoard(lastState);   // smooth end-of-game animation between polls
+}
+animateBoard();
 
 // ---------------------------------------------------------------- pools + plasticity chip
 function drawPools(s) {
@@ -409,7 +586,7 @@ async function tick() {
     $('cond-chip').textContent = s.condition;
     $('subtitle').textContent = `MaleCNS v1.0 · ${s.sim.neurons.toLocaleString()} neurons · ${s.sim.edges.toLocaleString()} connections${s.sim.sensory_input ? '' : ' · synapses onto sensory cells silenced'} · numba on CPU`;
     drawBoard(s); drawPools(s); drawBrain(new Uint8Array(spikesBuf));
-    $('game-title').textContent = `${s.condition} · game ${s.game.number} · seed ${s.game.seed ?? '–'}${s.game.over ? (s.game.won ? ' · won' : ' · lost') : ''}`;
+    $('game-title').innerHTML = `${esc(s.condition)} · game ${s.game.over ? s.totals.games : s.game.number} · seed ${s.game.seed ?? '–'}` + (s.game.over ? ` <span class="tag ${s.game.won ? 'won' : 'lost'}">${s.game.won ? 'WON' : 'LOST'}</span>` : '');
     $('last-action').textContent = s.last_action ?? '–';
     $('danger').textContent = s.danger; $('danger-kv').className = 'kv' + (s.danger >= s.encoder.loom_threshold ? ' danger' : '');
     $('turn').textContent = s.game.moves;

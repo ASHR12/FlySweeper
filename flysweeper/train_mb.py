@@ -90,6 +90,14 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--sup-mode", default="error", choices=["error", "teacher"], help="supervised rule (see MBParams)")
     ap.add_argument("--reveal-penalty", type=float, default=3.0)
     ap.add_argument("--w-min-ratio", type=float, default=0.0)
+    # round 3
+    ap.add_argument("--reward-scheme", default="r1", choices=["r1", "r3"], help="RL-phase rewards (see MBPolicy.game_reward)")
+    ap.add_argument("--mask-reveal", action="store_true", help="decoder engineering: mask impossible reveals at the MBON readout")
+    ap.add_argument("--epsilon", type=float, default=0.0, help="epsilon-greedy over valid actions (sets temperature 0); annealed to --epsilon-min")
+    ap.add_argument("--epsilon-min", type=float, default=0.02)
+    ap.add_argument("--odor-level", type=int, default=None, help="extra_orn level (0/1/2); overrides the level stored in --init")
+    ap.add_argument("--sup-move-weight", type=float, default=1.0, help="supervised: scale of move-vs-move corrections")
+    ap.add_argument("--reveal-margin", type=float, default=0.0, help="decoder reveal margin during training (RL phase should match evaluation)")
     ap.add_argument("--kc-kc-gain", type=float, default=0.0)
     ap.add_argument("--w-max-ratio", type=float, default=5.0)
     ap.add_argument("--turn-steps", type=int, default=15)
@@ -105,13 +113,26 @@ def main(argv: list[str] | None = None) -> int:
                    kc_bias=args.kc_bias, kc_kc_gain=args.kc_kc_gain, w_max_ratio=args.w_max_ratio,
                    pn_bias=args.pn_bias, pn_kc_gain=args.pn_kc_gain, centered=not args.raw_eligibility,
                    center_scores=not args.raw_scores, action_mbons=GROUP_POOLS if args.pools == "groups" else SINGLE_POOLS,
-                   extra_orn=not args.no_extra_orn, sup_mode=args.sup_mode, reveal_penalty=args.reveal_penalty,
-                   w_min_ratio=args.w_min_ratio)
+                   extra_orn=(0 if args.no_extra_orn else (args.odor_level if args.odor_level is not None else 1)),
+                   sup_mode=args.sup_mode, reveal_penalty=args.reveal_penalty, w_min_ratio=args.w_min_ratio,
+                   reward_scheme=args.reward_scheme, mask_reveal=args.mask_reveal, epsilon=args.epsilon,
+                   sup_move_weight=args.sup_move_weight, reveal_margin=args.reveal_margin)
+    if args.epsilon > 0:
+        mbp.temperature = args.temperature = args.temperature_min = 0.0
     brain = Brain()
     player = FlyPlayer(brain, cfg, Params.preset("flyai"), EncoderParams(route="lamina"), DecoderParams(), seed=args.seed0,
                        mb_params=mbp, mb_weights_path=args.init)
     mb = player.enable_mb(load=args.init is not None)
     mb.learning = True
+    if args.init is not None:                 # the file restores its decision-side settings; training settings win here
+        for k in ("reward_scheme", "mask_reveal", "epsilon", "sup_move_weight", "sup_mode", "reveal_penalty", "eta",
+                  "other_credit", "trace_decay", "w_min_ratio", "w_max_ratio", "reveal_margin"):
+            setattr(mb.p, k, getattr(mbp, k))
+        if args.odor_level is not None and int(args.odor_level) != int(mb.p.extra_orn):
+            mb.set_odor_level(args.odor_level)
+        print(f"[train_mb] continuing from {args.init}: extra_orn {mb.p.extra_orn}, reward {mb.p.reward_scheme}, mask_reveal {mb.p.mask_reveal}, "
+              f"epsilon {mb.p.epsilon}, margin {mb.p.reveal_margin}, eta {mb.p.eta}, trace_decay {mb.p.trace_decay}")
+    epsilon0 = args.epsilon
     mb.shuffle_reward = args.shuffle_reward
     mb.shuffle_rng = np.random.default_rng(args.seed0 + 7)
     mb.meta = {"trained_on": {"seed0": args.seed0, "games": args.games}, "args": vars(args) | {"out": str(out)},
@@ -128,6 +149,8 @@ def main(argv: list[str] | None = None) -> int:
         seed = args.seed0 + i
         frac = min(1.0, i / max(1, args.anneal_games))
         mb.p.temperature = args.temperature + frac * (args.temperature_min - args.temperature)
+        if epsilon0 > 0:
+            mb.p.epsilon = epsilon0 + frac * (args.epsilon_min - epsilon0)
         warm = i < args.warmstart_games
         player.teacher_act = teacher.act if warm else None
         act = None
@@ -151,6 +174,7 @@ def main(argv: list[str] | None = None) -> int:
             "supervised": pl.get("game", {}).get("supervised", 0), "abs_delta": round(pl.get("game", {}).get("abs_delta", 0.0), 5),
             "edges_changed": pl.get("game", {}).get("edges_changed", 0), "mean_weight_ratio": round(pl.get("mean_weight_ratio", 1.0), 4),
             "pool_ratio": pl.get("pool_ratio"), "baseline": round(pl.get("baseline", 0.0), 4), "temperature": round(mb.p.temperature, 3),
+            "epsilon": round(mb.p.epsilon, 3),
             "warmstart": warm, "teacher_agreement": round(agree["same"] / max(1, agree["n"]), 3), "seconds": rec.seconds,
         }
         games.append(row)

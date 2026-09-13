@@ -51,7 +51,7 @@ from pathlib import Path
 import numpy as np
 
 from .brain import Brain
-from .oracle import ACTIONS, CHANNELS, N_CHANNELS, Oracle, OracleParams
+from .oracle import ACTIONS, CH, CHANNELS, N_CHANNELS, Oracle, OracleParams
 from .paths import COMPILED
 from .sim import LIF
 
@@ -73,6 +73,11 @@ EXTRA_ORN_TYPES = {
     "cursor_frontier": ("ORN_DC1", "ORN_DM4"), "cursor_free": ("ORN_VC2", "ORN_DP1m"),
     "guess_here": ("ORN_VC5",), "no_safe_known": ("ORN_VA3",),
 }
+# Round 3 (extra_orn level 2): the eight direction channels get a second ORN type each as well.
+EXTRA_ORN_TYPES_L2 = {
+    "safe_up": ("ORN_VC1",), "safe_down": ("ORN_VA7l",), "safe_left": ("ORN_D",), "safe_right": ("ORN_VM7v",),
+    "guess_up": ("ORN_VM6m",), "guess_down": ("ORN_VA7m",), "guess_left": ("ORN_DL2v",), "guess_right": ("ORN_DC4",),
+}
 
 # Round 1 pools: one MBON type per action.
 SINGLE_POOLS = (("up", ("MBON01",)), ("down", ("MBON05",)), ("left", ("MBON06",)),
@@ -93,7 +98,8 @@ GROUP_POOLS = (
 class MBParams:
     # action -> MBON types (both hemispheres; chosen for large KC in-degree, see --probe)
     action_mbons: tuple = GROUP_POOLS
-    extra_orn: bool = True         # give the safety channels a second ORN type (EXTRA_ORN_TYPES)
+    extra_orn: int = 1             # 0: one ORN type per channel; 1: safety channels get extra types
+                                   # (EXTRA_ORN_TYPES); 2: direction channels too (EXTRA_ORN_TYPES_L2)
     odor_amp: float = 1.0          # ORN current per step at channel value 1 (saturates ORNs at 50 Hz)
     kc_kc_gain: float = 0.0
     kc_bias: float = -0.20
@@ -108,6 +114,15 @@ class MBParams:
     reveal_penalty: float = 3.0    # extra debit when the fly chose "reveal" and the teacher did not
     reveal_margin: float = 0.0     # decoder engineering: reveal only if it beats the runner-up by this
                                    # (in centred spikes/cell); otherwise take the runner-up. Argmax mode only.
+    mask_reveal: bool = False      # decoder engineering (round 3): "reveal" is not selectable when the
+                                   # cursor cell is already revealed or provably a mine (greedy + exploration)
+    epsilon: float = 0.0           # round 3 exploration: with prob epsilon pick uniformly among VALID actions
+                                   # (used when temperature == 0)
+    sup_move_weight: float = 1.0   # supervised: scale of the update when a move was confused with another move
+    reward_scheme: str = "r1"      # "r1": round-1 rewards (r_safe per cell capped); "r3": see game_reward
+    r_progress: float = 0.3        # r3: per successful reveal decision on a provably-safe cell or a forced guess
+    r_guess: float = -0.3          # r3: unproven reveal while a provably-safe cell exists (even if it succeeds)
+    r_wasted: float = -0.1         # r3: hold, no-op reveal, move into a wall
     trace_decay: float = 0.5       # per-turn eligibility decay
     baseline_alpha: float = 0.05   # running-mean reward
     centered: bool = True          # eligibility uses (KC count - KC running mean): the shared component
@@ -128,9 +143,11 @@ class MBParams:
 class OdorEncoder:
     """Channel k of the helper's vector drives every cell of ORN type k with current amp * value."""
 
-    def __init__(self, brain: Brain, amp: float, extra: bool = True):
+    def __init__(self, brain: Brain, amp: float, extra: int = 1):
         self.amp = amp
-        self.types = [(t,) + (EXTRA_ORN_TYPES.get(name, ()) if extra else ()) for name, t in zip(CHANNELS, ORN_TYPES)]
+        extra = int(extra)
+        self.types = [(t,) + (EXTRA_ORN_TYPES.get(name, ()) if extra >= 1 else ())
+                      + (EXTRA_ORN_TYPES_L2.get(name, ()) if extra >= 2 else ()) for name, t in zip(CHANNELS, ORN_TYPES)]
         self.cells = [np.concatenate([brain.cells(types=t) for t in ts]) for ts in self.types]
         self.sizes = np.array([len(c) for c in self.cells])
         self.all_idx = np.concatenate(self.cells)
@@ -299,10 +316,19 @@ class MBPolicy:
         else:
             scores = raw
         self.last_scores = scores
+        k_rev = self.actions.index("reveal")
+        valid = np.ones(len(self.actions), dtype=bool)
+        if self.p.mask_reveal and (self.features[CH["cursor_revealed"]] > 0 or self.features[CH["cursor_mine"]] > 0):
+            valid[k_rev] = False                        # decoder engineering: impossible / suicidal reveal masked
+        scores = np.where(valid, scores, -np.inf).astype(np.float32)
         T = self.p.temperature
         if T <= 0:
+            if self.p.epsilon > 0 and rng.random() < self.p.epsilon:
+                cand = np.flatnonzero(valid)
+                self.last_probs = np.zeros(len(self.actions), dtype=np.float32)
+                self.last_probs[cand] = 1 / len(cand)
+                return self.actions[int(rng.choice(cand))]
             order = np.argsort(-scores, kind="stable")
-            k_rev = self.actions.index("reveal")
             dropped = False
             if self.p.reveal_margin > 0 and order[0] == k_rev and scores[k_rev] - scores[order[1]] < self.p.reveal_margin:
                 order, dropped = order[1:], True        # decoder engineering: not confident enough to reveal
@@ -321,6 +347,8 @@ class MBPolicy:
     # ------------------------------------------------------------------ learning
     def game_reward(self, action: str, result: str, newly: int, moved: bool, won: bool) -> float:
         p = self.p
+        if p.reward_scheme == "r3":
+            return self._game_reward_r3(action, result, moved, won)
         if action == "reveal":
             if result == "mine":
                 r = p.r_mine
@@ -330,6 +358,32 @@ class MBPolicy:
                 r = min(p.r_cap, p.r_safe * newly)
         elif action in ("up", "down", "left", "right"):
             r = 0.0 if moved else p.r_noop
+        else:
+            r = 0.0
+        if won:
+            r += p.r_win
+        return float(r)
+
+    def _game_reward_r3(self, action: str, result: str, moved: bool, won: bool) -> float:
+        """Round-3 rewards (docs/rl_references.md): +r_progress per successful reveal *decision* on a
+        provably-safe cell or a forced guess (no provable move anywhere); r_guess for an unproven
+        reveal while a provably-safe cell exists, even if it succeeds; r_mine; r_wasted for hold /
+        no-op reveal / move into a wall; r_win on a win.  Uses the helper's facts for this turn."""
+        p = self.p
+        f = self.features
+        if action == "reveal":
+            if result == "mine":
+                r = p.r_mine
+            elif result == "noop":
+                r = p.r_wasted
+            elif f[CH["cursor_safe"]] > 0 or f[CH["no_safe_known"]] > 0 or f[CH["untouched"]] > 0:
+                r = p.r_progress
+            else:
+                r = p.r_guess
+        elif action in ("up", "down", "left", "right"):
+            r = 0.0 if moved else p.r_wasted
+        elif action == "hold":
+            r = p.r_wasted
         else:
             r = 0.0
         if won:
@@ -399,6 +453,9 @@ class MBPolicy:
                 return
             debit = self.p.reveal_penalty if kc == k_rev else 1.0
             credit = np.where(self.edge_pool == kt, 1.0, np.where(self.edge_pool == kc, -debit, 0.0)).astype(np.float32)
+            moves = ("up", "down", "left", "right")
+            if teacher_action in moves and chosen_action in moves:
+                credit *= self.p.sup_move_weight
         self.pending.append((self.p.dopamine_steps, 1.0))
         self.game_log["supervised"] += 1
         self._apply(1.0, act * credit, "teacher")
@@ -452,8 +509,8 @@ class MBPolicy:
         p = MBParams(**asdict(override)) if override is not None else MBParams()
         if "action_mbons" in saved:
             p.action_mbons = tuple((a, tuple(t) if not isinstance(t, str) else (t,)) for a, t in saved["action_mbons"])
-        p.extra_orn = bool(saved.get("extra_orn", False))
-        for k in ("kc_kc_gain", "kc_bias", "pn_kc_gain", "pn_bias", "odor_amp", "center_scores", "score_mean_alpha", "reveal_margin"):
+        p.extra_orn = int(saved.get("extra_orn", 0))
+        for k in ("kc_kc_gain", "kc_bias", "pn_kc_gain", "pn_bias", "odor_amp", "center_scores", "score_mean_alpha", "reveal_margin", "mask_reveal"):
             if k in saved:
                 setattr(p, k, saved[k])
         if saved and "center_scores" not in saved:
@@ -479,15 +536,23 @@ class MBPolicy:
         self.meta = json.loads(str(z["meta"])) if "meta" in z else {}
         saved = json.loads(str(z["params"])) if "params" in z else {}
         # the decision-side settings the weights were trained under travel with the weights
-        for k in ("center_scores", "score_mean_alpha", "kc_kc_gain", "kc_bias", "pn_kc_gain", "pn_bias", "odor_amp", "reveal_margin"):
+        for k in ("center_scores", "score_mean_alpha", "kc_kc_gain", "kc_bias", "pn_kc_gain", "pn_bias", "odor_amp", "reveal_margin", "mask_reveal"):
             if k in saved:
                 setattr(self.p, k, saved[k])
+        if saved and int(saved.get("extra_orn", 0)) != int(self.p.extra_orn):
+            self.p.extra_orn = int(saved["extra_orn"])
+            self.odor = OdorEncoder(self.brain, self.p.odor_amp, self.p.extra_orn)
         if saved and "center_scores" not in saved:
             self.p.center_scores = False      # older files were trained on raw pool counts
         if "score_mean" in z and self.p.center_scores:
             self.score_mean[:] = z["score_mean"]
             self.score_mean_ready = True
         return self.meta
+
+    def set_odor_level(self, level: int) -> None:
+        """Change the channel -> ORN-type mapping (extra_orn level); the plastic edge set is unchanged."""
+        self.p.extra_orn = int(level)
+        self.odor = OdorEncoder(self.brain, self.p.odor_amp, self.p.extra_orn)
 
     def describe(self) -> dict:
         return {
