@@ -49,6 +49,8 @@ export class BrainMap {
     if (fw > W * (1 - 2 * m)) { fw = W * (1 - 2 * m); fh = fw / CNS_ASPECT; }
     const ox = (W - fw) / 2, oy = (H - fh) / 2;
     this.frame = { ox, oy, fw, fh };
+    // glow gain falls with point density so a small frame does not saturate to white
+    this.gain = Math.min(1, Math.max(0.3, (fw * fh) / (this.n * 2.4)));
     this.owner = new Int32Array(W * H).fill(-1);
     for (let i = 0; i < this.n; i++) {
       const x = Math.min(W - 2, Math.max(1, Math.round(ox + uv[2 * i] * fw)));
@@ -81,15 +83,15 @@ export class BrainMap {
     this.lastAct = act;
     const W = this.canvas.width, d = this.img.data;
     d.set(this.dust);
-    const pal = this.palette, region = this.region, pix = this.pix, W4 = W * 4;
+    const pal = this.palette, region = this.region, pix = this.pix, W4 = W * 4, gain = this.gain;
     for (let i = 0; i < this.n; i++) {
       const a = act[i];
       if (a < 6) continue;
-      const p = pix[i] * 4, c = pal[region[i]], k = a / 255;
-      // soft 3x3 additive glow: centre full, edges 45%, corners 18% (Uint8ClampedArray clamps for us)
-      const r = c[0] * k, g = c[1] * k, b = c[2] * k;
-      d[p] += r * 1.1 + 40 * k; d[p + 1] += g * 1.1 + 40 * k; d[p + 2] += b * 1.1 + 40 * k;
-      const r1 = r * 0.45, g1 = g * 0.45, b1 = b * 0.45, r2 = r * 0.18, g2 = g * 0.18, b2 = b * 0.18;
+      const p = pix[i] * 4, c = pal[region[i]], k = (a / 255) * gain;
+      // soft 3x3 additive glow: centre full, edges 40%, corners 15% (Uint8ClampedArray clamps for us)
+      const r = c[0] * k, g = c[1] * k, b = c[2] * k, w = 30 * k;
+      d[p] += r + w; d[p + 1] += g + w; d[p + 2] += b + w;
+      const r1 = r * 0.4, g1 = g * 0.4, b1 = b * 0.4, r2 = r * 0.15, g2 = g * 0.15, b2 = b * 0.15;
       let q = p - 4; d[q] += r1; d[q + 1] += g1; d[q + 2] += b1;
       q = p + 4; d[q] += r1; d[q + 1] += g1; d[q + 2] += b1;
       q = p - W4; d[q] += r1; d[q + 1] += g1; d[q + 2] += b1;

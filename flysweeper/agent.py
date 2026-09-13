@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field, asdict
+from pathlib import Path
 
 import numpy as np
 
@@ -65,6 +66,25 @@ class GameRecord:
     plasticity: dict | None = None
     action_trace: list[str] = field(default_factory=list)
     overrides: int = 0            # turns where an `act` callback replaced the brain's decision
+
+
+class MBStatsHook:
+    """Stands in for `player.plasticity` while fly-mb plays, so anything that reads
+    `player.plasticity.summary()` (the spectator's /state) sees the MB policy's weight stats.
+    It never learns: attach/detach/observe/dopamine are no-ops and `attached` is False."""
+
+    attached = False
+
+    def __init__(self, mb: MBPolicy):
+        self.mb = mb
+
+    def summary(self) -> dict:
+        return self.mb.summary()
+
+    def attach(self) -> None: ...
+    def detach(self) -> None: ...
+    def observe(self, fired) -> None: ...
+    def dopamine(self, *a, **k) -> None: ...
 
 
 class FlyPlayer:
@@ -148,17 +168,34 @@ class FlyPlayer:
         return self.readout
 
     def enable_mb(self, load: bool = True) -> MBPolicy:
-        """Build the mushroom-body policy; load trained KC->MBON weights if a file exists."""
+        """Build the mushroom-body policy; load trained KC->MBON weights if a file exists.
+
+        A loaded policy plays with exploration OFF (argmax + the file's reveal margin) and learning
+        off, exactly as validate.py evaluates it; train_mb.py re-enables both explicitly."""
         if self.mb is None:
             path = self.mb_weights_path or (DEFAULT_WEIGHTS if DEFAULT_WEIGHTS.exists() else None)
             if load and path is not None:
                 # pools / odor mapping / KC changes come from the file so the edge set matches
+                path = str(Path(path).resolve())
                 self.mb = MBPolicy.from_file(self.brain, self.sim, path, self.mb_params)
-                self.mb.loaded_from = str(path)
+                self.mb.loaded_from = path
+                self.mb.learning = False
+                self.mb.p.temperature = 0.0
+                p = self.mb.p
+                print(f"[fly-mb] weights {path}: {len(self.mb.edge_pos)} plastic KC->MBON edges, "
+                      f"{self.mb.games_trained} games trained; pools "
+                      + ", ".join(f"{a}={len(self.mb.pool_idx[a])} cells" for a in self.mb.actions)
+                      + f"; KC settings kc_kc_gain {p.kc_kc_gain} kc_bias {p.kc_bias} pn_bias {p.pn_bias} "
+                      f"pn_kc_gain {p.pn_kc_gain}; decision argmax (temperature {p.temperature}), "
+                      f"reveal margin {p.reveal_margin}, centred scores {p.center_scores}", flush=True)
             else:
                 self.mb = MBPolicy(self.brain, self.sim, self.mb_params)
                 self.mb.loaded_from = None
         return self.mb
+
+    @property
+    def mb_summary(self) -> dict | None:
+        return self.mb.summary() if self.mb is not None else None
 
     @property
     def learning_active(self) -> bool:
@@ -230,6 +267,8 @@ class FlyPlayer:
         self.condition = condition
         blind = condition == "fly-blind"
         learning = condition == "fly-learning"
+        if isinstance(self.plasticity, MBStatsHook) and condition != "fly-mb":
+            self.plasticity = None            # the hook only stands in while fly-mb is playing
         if learning:
             self.enable_learning()
             self.plasticity.attach()
@@ -243,6 +282,8 @@ class FlyPlayer:
             self.mb.attach()                  # learned KC->MBON weights + documented KC sparsening
             self.mb_active = True
             self.decoder = self.mb
+            if self.plasticity is None:       # lets server.py's state() report the MB weight stats
+                self.plasticity = MBStatsHook(self.mb)
         elif self.mb is not None:
             self.mb.detach()                  # every other condition runs on the frozen wiring
         try:

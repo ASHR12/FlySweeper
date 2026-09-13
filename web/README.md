@@ -41,10 +41,12 @@ URL parameters: `?speed=0.5|1|4|0` (0 = as fast as the GPU allows), `?seed=1000`
 
 The page is laid out to fit one screen without scrolling (a `100vh` CSS grid: one-line header,
 three columns, one-line honesty label; the canvases are fitted to their grid cells by a
-`ResizeObserver`, the brain map keeps its 12:7 aspect ratio, the board is square and never below
-300 px). Left column (≤ 32 vw): the fly's board with its action/turn line and the one-line scoreboard
-directly under it; centre: the brain map (largest), legend, one stats strip with the pace buttons;
-right column (240 px): pool bars on top, the log (last 12 entries, scrolling inside its box) below.
+`ResizeObserver`; the board is square and never below 300 px). Left column (≤ 38 vw): the fly's
+board with its action/danger/turn line, four stat tiles and a sparkline directly under it; centre: the
+brain map (largest), legend, one stats strip with the pace buttons; right column (240 px): pool bars
+on top, the log (last 12 entries, newest first, scrolling inside its box) below. The look is shared
+with the Python spectator page (`flysweeper/ui/index.html`): the `<style>` blocks of the two files
+are identical, and the board/brain drawing code is the same (kept in sync by hand).
 Verified with no vertical or horizontal scroll at 1440×760, 1512×870, 1728×1000, 1280×680, 1512×982
 and 1728×1117 (a Chrome window on a 14"/16" MacBook Pro loses ~110 px to browser chrome). The "?"
 markers hold the longer explanations (pool anatomy; anatomy vs. engineered; console commands).
@@ -64,8 +66,10 @@ markers hold the longer explanations (pool anatomy; anatomy vs. engineered; cons
   the log says so). If the fly has already finished its game when you click, only your board changes,
   so the fly's recorded result stays honest. The small gold dot marks the fly's start cell, whose 3×3
   neighbourhood is mine-free (a hint, not the only safe start). The timer starts at your first click.
-* **Scoreboard**: safe cells revealed on the current board, finished games (wins), mean safe cells per
-  finished game, the last result, and *abandoned* games, for both players. The fly wins by revealing
+* **Stat tiles**: safe cells revealed on the current board, finished games (wins) with the number of
+  *abandoned* games underneath, mean safe cells per finished game, and the last result; the sparkline
+  under them is safe cells per finished game over the last 50 games (dotted line = their mean),
+  tracked client-side. With `?human=1` a YOU scoreline with the same figures appears below. The fly wins by revealing
   all 71 safe cells, loses on a mine, or times out after 400 turns. A new shared board starts 3 s
   after the fly finishes if your board is finished or untouched; if you are mid-game the fly waits for
   you (its brain keeps running on a blank screen). **new game** forces a fresh board at the fly's next
@@ -74,10 +78,16 @@ markers hold the longer explanations (pool anatomy; anatomy vs. engineered; cons
   the fly's cursor to the centre, its turn counter, the encoder's previous-luminance memory, the
   decision-window display (the GPU pool counters are cleared at the start of the first turn) and your
   timer and flags; the decoder's running baseline persists across games, as in the Python agent.
-* **Pools → buttons**: per-cell spike rate of each pool this turn above its running baseline; gold is
-  the action taken. `base` is the running EMA baseline in Hz.
-* **Whole nervous system**: 139,662 somas (every neuron with a soma position), coloured by region,
-  brightened by recent spikes. Hover to see a neuron's type and region.
+* **Pools → buttons**: bar = per-cell spike rate of each pool this turn (Hz), the tick on each bar is
+  the pool's running EMA baseline; gold is the action taken; the small number after the name is the
+  pool size in cells.
+* **Whole nervous system**: 139,662 somas (every neuron with a soma position), drawn at the soma
+  cloud's true x/z proportions (0.733 wide : 1 tall, brain on top, nerve cord below — the constant
+  `CNS_ASPECT` in `js/brainmap.js`) fitted to the panel with a 3 % margin. Quiet somas are a faint
+  region-tinted dust; a spike adds a soft 3×3 glow in the region colour that decays over a few frames
+  (additive `ImageData`, ~20 fps). Hover to see a neuron's type and region.
+* **Header**: the chip after the product name is the condition (always the frozen connectome here);
+  the dot on the right pulses green while the step counter advances and turns grey when paused.
 * **Pace**: ½×, 1×, 4× real time, `max`, `pause` (space bar). Speed is the simulated time per wall
   second; at 1× a brain step happens every 20 ms.
 * **Stats**: step count, simulated time, spikes in the last step and the corresponding mean firing
@@ -203,15 +213,16 @@ for the fly (turns/safe cells logged) and one for the human (1 cell revealed, 1 
 stayed at 0, and the fresh board started with cursor at the centre, turn 0, 0 flags, timer 0.0 s;
 a normal safe first click (a 0-cell) flood-filled 56 cells with no relocation.
 
-Single-screen layout check (headless Chrome, default view and `?human=1`, viewports 1440×760,
+Single-screen layout check after the visual polish pass (headless Chrome, viewports 1440×760,
 1512×870, 1728×1000, 1280×680, 1512×982, 1728×1117): `scrollHeight == innerHeight` and
-`scrollWidth == innerWidth` at all six (no scrolling either way); board 439 / 462 / 531 / 388 / 462 /
-531 px and brain map 681×397 / 730×425 / 877×511 / 572×333 / 730×425 / 877×511 (aspect 1.71), both
-fully inside the viewport; the human board and its scoreboard row absent by default; zero console
-errors; the fly plays (8 turns: left, right, down, jump×2, reveal×3, hold); pause freezes the step
-counter, 4× gives 200 steps/s; the brain-map hover tooltip works. Screenshot at 1440×760:
-`outputs/flysweeper-web-final.png`. With `?human=1` the two boards share the left column and drop to
-~240–350 px at these sizes.
+`scrollWidth == innerWidth` at all six (no scrolling either way); board 501 / 549 / 631 / 421 / 549 /
+631 px and brain canvas 591×501 / 635×629 / 769×779 / 492×421 / 635×741 / 769×896 (the canvas fills
+its box; the soma cloud is fitted inside at aspect 0.733, so it spans the full panel height), both
+fully inside the viewport; the human board absent by default; zero console errors; the fly plays
+(8 turns: left, right, down, jump×2, reveal×3, hold); pause freezes the step counter, 4× gives
+~200 steps/s; the brain-map hover tooltip works. Screenshot at 1440×760:
+`outputs/flysweeper-web-classy.png` (Python page, same look: `outputs/flysweeper-py-classy.png`).
+With `?human=1` the two boards share the left column and are smaller at these sizes.
 
 ## Known limitations / open points
 

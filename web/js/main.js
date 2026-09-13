@@ -542,11 +542,11 @@ function updateDom() {
   // stat tiles (fly) + sparkline of safe cells per finished game
   const tf = app.totals.fly, fg = fly.game;
   $('fly-safe').innerHTML = fg ? `${fg.safeRevealed}<small> / ${fg.totalSafe}</small>` : '–';
-  $('fly-safe-sub').textContent = fg ? `this board · ${fly.phase === 'playing' ? `turn ${fly.turn + 1}` : fly.phase}` : 'this board';
+  $('fly-safe-sub').textContent = fg ? (fly.phase === 'playing' ? `turn ${fly.turn + 1}` : fly.phase) : 'this board';
   $('fly-games').innerHTML = `${tf.games}<small> (${tf.wins})</small>`;
-  $('fly-games-sub').textContent = tf.abandoned ? `${tf.abandoned} abandoned` : 'finished (won)';
+  $('fly-games-sub').textContent = tf.abandoned ? `${tf.abandoned} abandoned` : 'finished';
   $('fly-mean').textContent = tf.games ? (tf.safe / tf.games).toFixed(1) : '–';
-  $('fly-mean-sub').textContent = fg ? `of ${fg.totalSafe} safe cells` : 'of 71';
+  $('fly-mean-sub').textContent = fg ? `of ${fg.totalSafe} safe` : 'of 71 safe';
   $('fly-last').textContent = tf.last ? tf.last.outcome : '–';
   $('fly-last').className = 'v ' + (tf.last ? tf.last.outcome : '');
   $('fly-last-sub').textContent = tf.last ? `${tf.last.safe} safe · ${tf.last.turns} turns` : '\u00a0';
@@ -561,7 +561,7 @@ function updateDom() {
     $('you-abandoned').textContent = String(th.abandoned);
     $('you-note').textContent = human.relocation || '';
   }
-  $('game-title').textContent = fly.game ? `game ${app.gameNumber} · seed ${fly.game.seed}` : '';
+  $('game-title').textContent = fly.game ? `fly · game ${app.gameNumber} · seed ${fly.game.seed}` : '';
   // pools: bar = rate this turn, tick = running baseline, gold = the action taken
   const rates = dec.lastRates, base = dec.running, max = Math.max(1, ...rates, ...base) * 1.08;
   let html = '';

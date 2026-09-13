@@ -367,3 +367,15 @@ NUMBA_NUM_THREADS=10 ./.venv/bin/python -m flysweeper.validate --games 30  --see
 NUMBA_NUM_THREADS=10 ./.venv/bin/python -m flysweeper.validate --games 100 --seed0 5000 --conditions fly-mb fly-mb-oracle-only random-walk --out outputs/validation/mb_round2_100
 ./.venv/bin/python -m flysweeper.server --condition fly-mb      # spectator on the installed weights (data/compiled/mb_weights.npz)
 ```
+
+Spectator parity: `FlyPlayer.play("fly-mb")` loads the weights file by absolute path, applies the
+file's pools / odor map / KC settings / reveal margin, and plays argmax with learning off, exactly
+like `validate.py` (a bug in the first round-2 install left the training softmax temperature 1.0 in
+the server path, which made the spectator play near-randomly; fixed in `FlyPlayer.enable_mb`).
+Verified: with the same NUMBA thread count, the server-built player reproduces validate's action
+traces bit-for-bit on seeds 5000-5004; a 3-minute run of the server at `--speed 0` gave 78 wins in
+136 games (57%), 66.5 safe cells. The sim's Bernoulli noise is drawn per Numba thread, so a different
+`NUMBA_NUM_THREADS` changes individual games but not the statistics.
+
+```bash
+```
