@@ -12,8 +12,9 @@ with the same mines.
 By default the page runs the **trained fly** (the Python `fly-mb` condition: a helper turns the board
 into 31 facts that are injected as odours into olfactory receptor neurons, and six pools of
 mushroom-body output neurons are the buttons, with the Kenyon-cell → MBON synapses onto them trained
-by `flysweeper/train_mb.py`). A selector in the header switches between exported checkpoints ("Checkpoint k · N episodes") and
-the **baseline** — the untrained frozen connectome (descending-neuron pools decode the actions).
+by `flysweeper/train_mb.py`). A selector in the header switches between exported checkpoints ("Checkpoint k · N episodes"). The
+**baseline** — the untrained frozen connectome, descending-neuron pools decoding the actions — is not
+in the menu; developers reach it with `?weights=frozen` in the URL.
 
 Everything is vanilla JS modules + WGSL; there is no build step. The dynamics, encoder, decoders,
 helper and mushroom-body policy are line-by-line ports of the Python package in `flysweeper/`
@@ -52,7 +53,7 @@ from the cache in ~100 ms. Re-running the export changes the hashes, which inval
 automatically. `?clearcache=1` wipes it, `?nocache=1` bypasses it.
 
 URL parameters: `?weights=round3|round2|round1|frozen` (weight set; default = `web/weights/manifest.json`
-`"default"`), `?speed=0.5|1|4|0` (0 = as fast as the GPU allows), `?seed=1000` (first board seed),
+`"default"`; `frozen` = untrained baseline, URL-only), `?speed=0.5|1|4|0` (0 = as fast as the GPU allows), `?seed=1000` (first board seed),
 `?simseed=0` (GPU noise seed), `?human=1` (show the human-playable board, see below), `?data=<url>`
 (connectome base URL, see *Deploying*), `?games=N` (finished games per session, default 100; 0 =
 unlimited), `?v=<token>` (cache-busting version, set automatically when you switch weight sets or
@@ -144,9 +145,11 @@ markers hold the longer explanations (pool anatomy; anatomy vs. engineered; cons
   (additive `ImageData`, ~20 fps). Hover to see a neuron's type and region.
 * **Header**: the chip after the product name is the condition — `fly-mb · checkpoint 3` for a
   trained weight set, `fly · baseline` otherwise — followed by the **weights** selector (entries from
-  `web/weights/manifest.json`: "Baseline · untrained (frozen connectome)", "Checkpoint 1 · 200
-  episodes", "Checkpoint 2 · 1,500 episodes", "Checkpoint 3 · 2,000 episodes"; no win rates in the
-  menu — the "?" next to it lists episodes trained and held-out win rate per checkpoint). Choosing another entry does a *forced full
+  `web/weights/manifest.json` only: "Checkpoint 1 · 200 episodes", "Checkpoint 2 · 1,500 episodes",
+  "Checkpoint 3 · 2,000 episodes"; no win rates in the menu — the "?" next to it lists episodes trained
+  and held-out win rate per checkpoint). The untrained baseline is deliberately absent from the menu:
+  open `?weights=frozen` to run it (developer mode; the selector then shows a disabled "Baseline ·
+  untrained (frozen)" placeholder and the chip reads `fly · baseline`). Choosing another entry does a *forced full
   reload*: `location.assign(?weights=<id>&v=<timestamp>)`; an import map written by `index.html`
   gives every JS module `?v=<token>`, and the shaders, `config.json` and weight files are fetched with
   the same token, so no stale code or brain state survives the switch (the 205 MB connectome stays in

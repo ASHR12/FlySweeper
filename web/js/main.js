@@ -611,16 +611,18 @@ function setupUi(model) {
  */
 function setupWeightsUi(model) {
   const w = app.weights, mb = app.mb, sel = $('weights-select');
-  // standard ML naming: "Baseline · untrained" for the frozen wiring, "Checkpoint k · N episodes" for
-  // trained sets (manifest labels). Win rates are NOT shown in the menu; they live in the "?" tooltip.
-  const frozenLabel = 'Baseline · untrained (frozen connectome)';
+  // standard ML naming: the menu lists the manifest's checkpoints only ("Checkpoint k · N episodes").
+  // Win rates are NOT shown in the menu; they live in the "?" tooltip. The untrained frozen wiring
+  // (baseline) is not in the menu - developers reach it with ?weights=frozen; when that is active a
+  // disabled placeholder is shown as the selected entry so the menu does not misreport a checkpoint.
   const evalText = (s) => (s.win_rate != null ? `${Math.round(100 * s.win_rate)}% wins on ${s.eval_games ?? '?'} held-out boards` : 'not evaluated');
-  const opts = [{ id: FROZEN_ID, label: frozenLabel, title: 'The original condition "fly": untrained wiring, descending-neuron pools decode the actions. 0 wins.' }]
-    .concat((w.manifest?.sets || []).map((s) => ({ id: s.id, label: s.label, title: `${s.games_trained?.toLocaleString() ?? '?'} teacher-driven episodes · ${evalText(s)}` + (s.notes ? `\n${s.notes}` : '') })));
-  sel.innerHTML = opts.map((o) => `<option value="${o.id}" title="${escapeHtml(o.title)}"${o.id === w.id ? ' selected' : ''}>${escapeHtml(o.label)}</option>`).join('');
+  const opts = (w.manifest?.sets || []).map((s) => ({ id: s.id, label: s.label, title: `${s.games_trained?.toLocaleString() ?? '?'} teacher-driven episodes · ${evalText(s)}` + (s.notes ? `\n${s.notes}` : '') }));
+  sel.innerHTML = (mb ? '' : `<option value="${FROZEN_ID}" disabled selected title="Untrained frozen connectome (developer mode, ?weights=frozen)">Baseline · untrained (frozen)</option>`) +
+    opts.map((o) => `<option value="${o.id}" title="${escapeHtml(o.title)}"${o.id === w.id ? ' selected' : ''}>${escapeHtml(o.label)}</option>`).join('');
   sel.disabled = false;
   $('weights-help').title = 'Trained KC→MBON weight sets (learning is off in the browser). Held-out evaluation in Python:\n' +
-    opts.map((o) => `• ${o.label}: ${o.id === FROZEN_ID ? '0% wins' : evalText(w.manifest.sets.find((s) => s.id === o.id))}`).join('\n');
+    opts.map((o) => `• ${o.label}: ${evalText((w.manifest?.sets || []).find((s) => s.id === o.id))}`).join('\n') +
+    '\nThe untrained baseline (frozen connectome, 0 wins) is available with ?weights=frozen in the URL.';
   sel.onchange = () => {
     const id = sel.value;
     if (id === w.id) return;
