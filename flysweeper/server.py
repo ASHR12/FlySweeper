@@ -172,7 +172,7 @@ class Spectator:
 
 
 def make_handler(spec: Spectator):
-    index_html = (UI_DIR / "index.html").read_bytes()
+    index_path = UI_DIR / "index.html"   # read per request so page edits show up on reload
 
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *args):  # quiet
@@ -189,7 +189,7 @@ def make_handler(spec: Spectator):
         def do_GET(self):
             url = urlparse(self.path)
             if url.path in ("/", "/index.html"):
-                self._send(200, index_html, "text/html; charset=utf-8")
+                self._send(200, index_path.read_bytes(), "text/html; charset=utf-8")
             elif url.path == "/state":
                 self._send(200, json.dumps(spec.state()).encode(), "application/json")
             elif url.path == "/atlas":

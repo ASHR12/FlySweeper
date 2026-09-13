@@ -9,6 +9,12 @@ Honest framing for the second (main) approach:
 
 > a helper reads the board into a few facts; the fly's mushroom body learns what to do about them.
 
+**Current result (round 2, section 4):** with 59,334 KC->MBON synapses trained on 1,500
+teacher-driven games, a sparser Kenyon-cell code and a reveal margin, `fly-mb` wins **18 of 30**
+held-out games (seeds 5000-5029; 67.1 +- 1.8 safe cells) and **48 of 100** (seeds 5000-5099;
+66.7 +- 0.8), versus 0 wins and ~50 safe cells for the frozen fly and random-walk, and 90% / 84%
+for the logic solver / the helper's facts decoded by a fixed rule. Round 1 (section 3.5) had 0 wins.
+
 ## 1. What is anatomy and what is invented
 
 | piece | anatomy (from the connectome) | invented (ours) |
@@ -182,10 +188,10 @@ RL phase so far learns nothing that the shuffled control does not.
 | fly-mb-oracle-only (helper facts, fixed rule, no brain) | 30 | **0.87** | 70.4 | 0.4 | 55.9 | 18.0 |
 | solver | 30 | 0.90 | 68.8 | 2.0 | 25.7 | 16.9 |
 | random-walk | 30 | 0.00 | 50.4 | 2.5 | 47.1 | 4.3 |
-| fly (frozen, descending-neuron pools) | 30 | 0.00 | 48.6 | 2.6 | 400 | – |
+| fly (frozen, descending-neuron pools) | 30 | 0.00 | 48.6 | 2.6 | 42.3 | 5.5 |
 | **fly-mb (200 warm-start games)** | 30 | **0.00** | **46.9** | 2.0 | 15.8 | 3.5 |
 | random-click | 30 | 0.00 | 39.3 | 2.8 | 3.4 | 3.4 |
-| fly-blind | 30 | 0.00 | 38.4 | 3.0 | 400 | – |
+| fly-blind | 30 | 0.00 | 38.4 | 3.0 | 30.7 | 3.8 |
 
 **The fly's win rate is 0.00.** `fly-mb` reveals the safe centre cell first (the learned
 "reveal when safe-here" association works: 30/30 games open correctly and 82% of the teacher's
@@ -208,7 +214,132 @@ What limits it, in order of evidence:
 3. Spontaneous MB activity had to be tamed (KC->KC silenced, KC bias) before any odor code existed;
    the resulting code is dense (80% of KCs active), not the sparse code of a real mushroom body.
 
-## 4. Reproduce
+## 4. Round 2: readout capacity, longer supervised warm start, reveal safety
+
+Round 1 ended with an in-brain readout at 0.48 teacher agreement (ceiling 0.85) and 0 wins. Round 2
+attacked the readout capacity and the training signal, in this order; every variant was evaluated
+with `python -m flysweeper.mb_eval` (argmax agreement + confusion on teacher-driven boards, seeds
+80000+, 600 turns; held-out games on seeds 5000-5029, exploration off).
+
+Changes (all in `mb_policy.py`, all documented in `MBParams`):
+
+1. **Pools**: every MBON type with >= 20% of its input from Kenyon cells (34 types, 91 cells) is
+   used; types are dealt greedily by KC edge count into six groups of ~10,000 KC->MBON edges
+   (10-23 cells per action, both hemispheres; `GROUP_POOLS`). 59,334 plastic edges (was 16,167).
+2. **Weight range** floor 0 x original (silent synapse allowed; was 0.1). The ceiling stayed at 5x:
+   `MBParams` now defaults to 10x but the `train_mb --w-max-ratio` default of 5.0 applied to these
+   runs. No edge reached the ceiling in any run, so the ceiling was not the binding constraint.
+3. **Supervised rule** (Ramp-style "trained on labelled decisions", cursor follows the teacher,
+   1,500 games, seeds 12000-13499, checkpoints every 250):
+   - `error` (perceptron): on a mistake, +1 x (centred KC counts) onto the teacher's pool, -1 x onto
+     the chosen pool; a wrong "reveal" is debited 3x (`reveal_penalty`); a PAM pulse marks each event.
+   - `teacher`: every turn +1 onto the teacher's pool, -0.2 onto the others (-0.6 onto "reveal"
+     when the teacher did not reveal).
+4. **Safety facts represented more strongly**: `cursor_safe`, `cursor_mine`, `cursor_frontier`,
+   `cursor_free` get a second (and third) ORN type each, `guess_here` and `no_safe_known` one more
+   (`EXTRA_ORN_TYPES`; 2,362 ORN cells driven in total).
+5. **Sparser KC code** (fly-mb-only model change, like the KC->KC gain): PN bias -0.30 (silences the
+   antennal-lobe PNs' 14 Hz spontaneous rate), PN->KC gain 3.0, KC bias -0.30. Probe: KCs 0.0 Hz
+   without odor, 8.8 Hz with odor (65% active per window); single-channel d' 1.2-1.7 vs 0.45 noise
+   (was 0.7/0.56 vs 0.41). Offline linear ceiling 0.88.
+6. **Reveal margin** (decoder engineering, argmax mode only): "reveal" is taken only if its centred
+   pool score exceeds the runner-up by `reveal_margin`; otherwise the runner-up action is taken.
+   Tuned on training seeds 15000-15014 only; the decision still comes from the MBON pools.
+
+Results (`outputs/mb/eval_r2_*.md`; agreement on 600 teacher-driven turns; held-out = 30 games,
+seeds 5000-5029, argmax, margin 0 unless stated):
+
+| run | KC code | rule | games | agreement | reveal recall | reveal FPR | held-out wins | safe cells |
+|---|---|---|---|---|---|---|---|---|
+| round 1 `warm` (single-type pools, [0.1,5]) | dense | error | 200 | 0.484 | 0.82 | ~0.12 | 0/30 | 46.9 +- 2.0 |
+| `r2_error` | dense | error | 250 | 0.607 | 0.947 | 0.019 | 0/30 | 50.2 +- 2.2 |
+| `r2_error` | dense | error | 1500 | 0.625 | 0.973 | 0.024 | 0/30 | 49.7 +- 2.6 |
+| `r2_teacher` | dense | teacher | 250 | 0.564 | 0.915 | 0.029 | 0/30 | 48.7 +- 2.1 |
+| `r2_teacher` | dense | teacher | 1500 | 0.586 | 0.920 | 0.017 | 0/30 | 49.5 +- 2.4 |
+| `r2_error_sparse` | sparse | error | 250 | 0.717 | 0.984 | 0.021 | 4/30 | 50.3 +- 2.6 |
+| `r2_error_sparse` | sparse | error | 500 | 0.696 | 0.947 | 0.010 | 2/30 | 52.1 +- 2.5 |
+| `r2_error_sparse` | sparse | error | 750 | 0.691 | 0.963 | 0.007 | 2/30 | 54.5 +- 2.4 |
+| `r2_error_sparse` | sparse | error | 1000 | 0.725 | 0.963 | 0.017 | 5/30 | 55.8 +- 2.3 |
+| `r2_error_sparse` | sparse | error | 1250 | 0.729 | 0.968 | 0.012 | 5/30 | 53.6 +- 3.1 |
+| **`r2_error_sparse`** | sparse | error | **1500** | **0.735** | **0.979** | **0.007** | **8/30 (0.267)** | **64.5 +- 1.5** |
+
+The best checkpoint by agreement (an independent criterion, seeds 80000+) is also the best by
+held-out score: `outputs/mb/r2_error_sparse/weights_001500.npz`. The rule comparison is clean:
+perceptron (`error`) beats the every-turn `teacher` rule (0.625 vs 0.586 at 1500 games), the bigger
+pools + weight range lift the dense-code readout from 0.48 to 0.61-0.63, and the sparse KC code is
+the single biggest lever (0.63 -> 0.74, first wins).
+
+Reveal-margin sweep on **training** seeds 15000-15014 (best checkpoint, 15 games): margin 0 ->
+1/15 wins, 58.8 safe; 0.10 -> 5/15, 66.7; 0.25 -> 6/15, 67.3. Installed: margin 0.25
+(`data/compiled/mb_weights.npz`, saved with the margin and all fly-mb model settings inside the file,
+so `python -m flysweeper.server --condition fly-mb` runs exactly this policy).
+
+Per-action agreement of the installed policy (argmax + margin 0.25; 619 teacher-driven turns,
+rows = teacher, columns = fly; order up, down, left, right, reveal, jump):
+
+```
+up      [ 48  19  15  13   0   2]   recall 0.50
+down    [ 10  53  15  14   1   0]   recall 0.57
+left    [ 13  22  82   3   0   1]   recall 0.68
+right   [ 11  17   3  75   0   1]   recall 0.70
+reveal  [  4   0   1   1 179   3]   recall 0.95   precision 0.994
+jump    [  0   0   0   0   0   2]
+```
+
+Overall agreement 0.722; **reveal false-positive rate 0.2%** (1 unwanted reveal in 419 non-reveal
+states; was 12% in round 1). The remaining errors are almost all move-vs-move confusions
+(which of two directions to walk), which cost turns but not lives.
+
+Weight state of the installed policy: 55,832 of 59,334 plastic edges differ from the connectome
+values, mean ratio 1.45, 5,152 edges silenced (ratio 0), none at the 10x ceiling; mean ratio per
+pool: up 1.41, down 1.24, left 1.41, right 1.13, reveal 1.87, jump 1.62. Nothing else in the brain
+changed; the frozen conditions run with the original KC->MBON weights, KC->KC synapses, and KC/PN
+biases (attach/detach is verified by the frozen `fly` row in the table below being unchanged).
+
+### 4.1 Held-out table (round 2)
+
+All rows in one run (`outputs/validation/mb_round2/report.md`), 30 games, seeds 5000-5029,
+15-step turns, 400-turn limit, exploration off. `fly-mb` = installed weights
+(`r2_error_sparse/weights_001500.npz`, margin 0.25). SEM = standard error over games.
+
+| condition | games | win rate | safe cells | SEM | mean turns | reveals |
+|---|---|---|---|---|---|---|
+| solver (single-point logic, not a brain) | 30 | 0.90 | 68.8 | 2.0 | 25.7 | 16.9 |
+| fly-mb-oracle-only (helper facts + fixed rule, no brain) | 30 | 0.87 | 70.4 | 0.4 | 55.9 | 18.0 |
+| **fly-mb (trained KC->MBON, in-brain decision)** | 30 | **0.60 (18/30)** | **67.1** | 1.8 | 74.7 | 16.2 |
+| fly (frozen, descending-neuron pools) | 30 | 0.00 | 51.3 | 2.3 | 63.2 | 6.6 |
+| random-walk | 30 | 0.00 | 50.4 | 2.5 | 47.1 | 4.3 |
+| fly-blind (no board input) | 30 | 0.00 | 44.5 | 2.5 | 36.0 | 4.6 |
+| random-click | 30 | 0.00 | 39.3 | 2.8 | 3.4 | 3.4 |
+
+Tighter estimate on 100 held-out seeds 5000-5099 (`outputs/validation/mb_round2_100/report.md`):
+**fly-mb 48/100 wins (0.48), 66.7 +- 0.8 safe cells**; fly-mb-oracle-only 84/100, 68.9 +- 0.9;
+random-walk 0/100, 50.1 +- 1.4. The 30-seed estimate (0.60) is on the lucky side of the
+100-seed one; quote 0.48 +- 0.05 (binomial SE) as the win rate.
+
+What this is and is not:
+
+- The decision is made by the fly's MBON pools (spike counts over the turn, mean-centred). The
+  helper contributes 31 facts as smells; the fixed-rule ceiling on those facts is 0.84-0.87, so
+  the mushroom body recovers roughly 55-70% of what the facts allow.
+- The reveal margin is decoder engineering, disclosed: it changes *when* the reveal pool's vote is
+  acted on, not what the pools compute. It was tuned on training seeds only. Without it the same
+  weights win 8/30 (26.7%) held-out games; the margin lifts that to 18/30.
+- The sparse KC code (PN bias -0.3, PN->KC gain 3, KC bias -0.3) and the silenced KC->KC synapses
+  are fly-mb-only model changes; the `fly` and `fly-blind` rows are run with the original wiring
+  in the same process and match round 1 (51.3 vs 48.6-52.6 safe cells, 0 wins).
+- Learning was supervised (teacher labels through the three-factor rule with a dopamine pulse as the
+  event marker), not reward-driven RL: pure RL and the shuffled-reward control were
+  indistinguishable in round 1 (section 3.4) and RL fine-tuning was not attempted in round 2.
+- Weight statistics: 55,832 of 59,334 plastic edges changed, 5,152 silenced, mean ratio 1.45; the
+  remaining 25.58 M edges are the connectome's.
+
+Remaining gaps: move-direction agreement is 0.50-0.70 (the fly walks the wrong way often, costing
+turns: 75 turns per game vs 26 for the solver); the `jump` action is almost never demanded by the
+teacher (2 of 619 turns) so its pool is untrained; RL fine-tuning from this checkpoint is untested;
+and the win rate is still well below the 0.84-0.87 ceiling of the facts it is given.
+
+## 5. Reproduce
 
 ```bash
 # approach A
@@ -222,5 +353,17 @@ NUMBA_NUM_THREADS=10 ./.venv/bin/python -m flysweeper.train_mb --games 1200 --se
 NUMBA_NUM_THREADS=10 ./.venv/bin/python -m flysweeper.train_mb --games 1200 --seed0 10000 --eta 0.03 --anneal-games 900 --no-install --out outputs/mb/rl
 NUMBA_NUM_THREADS=10 ./.venv/bin/python -m flysweeper.train_mb --games 500  --seed0 10000 --eta 0.03 --shuffle-reward --anneal-games 375 --out outputs/mb/shuffled
 NUMBA_NUM_THREADS=10 ./.venv/bin/python -m flysweeper.validate --games 30 --seed0 5000 --conditions fly-mb fly-mb-oracle-only fly fly-blind random-walk random-click solver --mb-weights outputs/mb/warm/weights_final.npz --out outputs/validation/mb
-./.venv/bin/python -m flysweeper.server --condition fly-mb      # spectator on the trained weights
+
+# round 2 (section 4): 1,500 teacher-driven games, group pools, floor 0, perceptron rule, sparse KC code
+NUMBA_NUM_THREADS=6 ./.venv/bin/python -m flysweeper.train_mb --games 1500 --seed0 12000 --eta 0.03 --warmstart-games 1500 --warmstart-follow --sup-mode error --no-install --out outputs/mb/r2_error
+NUMBA_NUM_THREADS=6 ./.venv/bin/python -m flysweeper.train_mb --games 1500 --seed0 12000 --eta 0.03 --warmstart-games 1500 --warmstart-follow --sup-mode teacher --no-install --out outputs/mb/r2_teacher
+NUMBA_NUM_THREADS=4 ./.venv/bin/python -m flysweeper.train_mb --games 1500 --seed0 12000 --eta 0.03 --warmstart-games 1500 --warmstart-follow --sup-mode error --pn-bias -0.3 --pn-kc-gain 3.0 --kc-bias -0.3 --no-install --out outputs/mb/r2_error_sparse
+# evaluate every checkpoint (agreement + confusion on teacher-driven boards, held-out games)
+NUMBA_NUM_THREADS=10 ./.venv/bin/python -m flysweeper.mb_eval outputs/mb/r2_error_sparse/weights_*.npz --games 30 --agree-turns 600 --out outputs/mb/eval_r2_sparse.md
+# tune the reveal margin on TRAINING seeds, then install the best checkpoint with that margin
+NUMBA_NUM_THREADS=10 ./.venv/bin/python -m flysweeper.mb_eval outputs/mb/r2_error_sparse/weights_001500.npz --games 15 --seed0 15000 --agree-turns 0 --margin-sweep 0 0.1 0.25
+NUMBA_NUM_THREADS=10 ./.venv/bin/python -m flysweeper.mb_eval outputs/mb/r2_error_sparse/weights_001500.npz --games 0 --agree-turns 0 --margin-sweep 0.25 --install data/compiled/mb_weights.npz
+NUMBA_NUM_THREADS=10 ./.venv/bin/python -m flysweeper.validate --games 30  --seed0 5000 --conditions fly-mb fly-mb-oracle-only random-walk random-click solver fly fly-blind --out outputs/validation/mb_round2
+NUMBA_NUM_THREADS=10 ./.venv/bin/python -m flysweeper.validate --games 100 --seed0 5000 --conditions fly-mb fly-mb-oracle-only random-walk --out outputs/validation/mb_round2_100
+./.venv/bin/python -m flysweeper.server --condition fly-mb      # spectator on the installed weights (data/compiled/mb_weights.npz)
 ```

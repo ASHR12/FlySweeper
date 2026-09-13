@@ -2,188 +2,274 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23141a22'/%3E%3Ccircle cx='8' cy='8' r='4' fill='%23ffc45a'/%3E%3C/svg%3E">
 <title>FlySweeper — a fruit-fly connectome plays Minesweeper</title>
 <style>
-  :root { --bg:#0b0e12; --panel:#141a22; --ink:#e6edf3; --dim:#8b98a5; --line:#233041; --accent:#ffc45a; }
+  /* Single-viewport layout (same as web/index.html): body is a 100vh grid (header / main / honest
+     label), nothing scrolls. main = board + scoreboard | brain map + legend + stats + pace | pools + log.
+     Canvases sit absolutely inside flex ".box"es and are sized by a ResizeObserver. */
+  :root { --bg:#0b0e12; --panel:#141a22; --ink:#e6edf3; --dim:#8b98a5; --line:#233041; --accent:#ffc45a; --blue:#4f7dff; --gap:8px; --side:240px; }
   * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.45 -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif; }
-  header { padding:14px 20px 8px; display:flex; align-items:baseline; gap:16px; flex-wrap:wrap; }
-  header h1 { margin:0; font-size:20px; letter-spacing:.3px; }
-  header .sub { color:var(--dim); }
-  main { display:grid; grid-template-columns: 420px 1fr; gap:14px; padding:0 20px 20px; }
-  .panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px; }
-  .panel h2 { margin:0 0 8px; font-size:12px; text-transform:uppercase; letter-spacing:1.2px; color:var(--dim); }
-  canvas { display:block; width:100%; border-radius:6px; background:#0a0d11; }
-  .stats { display:grid; grid-template-columns: 1fr 1fr; gap:4px 12px; font-variant-numeric: tabular-nums; }
-  .stats div span { color:var(--dim); }
-  .pools { display:grid; grid-template-columns: 62px 1fr 74px; gap:4px 8px; align-items:center; font-variant-numeric: tabular-nums; }
-  .bar { height:12px; background:#0a0d11; border-radius:3px; overflow:hidden; border:1px solid var(--line); }
-  .bar i { display:block; height:100%; background:#4f7dff; }
+  html, body { height:100%; overflow:hidden; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:13px/1.35 -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+         height:100vh; display:grid; grid-template-rows:auto minmax(0,1fr) auto; gap:var(--gap); padding:var(--gap) 10px; }
+  header { display:flex; align-items:baseline; gap:14px; white-space:nowrap; overflow:hidden; min-width:0; }
+  header h1 { margin:0; font-size:18px; letter-spacing:.3px; flex:none; }
+  header h1 span { color:var(--dim); font-weight:400; }
+  header .sub { color:var(--dim); font-size:12px; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+  main { display:grid; grid-template-columns:minmax(322px, min(32vw, calc(100vh - 150px))) minmax(0,1fr) var(--side); gap:var(--gap); min-height:0; }
+  .col { display:flex; flex-direction:column; gap:var(--gap); min-height:0; min-width:0; }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:8px 10px; min-height:0; min-width:0; display:flex; flex-direction:column; }
+  .panel.grow { flex:1; }
+  .panel h2 { margin:0 0 5px; font-size:11px; text-transform:uppercase; letter-spacing:1.1px; color:var(--dim); display:flex; justify-content:space-between; align-items:center; gap:10px; flex:none; white-space:nowrap; min-width:0; }
+  .panel h2 .status { text-transform:none; letter-spacing:0; color:var(--accent); font-weight:500; overflow:hidden; text-overflow:ellipsis; }
+  .panel h2 .cond { color:var(--ink); }
+  .box { position:relative; flex:1; min-height:0; min-width:0; overflow:hidden; }
+  .box canvas { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); border-radius:5px; background:#0a0d11; display:block; }
+  .board-box { flex:0 1 auto; width:100%; aspect-ratio:1 / 1; }
+  .board-box canvas { top:0; transform:translate(-50%,0); }
+  .line { display:flex; flex-wrap:wrap; gap:2px 14px; font-variant-numeric:tabular-nums; font-size:12px; flex:none; align-items:center; }
+  .line span { color:var(--dim); }
+  .line b { font-weight:600; }
+  .line .controls { margin-left:auto; }
+  .pools { display:grid; grid-template-columns:40px 1fr 30px; gap:4px 6px; align-items:center; font-variant-numeric:tabular-nums; }
+  .pools .dim { text-align:right; }
+  .bar { height:9px; background:#0a0d11; border-radius:3px; overflow:hidden; border:1px solid var(--line); }
+  .bar i { display:block; height:100%; background:var(--blue); }
   .bar i.win { background:var(--accent); }
-  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size:12px; }
-  .events { max-height:220px; overflow:auto; }
-  .events div { color:var(--dim); }
+  .mono { font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:11.5px; }
+  .dim { color:var(--dim); }
+  .events { flex:1; min-height:0; overflow:auto; line-height:1.35; }
+  .events div { color:var(--dim); margin-bottom:3px; overflow-wrap:anywhere; }
   .events div b { color:var(--ink); font-weight:500; }
-  .label { color:var(--dim); font-size:12px; border-top:1px solid var(--line); padding-top:8px; margin-top:8px; }
-  .legend { display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:6px; color:var(--dim); font-size:12px; }
-  .legend i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:5px; vertical-align:-1px; }
-  .controls button { background:#1d2733; color:var(--ink); border:1px solid var(--line); border-radius:6px; padding:4px 10px; margin-right:4px; cursor:pointer; }
+  .honest { color:var(--ink); background:#1d2733; border:1px solid var(--line); border-left:3px solid var(--accent); border-radius:6px; padding:4px 10px; font-size:12.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; gap:10px; min-height:26px; }
+  .honest #label { flex:1; overflow:hidden; text-overflow:ellipsis; }
+  .help { flex:none; display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border-radius:50%; border:1px solid var(--dim); color:var(--dim); font-size:11px; cursor:help; font-weight:600; }
+  .legend { display:flex; flex-wrap:wrap; gap:2px 12px; color:var(--dim); font-size:11.5px; flex:none; margin-top:5px; white-space:nowrap; }
+  .legend i { display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:4px; vertical-align:-1px; }
+  .controls { display:flex; align-items:center; gap:4px; }
+  .controls button { background:#1d2733; color:var(--ink); border:1px solid var(--line); border-radius:5px; padding:2px 8px; cursor:pointer; font:inherit; font-size:12px; line-height:1.3; }
   .controls button.on { border-color:var(--accent); color:var(--accent); }
-  .big { font-size:26px; font-weight:600; }
   .danger { color:#ff5a78; }
-  .right { display:flex; flex-direction:column; gap:14px; }
+  .scoreline { display:flex; flex-wrap:wrap; gap:2px 10px; align-items:center; font-size:12px; font-variant-numeric:tabular-nums; margin-top:5px; padding-top:5px; border-top:1px solid var(--line); }
+  .scoreline .who { font-size:11px; letter-spacing:1.1px; font-weight:600; color:var(--dim); text-transform:uppercase; }
+  .scoreline span { color:var(--dim); }
+  .scoreline b { color:var(--ink); font-weight:600; }
+  .note { font-size:11.5px; color:var(--dim); margin-top:5px; overflow-wrap:anywhere; }
+  #plasticity:empty { display:none; }
 </style>
 </head>
 <body>
 <header>
-  <h1>FlySweeper</h1>
-  <div class="sub">MaleCNS v1.0 · 166,700 neurons · 25,582,938 connections · one fruit fly, one Minesweeper board</div>
+  <h1>FlySweeper <span id="cond-title">· …</span></h1>
+  <div class="sub" id="subtitle">MaleCNS v1.0 · 166,700 neurons · 25,582,938 connections</div>
 </header>
 <main>
-  <div class="left">
-    <div class="panel">
-      <h2>Board <span id="game-title" class="mono"></span></h2>
-      <canvas id="board" width="396" height="396"></canvas>
-      <div class="stats" style="margin-top:10px">
+  <!-- left: the board with the scoreboard directly underneath -->
+  <div class="col">
+    <div class="panel grow">
+      <h2><span>Fly <span class="cond" id="cond">·</span></span> <span class="status mono" id="game-title"></span></h2>
+      <div class="box board-box"><canvas id="board" width="396" height="396"></canvas></div>
+      <div class="line" style="margin-top:6px">
         <div><span>last action</span> <b id="last-action">–</b></div>
-        <div><span>danger under cursor</span> <b id="danger">0</b></div>
-        <div><span>safe cells</span> <b id="safe">0 / 0</b></div>
-        <div><span>games (wins)</span> <b id="games">0 (0)</b></div>
-        <div><span>mean safe / game</span> <b id="mean-safe">–</b></div>
-        <div><span>last game</span> <b id="last-game">–</b></div>
+        <div><span>danger</span> <b id="danger">0</b></div>
+        <div title="reveal moves this game; one turn = 15 brain steps = 300 ms of simulated time"><span>moves</span> <b id="turn">–</b></div>
       </div>
-    </div>
-    <div class="panel" style="margin-top:14px">
-      <h2>Descending-neuron pools → buttons</h2>
-      <div class="pools" id="pools"></div>
-      <div class="label">Bars: per-cell spike rate this turn above the pool's running baseline (Hz). Gold = the action taken. Pools are real MaleCNS cell types; the button assignment is ours.</div>
+      <div class="scoreline" title="The fly loses by revealing a mine, wins by revealing all safe cells, or times out.">
+        <span class="who">Fly</span> <span>safe <b id="safe">–</b></span> <span>games (wins) <b id="games">0 (0)</b></span> <span>mean <b id="mean-safe">–</b></span> <span>last <b id="last-game">–</b></span>
+      </div>
     </div>
   </div>
-  <div class="right">
-    <div class="panel">
-      <h2>Whole nervous system — 139,662 somas, live spikes</h2>
-      <canvas id="brain" width="960" height="560"></canvas>
+  <!-- centre: brain map, legend, one stats strip with the pace buttons -->
+  <div class="col">
+    <div class="panel grow">
+      <h2><span>Whole nervous system — <span id="n-plot">139,662</span> somas, live spikes</span></h2>
+      <div class="box" id="brain-box"><canvas id="brain" width="960" height="560"></canvas></div>
       <div class="legend" id="legend"></div>
-      <div class="stats" style="margin-top:8px">
+      <div class="line" style="margin-top:5px">
+        <div><span>step</span> <b id="sim-step">0</b></div>
         <div><span>sim time</span> <b id="sim-time">0 s</b></div>
-        <div><span>spikes last step</span> <b id="spikes">0</b></div>
-        <div><span>compute</span> <b id="ms">– ms/step</b></div>
-        <div><span>speed</span> <b id="rtf">–× realtime</b></div>
+        <div><span>compute</span> <b id="ms">–</b></div>
+        <div><span>speed</span> <b id="rtf">–</b></div>
+        <div><span>spikes/step</span> <b id="spikes">0</b></div>
         <div><span>dynamics</span> <b id="preset" class="mono"></b></div>
-        <div><span>input route</span> <b id="route" class="mono"></b></div>
-      </div>
-      <div class="controls" style="margin-top:8px">
-        <span style="color:var(--dim)">pace:</span>
-        <button data-speed="0.5">½×</button><button data-speed="1" class="on">1×</button><button data-speed="4">4×</button><button data-speed="0">max</button>
-        <button id="pause">pause</button>
+        <div><span>route</span> <b id="route" class="mono"></b></div>
+        <span class="controls"><span class="dim">pace</span>
+          <button data-speed="0.5">½×</button><button data-speed="1">1×</button><button data-speed="4">4×</button><button data-speed="0">max</button>
+          <button id="pause" title="space">pause</button></span>
       </div>
     </div>
+  </div>
+  <!-- right: pool bars on top, the log below (scrolls inside its box) -->
+  <div class="col">
     <div class="panel">
+      <h2>Pools → buttons <span class="help" title="Bars: per-cell spike rate this turn above the pool's running baseline (Hz; the number is the raw rate, hover a row for its idle baseline and size). Gold = the action taken. Pools are real MaleCNS descending-neuron cell types (up: DNp09+DNg100+DNg97, down: MDN, left/right: DNa02+DNa11+DNg13 by side, reveal: DNpe017+DNp10, jump: DNp01 giant fiber); the button assignment is ours.">?</span></h2>
+      <div class="pools mono" id="pools"></div>
+      <div class="note mono" id="plasticity"></div>
+    </div>
+    <div class="panel grow">
       <h2>Log</h2>
       <div class="events mono" id="events"></div>
-      <div class="label" id="label"></div>
     </div>
   </div>
 </main>
+<div class="honest"><span id="label"></span>
+  <span class="help" title="Anatomy (from the connectome): neurons, synapse counts, transmitter signs, optic-lobe columns, cell types, soma positions. Engineered (ours): leaky integrate-and-fire dynamics and their constants, how the board is painted onto lamina/R7/R8 cells, the looming stimulus, and which descending neurons count as which button.">?</span></div>
 <script>
-const $ = id => document.getElementById(id);
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 const boardC = $('board'), bctx = boardC.getContext('2d');
 const brainC = $('brain'), kctx = brainC.getContext('2d');
-let atlas = null, img = null, pix = null, regions = null;
+const BRAIN_ASPECT = 960 / 560;
+let atlas = null, img = null, pix = null, regions = null, lastState = null, lastSpikes = null;
 const numColors = ['', '#4f7dff', '#4caf50', '#ff5a78', '#8e44ad', '#c0392b', '#16a085', '#111', '#777'];
 
+// ---------------------------------------------------------------- canvas sizing
+/** Fit `canvas` into its parent box at aspect w/h; returns true if the backing resolution changed. */
+function fitCanvas(canvas, aspect, backingScale) {
+  const box = canvas.parentElement, bw = box.clientWidth, bh = box.clientHeight;
+  if (bw < 8 || bh < 8) return false;
+  let cw = bw, ch = bw / aspect;
+  if (ch > bh) { ch = bh; cw = bh * aspect; }
+  cw = Math.floor(cw); ch = Math.floor(ch);
+  canvas.style.width = `${cw}px`; canvas.style.height = `${ch}px`;
+  const W = Math.round(cw * backingScale), H = Math.round(ch * backingScale);
+  if (canvas.width === W && canvas.height === H) return false;
+  canvas.width = W; canvas.height = H;
+  return true;
+}
+const dpr = Math.min(2, window.devicePixelRatio || 1);
+function fitBoard() { if (fitCanvas(boardC, 1, dpr) && lastState) drawBoard(lastState); }
+function fitBrain() { if (fitCanvas(brainC, BRAIN_ASPECT, 1)) { layoutAtlas(); if (lastSpikes) drawBrain(lastSpikes); } }
+new ResizeObserver((entries) => { for (const e of entries) (e.target.id === 'brain-box' ? fitBrain : fitBoard)(); })
+  .observe(boardC.parentElement);
+new ResizeObserver(fitBrain).observe($('brain-box'));
+
+// ---------------------------------------------------------------- brain map
 async function loadAtlas() {
   const buf = await (await fetch('/atlas')).arrayBuffer();
   const n = new DataView(buf).getUint32(0, true);
-  const xy = new Float32Array(buf, 4, n * 2);
-  const region = new Uint8Array(buf, 4 + n * 8, n);
-  const W = brainC.width, H = brainC.height, pad = 14;
-  pix = new Int32Array(n);
-  for (let i = 0; i < n; i++) {
+  atlas = { n, xy: new Float32Array(buf, 4, n * 2), region: new Uint8Array(buf, 4 + n * 8, n) };
+  $('n-plot').textContent = n.toLocaleString();
+  layoutAtlas();
+}
+function layoutAtlas() {
+  if (!atlas) return;
+  const W = brainC.width, H = brainC.height, pad = Math.max(4, Math.round(Math.min(W, H) * 0.025)), xy = atlas.xy;
+  pix = new Int32Array(atlas.n);
+  for (let i = 0; i < atlas.n; i++) {
     const x = Math.round(pad + xy[2 * i] * (W - 2 * pad));
     const y = Math.round(pad + xy[2 * i + 1] * (H - 2 * pad));
     pix[i] = y * W + x;
   }
-  atlas = { n, region };
   img = kctx.createImageData(W, H);
 }
-
 function drawBrain(spikes) {
-  if (!atlas || !regions) return;
-  const d = img.data, W = brainC.width;
+  if (!atlas || !regions || !img) return;
+  lastSpikes = spikes;
+  const d = img.data;
   d.fill(0);
   for (let i = 3; i < d.length; i += 4) d[i] = 255;
-  const base = 22;
+  const base = 22 * 0.35;
   for (let i = 0; i < atlas.n; i++) {
-    const p = pix[i] * 4;
-    const c = regions[atlas.region[i]].color;
-    const a = spikes[i] / 255;
-    d[p]     = Math.min(255, d[p]     + base * 0.35 + c[0] * a);
-    d[p + 1] = Math.min(255, d[p + 1] + base * 0.35 + c[1] * a);
-    d[p + 2] = Math.min(255, d[p + 2] + base * 0.35 + c[2] * a);
+    const p = pix[i] * 4, c = regions[atlas.region[i]].color, a = spikes[i] / 255;
+    d[p] = Math.min(255, d[p] + base + c[0] * a);
+    d[p + 1] = Math.min(255, d[p + 1] + base + c[1] * a);
+    d[p + 2] = Math.min(255, d[p + 2] + base + c[2] * a);
   }
   kctx.putImageData(img, 0, 0);
 }
 
+// ---------------------------------------------------------------- board
 function drawBoard(s) {
-  const rows = s.rows, cols = s.cols, W = boardC.width, cell = Math.floor(W / cols);
-  bctx.fillStyle = '#0a0d11'; bctx.fillRect(0, 0, W, W);
+  const rows = s.rows, cols = s.cols, W = boardC.width, H = boardC.height, cell = Math.floor(W / cols);
+  bctx.fillStyle = '#0a0d11'; bctx.fillRect(0, 0, W, H);
+  bctx.textAlign = 'center'; bctx.textBaseline = 'middle';
   for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
     const v = s.board ? s.board[r][c] : -1, x = c * cell, y = r * cell;
     bctx.fillStyle = v === -1 ? '#26313f' : v === 9 ? '#5a3d1a' : v === 10 ? '#7a1b2a' : '#0f151c';
     bctx.fillRect(x + 1, y + 1, cell - 2, cell - 2);
-    if (v >= 1 && v <= 8) { bctx.fillStyle = numColors[v]; bctx.font = `bold ${Math.floor(cell * 0.5)}px sans-serif`; bctx.textAlign = 'center'; bctx.textBaseline = 'middle'; bctx.fillText(v, x + cell / 2, y + cell / 2 + 1); }
-    if (v === 9) { bctx.fillStyle = '#ffb347'; bctx.font = `${Math.floor(cell * 0.45)}px sans-serif`; bctx.textAlign = 'center'; bctx.textBaseline = 'middle'; bctx.fillText('⚑', x + cell / 2, y + cell / 2 + 1); }
-    if (v === 10) { bctx.fillStyle = '#ff5a78'; bctx.font = `${Math.floor(cell * 0.5)}px sans-serif`; bctx.textAlign = 'center'; bctx.textBaseline = 'middle'; bctx.fillText('✸', x + cell / 2, y + cell / 2 + 1); }
+    if (v >= 1 && v <= 8) { bctx.fillStyle = numColors[v]; bctx.font = `bold ${Math.floor(cell * 0.5)}px -apple-system, sans-serif`; bctx.fillText(v, x + cell / 2, y + cell / 2 + 1); }
+    if (v === 9) { bctx.fillStyle = '#ffb347'; bctx.font = `${Math.floor(cell * 0.45)}px sans-serif`; bctx.fillText('⚑', x + cell / 2, y + cell / 2 + 1); }
+    if (v === 10) { bctx.fillStyle = '#ff5a78'; bctx.font = `${Math.floor(cell * 0.5)}px sans-serif`; bctx.fillText('✸', x + cell / 2, y + cell / 2 + 1); }
   }
   const [cr, cc] = s.cursor;
-  bctx.strokeStyle = s.danger >= (s.encoder.loom_threshold || 2) ? '#ff5a78' : '#ffc45a'; bctx.lineWidth = 3;
+  bctx.strokeStyle = s.danger >= (s.encoder.loom_threshold || 2) ? '#ff5a78' : '#ffc45a'; bctx.lineWidth = Math.max(2, cell * 0.06);
   bctx.strokeRect(cc * cell + 2, cr * cell + 2, cell - 4, cell - 4);
-  // eye split marker
-  bctx.strokeStyle = 'rgba(255,255,255,0.12)'; bctx.lineWidth = 1; bctx.setLineDash([4, 4]);
-  bctx.beginPath(); bctx.moveTo(W / 2, 0); bctx.lineTo(W / 2, W); bctx.stroke(); bctx.setLineDash([]);
+  bctx.strokeStyle = 'rgba(255,255,255,0.12)'; bctx.lineWidth = 1; bctx.setLineDash([4, 4]);   // eye split
+  bctx.beginPath(); bctx.moveTo(W / 2, 0); bctx.lineTo(W / 2, cell * rows); bctx.stroke(); bctx.setLineDash([]);
 }
 
+// ---------------------------------------------------------------- pools + plasticity
 function drawPools(s) {
-  const el = $('pools'); const max = Math.max(0.5, ...s.scores);
+  const max = Math.max(0.5, ...s.scores);
   let html = '';
   s.actions.forEach((a, i) => {
     const win = a === s.last_action;
-    html += `<div class="mono">${a}</div><div class="bar"><i class="${win ? 'win' : ''}" style="width:${Math.min(100, 100 * s.scores[i] / max)}%"></i></div><div class="mono" style="color:var(--dim)">${s.rates[i].toFixed(1)} Hz · ${s.pools[a]} cells</div>`;
+    const title = `${a}: ${s.rates[i].toFixed(2)} Hz this turn · idle baseline ${(s.idle[i] ?? 0).toFixed(2)} Hz · ${s.pools[a]} cells`;
+    html += `<div title="${title}">${a}</div><div class="bar" title="${title}"><i class="${win ? 'win' : ''}" style="width:${Math.min(100, 100 * s.scores[i] / max)}%"></i></div><div class="dim" title="${title}">${s.rates[i].toFixed(1)}</div>`;
   });
-  el.innerHTML = html;
+  $('pools').innerHTML = html;
+  const pl = s.plasticity;
+  if (pl && typeof pl === 'object') {
+    const fmt = (v) => typeof v === 'number' ? (Number.isInteger(v) ? v.toLocaleString() : v.toFixed(3)) : String(v);
+    if ('kc_mbon_edges' in pl) {
+      $('plasticity').textContent = `KC→MBON plastic edges ${fmt(pl.kc_mbon_edges)}, changed ${fmt(pl.edges_changed ?? 0)}, mean ratio ${fmt(pl.mean_weight_ratio ?? 1)}`
+        + (pl.events != null ? `, ${fmt(pl.events)} events` : '') + (pl.attached === false ? ' (detached)' : '');
+    } else {
+      $('plasticity').textContent = 'plasticity: ' + Object.entries(pl).map(([k, v]) => `${k} ${fmt(v)}`).join(', ');
+    }
+    $('plasticity').title = Object.entries(pl).map(([k, v]) => `${k}: ${fmt(v)}`).join('\n');
+  } else {
+    $('plasticity').textContent = '';
+  }
 }
 
+// ---------------------------------------------------------------- polling (10 Hz)
+function reflectControls(sim) {
+  document.querySelectorAll('button[data-speed]').forEach((b) => b.classList.toggle('on', !sim.paused && Number(b.dataset.speed) === Number(sim.speed)));
+  $('pause').classList.toggle('on', !!sim.paused);
+}
 async function tick() {
   try {
-    const [s, spikesBuf] = await Promise.all([fetch('/state').then(r => r.json()), fetch('/spikes').then(r => r.arrayBuffer())]);
+    const [s, spikesBuf] = await Promise.all([fetch('/state').then((r) => r.json()), fetch('/spikes').then((r) => r.arrayBuffer())]);
+    lastState = s;
     if (!regions) {
       regions = s.regions;
-      $('legend').innerHTML = regions.map(r => `<span><i style="background:rgb(${r.color.join(',')})"></i>${r.name}</span>`).join('');
-      $('label').textContent = s.label;
+      $('legend').innerHTML = regions.map((r) => `<span><i style="background:rgb(${r.color.join(',')})"></i>${r.name}</span>`).join('');
     }
+    $('label').textContent = s.label;
+    $('cond-title').textContent = `· ${s.condition}`;
+    $('cond').textContent = `· ${s.condition}`;
+    $('subtitle').textContent = `MaleCNS v1.0 · ${s.sim.neurons.toLocaleString()} neurons · ${s.sim.edges.toLocaleString()} connections · condition ${s.condition}${s.sim.sensory_input ? '' : ' · synapses onto sensory cells silenced'} · numba on CPU`;
     drawBoard(s); drawPools(s); drawBrain(new Uint8Array(spikesBuf));
-    $('game-title').textContent = `game ${s.game.number} · seed ${s.game.seed} · ${s.condition}`;
-    $('last-action').textContent = s.last_action;
+    $('game-title').textContent = `game ${s.game.number} · seed ${s.game.seed ?? '–'}${s.game.over ? (s.game.won ? ' · won' : ' · lost') : ''}`;
+    $('last-action').textContent = s.last_action ?? '–';
     $('danger').textContent = s.danger; $('danger').className = s.danger >= s.encoder.loom_threshold ? 'danger' : '';
+    $('turn').textContent = s.game.moves;
     $('safe').textContent = `${s.game.safe_revealed} / ${s.game.total_safe}`;
     $('games').textContent = `${s.totals.games} (${s.totals.wins})`;
     $('mean-safe').textContent = s.totals.mean_safe ?? '–';
     $('last-game').textContent = s.totals.last ? `${s.totals.last.outcome}, ${s.totals.last.safe_revealed} safe, ${s.totals.last.turns} turns` : '–';
+    $('sim-step').textContent = s.sim.step.toLocaleString();
     $('sim-time').textContent = `${s.sim.time_s} s`;
-    $('spikes').textContent = s.sim.spikes_last_step.toLocaleString();
     $('ms').textContent = `${s.sim.ms_per_step} ms/step`;
     $('rtf').textContent = s.sim.paused ? 'paused' : `${s.sim.rtf}× realtime`;
-    $('preset').textContent = `dt ${s.sim.preset.dt}s τ ${s.sim.preset.tau}s gain ${s.sim.preset.gain} tonic ${s.sim.preset.tonic}`;
+    const hz = s.sim.preset.dt ? (s.sim.spikes_last_step / s.sim.neurons / s.sim.preset.dt).toFixed(2) : null;
+    $('spikes').textContent = s.sim.spikes_last_step.toLocaleString() + (hz ? ` (${hz} Hz)` : '');
+    const p = s.sim.preset;
+    $('preset').textContent = `dt ${p.dt}s τ ${p.tau}s gain ${p.gain} tonic ${p.tonic}` + (p.noise_rate != null ? ` noise ${p.noise_rate}Hz×${p.noise_amp}` : '');
     $('route').textContent = `${s.encoder.route}${s.encoder.danger_loom ? ' + looming→DNp01' : ''}`;
-    $('events').innerHTML = s.events.map(e => `<div><b>${e.t}s</b> ${e.text}</div>`).join('');
+    $('events').innerHTML = s.events.slice(0, 12).map((e) => `<div><b>${e.t}s</b> ${esc(e.text)}</div>`).join('');
+    reflectControls(s.sim);
   } catch (e) { /* server restarting */ }
   setTimeout(tick, 100);
 }
 
-document.querySelectorAll('button[data-speed]').forEach(b => b.onclick = async () => {
+document.querySelectorAll('button[data-speed]').forEach((b) => b.onclick = async () => {
   await fetch(`/control?speed=${b.dataset.speed}&pause=0`);
-  document.querySelectorAll('button[data-speed]').forEach(x => x.classList.toggle('on', x === b));
+  document.querySelectorAll('button[data-speed]').forEach((x) => x.classList.toggle('on', x === b));
   $('pause').classList.remove('on');
 });
 $('pause').onclick = async () => {
@@ -191,7 +277,9 @@ $('pause').onclick = async () => {
   await fetch(`/control?pause=${on ? 1 : 0}`);
   $('pause').classList.toggle('on', on);
 };
+window.addEventListener('keydown', (ev) => { if (ev.key === ' ' && ev.target === document.body) { ev.preventDefault(); $('pause').click(); } });
 
+fitBoard(); fitBrain();
 loadAtlas().then(tick);
 </script>
 </body>

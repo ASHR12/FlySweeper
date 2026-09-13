@@ -30,7 +30,7 @@ from .agent import FlyPlayer, GameConfig
 from .brain import Brain
 from .decoder import DecoderParams
 from .encoder import EncoderParams
-from .mb_policy import DEFAULT_WEIGHTS, MBParams
+from .mb_policy import DEFAULT_WEIGHTS, GROUP_POOLS, SINGLE_POOLS, MBParams
 from .paths import OUTPUTS
 from .sim import Params
 from .teacher import Teacher
@@ -68,7 +68,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--games", type=int, default=2000)
     ap.add_argument("--seed0", type=int, default=10000)
     ap.add_argument("--out", type=Path, default=OUTPUTS / "mb" / datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ"))
-    ap.add_argument("--checkpoint-every", type=int, default=200)
+    ap.add_argument("--checkpoint-every", type=int, default=250)
     ap.add_argument("--warmstart-games", type=int, default=0, help="first N games: teacher-labelled supervised updates (Ramp-style)")
     ap.add_argument("--warmstart-follow", action="store_true", help="during warm start the cursor follows the teacher (else the fly's own choice)")
     ap.add_argument("--shuffle-reward", action="store_true", help="control: reward sign randomised per event")
@@ -85,6 +85,11 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--pn-kc-gain", type=float, default=1.0)
     ap.add_argument("--raw-eligibility", action="store_true", help="use raw KC counts instead of mean-subtracted ones")
     ap.add_argument("--raw-scores", action="store_true", help="decide on raw pool counts instead of mean-centred ones")
+    ap.add_argument("--pools", default="groups", choices=["groups", "single"], help="MBON pools: groups of types (round 2) or one type per action (round 1)")
+    ap.add_argument("--no-extra-orn", action="store_true", help="do not give the safety channels a second ORN type")
+    ap.add_argument("--sup-mode", default="error", choices=["error", "teacher"], help="supervised rule (see MBParams)")
+    ap.add_argument("--reveal-penalty", type=float, default=3.0)
+    ap.add_argument("--w-min-ratio", type=float, default=0.0)
     ap.add_argument("--kc-kc-gain", type=float, default=0.0)
     ap.add_argument("--w-max-ratio", type=float, default=5.0)
     ap.add_argument("--turn-steps", type=int, default=15)
@@ -99,7 +104,9 @@ def main(argv: list[str] | None = None) -> int:
     mbp = MBParams(eta=args.eta, other_credit=args.other_credit, trace_decay=args.trace_decay, temperature=args.temperature,
                    kc_bias=args.kc_bias, kc_kc_gain=args.kc_kc_gain, w_max_ratio=args.w_max_ratio,
                    pn_bias=args.pn_bias, pn_kc_gain=args.pn_kc_gain, centered=not args.raw_eligibility,
-                   center_scores=not args.raw_scores)
+                   center_scores=not args.raw_scores, action_mbons=GROUP_POOLS if args.pools == "groups" else SINGLE_POOLS,
+                   extra_orn=not args.no_extra_orn, sup_mode=args.sup_mode, reveal_penalty=args.reveal_penalty,
+                   w_min_ratio=args.w_min_ratio)
     brain = Brain()
     player = FlyPlayer(brain, cfg, Params.preset("flyai"), EncoderParams(route="lamina"), DecoderParams(), seed=args.seed0,
                        mb_params=mbp, mb_weights_path=args.init)

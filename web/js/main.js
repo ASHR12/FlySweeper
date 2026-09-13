@@ -7,7 +7,7 @@ import { Minesweeper, HIDDEN } from './minesweeper.js';
 import { Encoder } from './encoder.js';
 import { Decoder } from './decoder.js';
 import { RNG } from './rng.js';
-import { BrainMap } from './brainmap.js';
+import { BrainMap, harmonise } from './brainmap.js';
 import { BoardView } from './boardview.js';
 import { idleTest, loomTest, boardTest } from './tests.js';
 
@@ -35,6 +35,7 @@ const app = {
   stats: { msPerStep: null, msSource: '', rtf: 0, spikesLastStep: 0, lastBatchEnd: null, batches: 0, samples: [] },
   idleRates: null,
   events: [],
+  history: [],          // finished fly games: { game, outcome, safe, turns } (feeds the sparkline)
   suspendRequested: false, parked: false, newGameRequested: false,
 };
 
@@ -281,6 +282,8 @@ async function playFlyGame() {
   if (outcome !== 'aborted') {
     t.games += 1; t.wins += outcome === 'won' ? 1 : 0; t.safe += game.safeRevealed;
     t.last = { outcome, safe: game.safeRevealed, turns: fly.turn + 1 };
+    app.history.push({ game: app.gameNumber, outcome, safe: game.safeRevealed, turns: fly.turn + 1 });
+    if (app.history.length > 200) app.history.splice(0, app.history.length - 200);
     addEvent(`fly ${outcome}: ${game.safeRevealed}/${game.totalSafe} safe cells in ${fly.turn + 1} turns`);
   } else {
     // "new game" pressed mid-game: counted separately, excluded from games/wins/mean
@@ -414,7 +417,8 @@ function setupUi(model) {
   app.flyView = new BoardView($('fly-board'), g.rows, g.cols, { eyeSplit: true });
   app.youView = new BoardView($('you-board'), g.rows, g.cols, { onReveal: humanReveal, onFlag: humanFlag });
   $('boards-title').textContent = SHOW_HUMAN_BOARD ? 'Same mines, two players' : 'Fly';
-  $('legend').innerHTML = model.regions.map((r) => `<span><i style="background:rgb(${r.color.join(',')})"></i>${r.name}</span>`).join('');
+  $('cond-chip').textContent = `fly · frozen connectome`;
+  $('legend').innerHTML = model.regions.map((r) => `<span><i style="background:rgb(${harmonise(r.color).join(',')})"></i>${r.name}</span>`).join('');
   $('label').textContent = model.label;
   $('subtitle').textContent = `${model.dataset} · ${model.n_neurons.toLocaleString()} neurons · ${model.n_edges_total.toLocaleString()} connections (${model.n_edges_silenced.toLocaleString()} onto sensory cells silenced) · simulated on your GPU`;
   const s = model.sim;
@@ -450,14 +454,12 @@ function setupUi(model) {
 // canvas sizing: every canvas sits absolutely inside a flex ".box" and is fitted to the box by a
 // ResizeObserver (so the layout is driven by the viewport, never by the canvas)
 // ------------------------------------------------------------------------------------------
-const BRAIN_ASPECT = 960 / 560;   // the soma atlas is drawn into a 12:7 frame, like the Python spectator page
-
-/** Fit `canvas` into its parent box at `aspect` (w/h); returns true if the backing resolution changed. */
+/** Fit `canvas` into its parent box at `aspect` (w/h; 0 = fill the box); returns true if the backing resolution changed. */
 function fitCanvas(canvas, aspect, backingScale) {
   const box = canvas.parentElement;
   const bw = box.clientWidth, bh = box.clientHeight;
   if (bw < 8 || bh < 8) return false;
-  let cw = bw, ch = bw / aspect;
+  let cw = bw, ch = aspect ? bw / aspect : bh;
   if (ch > bh) { ch = bh; cw = bh * aspect; }
   cw = Math.floor(cw); ch = Math.floor(ch);
   canvas.style.width = `${cw}px`; canvas.style.height = `${ch}px`;
@@ -476,8 +478,9 @@ function setupResize() {
   };
   const fitBrain = () => {
     const brain = $('brain');
-    // 1 backing pixel per CSS pixel: each soma is one dot, same look as the fixed 960x560 version
-    if (fitCanvas(brain, BRAIN_ASPECT, 1)) app.brainMap.resize(brain.width, brain.height);
+    // the canvas fills its box (1 backing pixel per CSS pixel); the soma cloud is fitted inside it
+    // at its true proportions by BrainMap._layout
+    if (fitCanvas(brain, 0, 1)) app.brainMap.resize(brain.width, brain.height);
   };
   const ro = new ResizeObserver((entries) => {
     for (const e of entries) {
@@ -511,7 +514,7 @@ function updateDom() {
       visible: fly.game.visible(), cursor: fly.cursor, dangerous: fly.danger >= app.model.encoder.params.loom_threshold,
       mineHit: fly.game.mineHit, dim: fly.phase === 'waiting',
       banner: over && fly.outcome ? fmtOutcome(fly.outcome) : fly.phase === 'settle' ? 'settling…' : null,
-      bannerColor: fly.outcome === 'won' ? '#4caf50' : fly.outcome === 'lost' ? '#ff5a78' : '#e6edf3',
+      bannerColor: fly.outcome === 'won' ? '#5ecf8a' : fly.outcome === 'lost' ? '#f0647c' : '#e7ebf0',
     });
   }
   if (human.game && SHOW_HUMAN_BOARD) {
@@ -519,7 +522,7 @@ function updateDom() {
       visible: human.game.visible(), mineHit: human.game.mineHit,
       safeStart: human.game.safeRevealed === 0 && !human.game.over ? [Math.floor(g.rows / 2), Math.floor(g.cols / 2)] : null,
       banner: human.game.over ? (human.game.won ? 'YOU WON' : 'BOOM') : null,
-      bannerColor: human.game.won ? '#4caf50' : '#ff5a78',
+      bannerColor: human.game.won ? '#5ecf8a' : '#f0647c',
     });
   }
   // fly stats
@@ -527,7 +530,7 @@ function updateDom() {
   $('fly-status').textContent = flyStatus;
   $('fly-status-top').textContent = ` · ${flyStatus}`;
   $('last-action').textContent = fly.lastAction + (fly.lastResult && fly.lastAction === 'reveal' ? ` (${fly.lastResult})` : '');
-  $('danger').textContent = fly.danger; $('danger').className = fly.danger >= app.model.encoder.params.loom_threshold ? 'danger' : '';
+  $('danger').textContent = fly.danger; $('danger-kv').className = 'kv' + (fly.danger >= app.model.encoder.params.loom_threshold ? ' danger' : '');
   $('fly-turn').textContent = fly.game ? `${fly.phase === 'settle' || fly.phase === 'calibrating' ? 0 : fly.turn + 1} / ${g.max_turns}` : '–';
   // human stats
   if (human.game) {
@@ -536,26 +539,38 @@ function updateDom() {
     $('you-flags').textContent = `${human.game.flagsPlaced} / ${g.mines}`;
     $('you-status').textContent = human.game.over ? (human.game.won ? 'won' : 'lost') : human.started ? 'playing' : 'your move';
   }
-  // scoreboard
-  const sb = (side, game, tot, extra) => {
-    $(`${side}-safe`).textContent = game ? `${game.safeRevealed} / ${game.totalSafe}` : '–';
-    $(`${side}-games`).textContent = `${tot.games} (${tot.wins})`;
-    $(`${side}-mean`).textContent = tot.games ? (tot.safe / tot.games).toFixed(1) : '–';
-    $(`${side}-last`).textContent = tot.last ? `${tot.last.outcome}, ${tot.last.safe} safe, ${extra(tot.last)}` : '–';
-    $(`${side}-abandoned`).textContent = String(tot.abandoned);
-  };
-  $('you-note').textContent = human.relocation || '';
-  sb('fly', fly.game, app.totals.fly, (l) => `${l.turns} turns`);
-  sb('you', human.game, app.totals.human, (l) => l.seconds != null ? `${l.seconds.toFixed(1)} s` : '');
+  // stat tiles (fly) + sparkline of safe cells per finished game
+  const tf = app.totals.fly, fg = fly.game;
+  $('fly-safe').innerHTML = fg ? `${fg.safeRevealed}<small> / ${fg.totalSafe}</small>` : '–';
+  $('fly-safe-sub').textContent = fg ? `this board · ${fly.phase === 'playing' ? `turn ${fly.turn + 1}` : fly.phase}` : 'this board';
+  $('fly-games').innerHTML = `${tf.games}<small> (${tf.wins})</small>`;
+  $('fly-games-sub').textContent = tf.abandoned ? `${tf.abandoned} abandoned` : 'finished (won)';
+  $('fly-mean').textContent = tf.games ? (tf.safe / tf.games).toFixed(1) : '–';
+  $('fly-mean-sub').textContent = fg ? `of ${fg.totalSafe} safe cells` : 'of 71';
+  $('fly-last').textContent = tf.last ? tf.last.outcome : '–';
+  $('fly-last').className = 'v ' + (tf.last ? tf.last.outcome : '');
+  $('fly-last-sub').textContent = tf.last ? `${tf.last.safe} safe · ${tf.last.turns} turns` : '\u00a0';
+  drawSparkline($('spark'), app.history.map((h) => h.safe), fg ? fg.totalSafe : 71, $('spark-s'));
+  // human scoreline (only when the human board is shown)
+  if (SHOW_HUMAN_BOARD) {
+    const th = app.totals.human, hg = human.game;
+    $('you-safe').textContent = hg ? `${hg.safeRevealed} / ${hg.totalSafe}` : '–';
+    $('you-games').textContent = `${th.games} (${th.wins})`;
+    $('you-mean').textContent = th.games ? (th.safe / th.games).toFixed(1) : '–';
+    $('you-last').textContent = th.last ? `${th.last.outcome}, ${th.last.safe} safe, ${th.last.seconds != null ? `${th.last.seconds.toFixed(1)} s` : ''}` : '–';
+    $('you-abandoned').textContent = String(th.abandoned);
+    $('you-note').textContent = human.relocation || '';
+  }
   $('game-title').textContent = fly.game ? `game ${app.gameNumber} · seed ${fly.game.seed}` : '';
-  // pools
-  const scores = dec.lastScores, rates = dec.lastRates, max = Math.max(0.5, ...scores);
+  // pools: bar = rate this turn, tick = running baseline, gold = the action taken
+  const rates = dec.lastRates, base = dec.running, max = Math.max(1, ...rates, ...base) * 1.08;
   let html = '';
   dec.actions.forEach((a, i) => {
     const win = a === fly.lastAction && fly.phase === 'playing';
-    const title = `${a}: ${rates[i].toFixed(2)} Hz this turn · running baseline ${dec.running[i].toFixed(2)} Hz · ${dec.sizes[i]} cells`;
-    html += `<div title="${title}">${a}</div><div class="bar" title="${title}"><i class="${win ? 'win' : ''}" style="width:${Math.min(100, (100 * scores[i]) / max)}%"></i></div>` +
-      `<div class="dim" title="${title}">${rates[i].toFixed(1)}</div>`;
+    const title = `${a}: ${rates[i].toFixed(2)} Hz this turn · running baseline ${base[i].toFixed(2)} Hz · ${dec.sizes[i]} cells`;
+    html += `<div class="name" title="${title}">${a}<small>${dec.sizes[i]}</small></div>` +
+      `<div class="bar" title="${title}"><i class="${win ? 'win' : ''}" style="width:${Math.min(100, (100 * rates[i]) / max).toFixed(1)}%"></i><s style="left:${Math.min(100, (100 * base[i]) / max).toFixed(1)}%"></s></div>` +
+      `<div class="rate" title="${title}"><b>${rates[i].toFixed(1)}</b> Hz</div>`;
   });
   $('pools').innerHTML = html;
   // sim stats
@@ -566,7 +581,44 @@ function updateDom() {
   $('ms').textContent = st.msPerStep == null ? '–' : `${st.msPerStep.toFixed(2)} ms/step (${st.msSource === 'gpu' ? 'GPU' : 'wall'})`;
   $('ms').title = st.msSource === 'gpu' ? 'GPU timestamp queries' : 'wall time including readback';
   $('rtf').textContent = app.pace.paused ? 'paused' : `${st.rtf.toFixed(1)}× realtime`;
-  $('events').innerHTML = app.events.slice(-12).reverse().map((e) => `<div><b>${e.t}s</b> ${escapeHtml(e.text)}</div>`).join('');
+  // live indicator: green + pulsing while the step counter advances
+  const advancing = sim.stepCount !== live.lastStep;
+  if (advancing) live.lastChange = performance.now();
+  live.lastStep = sim.stepCount;
+  const isLive = !app.pace.paused && performance.now() - live.lastChange < 600;
+  $('live').classList.toggle('on', isLive);
+  $('live-text').textContent = app.pace.paused ? 'paused' : isLive ? 'live' : 'idle';
+  $('events').innerHTML = app.events.slice(-12).reverse().map((e) => `<div class="${eventClass(e.text)}"><b>${e.t}s</b>${escapeHtml(e.text)}</div>`).join('');
+}
+
+const live = { lastStep: -1, lastChange: 0 };
+function eventClass(text) {
+  if (/→ mine|\blost\b|BOOM|crashed/.test(text)) return 'bad';
+  if (/\bwon\b/.test(text)) return 'good';
+  return '';
+}
+
+/** Tiny line + area chart of safe cells per finished game (last 50), with the mean as a dotted line. */
+function drawSparkline(canvas, values, total, labelEl) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const cw = canvas.clientWidth || 200, ch = canvas.clientHeight || 26;
+  if (canvas.width !== Math.round(cw * dpr) || canvas.height !== Math.round(ch * dpr)) { canvas.width = Math.round(cw * dpr); canvas.height = Math.round(ch * dpr); }
+  const ctx = canvas.getContext('2d'), W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  const v = values.slice(-50);
+  if (labelEl) labelEl.textContent = v.length ? `${v.length} game${v.length === 1 ? '' : 's'}` : 'no games yet';
+  if (!v.length) { ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.setLineDash([2 * dpr, 4 * dpr]); ctx.beginPath(); ctx.moveTo(0, H / 2); ctx.lineTo(W, H / 2); ctx.stroke(); ctx.setLineDash([]); return; }
+  const pad = 2 * dpr, x = (i) => v.length === 1 ? W / 2 : pad + (i / (v.length - 1)) * (W - 2 * pad), y = (s) => H - pad - (s / total) * (H - 2 * pad);
+  const mean = v.reduce((a, b) => a + b, 0) / v.length;
+  ctx.strokeStyle = 'rgba(255,255,255,0.10)'; ctx.lineWidth = dpr; ctx.setLineDash([2 * dpr, 4 * dpr]);
+  ctx.beginPath(); ctx.moveTo(0, y(mean)); ctx.lineTo(W, y(mean)); ctx.stroke(); ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(x(0), H); v.forEach((s, i) => ctx.lineTo(x(i), y(s))); ctx.lineTo(x(v.length - 1), H); ctx.closePath();
+  const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, 'rgba(242,193,92,0.28)'); g.addColorStop(1, 'rgba(242,193,92,0.0)');
+  ctx.fillStyle = g; ctx.fill();
+  ctx.beginPath(); v.forEach((s, i) => (i ? ctx.lineTo(x(i), y(s)) : ctx.moveTo(x(i), y(s))));
+  ctx.strokeStyle = '#f2c15c'; ctx.lineWidth = 1.5 * dpr; ctx.lineJoin = 'round'; ctx.stroke();
+  const lx = x(v.length - 1), ly = y(v[v.length - 1]);
+  ctx.fillStyle = '#f2c15c'; ctx.beginPath(); ctx.arc(lx, ly, 2 * dpr, 0, Math.PI * 2); ctx.fill();
 }
 
 // ------------------------------------------------------------------------------------------

@@ -150,12 +150,13 @@ class FlyPlayer:
     def enable_mb(self, load: bool = True) -> MBPolicy:
         """Build the mushroom-body policy; load trained KC->MBON weights if a file exists."""
         if self.mb is None:
-            self.mb = MBPolicy(self.brain, self.sim, self.mb_params)
             path = self.mb_weights_path or (DEFAULT_WEIGHTS if DEFAULT_WEIGHTS.exists() else None)
             if load and path is not None:
-                self.mb.load(path)
+                # pools / odor mapping / KC changes come from the file so the edge set matches
+                self.mb = MBPolicy.from_file(self.brain, self.sim, path, self.mb_params)
                 self.mb.loaded_from = str(path)
             else:
+                self.mb = MBPolicy(self.brain, self.sim, self.mb_params)
                 self.mb.loaded_from = None
         return self.mb
 

@@ -66,12 +66,34 @@ ORN_TYPES = (
 )
 assert len(ORN_TYPES) >= N_CHANNELS
 
+# Round 2: the safety facts get a second ORN type each (more PNs -> a larger Kenyon-cell footprint),
+# using types not in ORN_TYPES.  channel name -> extra ORN types.
+EXTRA_ORN_TYPES = {
+    "cursor_safe": ("ORN_DA3", "ORN_DP1l"), "cursor_mine": ("ORN_DA4l", "ORN_VM1"),
+    "cursor_frontier": ("ORN_DC1", "ORN_DM4"), "cursor_free": ("ORN_VC2", "ORN_DP1m"),
+    "guess_here": ("ORN_VC5",), "no_safe_known": ("ORN_VA3",),
+}
+
+# Round 1 pools: one MBON type per action.
+SINGLE_POOLS = (("up", ("MBON01",)), ("down", ("MBON05",)), ("left", ("MBON06",)),
+                ("right", ("MBON03",)), ("reveal", ("MBON11",)), ("jump", ("MBON09",)))
+# Round 2 pools: every MBON type with >= 20% of its input from KCs (34 types, 91 cells), dealt
+# greedily by KC edge count into six groups of ~10k KC->MBON edges (10-23 cells each).
+GROUP_POOLS = (
+    ("up", ("MBON09", "MBON32", "MBON30", "MBON31", "MBON25-like", "MBON28")),
+    ("down", ("MBON02", "MBON06", "MBON04", "MBON15-like", "MBON25", "MBON17-like")),
+    ("left", ("MBON11", "MBON05", "MBON21", "MBON23", "MBON27")),
+    ("right", ("MBON12", "MBON29", "MBON24", "MBON03", "MBON16")),
+    ("reveal", ("MBON07", "MBON01", "MBON18", "MBON10", "MBON15", "MBON26")),
+    ("jump", ("MBON14", "MBON22", "MBON20", "MBON19", "MBON13", "MBON17")),
+)
+
 
 @dataclass
 class MBParams:
-    # action -> MBON type (both hemispheres; chosen for large KC in-degree, see --probe)
-    action_mbons: tuple = (("up", "MBON01"), ("down", "MBON05"), ("left", "MBON06"),
-                           ("right", "MBON03"), ("reveal", "MBON11"), ("jump", "MBON09"))
+    # action -> MBON types (both hemispheres; chosen for large KC in-degree, see --probe)
+    action_mbons: tuple = GROUP_POOLS
+    extra_orn: bool = True         # give the safety channels a second ORN type (EXTRA_ORN_TYPES)
     odor_amp: float = 1.0          # ORN current per step at channel value 1 (saturates ORNs at 50 Hz)
     kc_kc_gain: float = 0.0
     kc_bias: float = -0.20
@@ -79,8 +101,13 @@ class MBParams:
     pn_bias: float = 0.0           # optional: suppress the antennal-lobe PNs' spontaneous rate (documented)
     eta: float = 0.02
     other_credit: float = 0.2      # non-chosen pools receive -eta*da*e*other_credit
-    w_min_ratio: float = 0.1
-    w_max_ratio: float = 5.0
+    w_min_ratio: float = 0.0       # silent synapse allowed
+    w_max_ratio: float = 10.0
+    sup_mode: str = "error"        # "error": on a mistake +1 teacher pool / -1 chosen pool (perceptron)
+                                   # "teacher": every turn +1 teacher pool / -other_credit others
+    reveal_penalty: float = 3.0    # extra debit when the fly chose "reveal" and the teacher did not
+    reveal_margin: float = 0.0     # decoder engineering: reveal only if it beats the runner-up by this
+                                   # (in centred spikes/cell); otherwise take the runner-up. Argmax mode only.
     trace_decay: float = 0.5       # per-turn eligibility decay
     baseline_alpha: float = 0.05   # running-mean reward
     centered: bool = True          # eligibility uses (KC count - KC running mean): the shared component
@@ -101,10 +128,10 @@ class MBParams:
 class OdorEncoder:
     """Channel k of the helper's vector drives every cell of ORN type k with current amp * value."""
 
-    def __init__(self, brain: Brain, amp: float):
+    def __init__(self, brain: Brain, amp: float, extra: bool = True):
         self.amp = amp
-        self.types = ORN_TYPES[:N_CHANNELS]
-        self.cells = [brain.cells(types=t) for t in self.types]
+        self.types = [(t,) + (EXTRA_ORN_TYPES.get(name, ()) if extra else ()) for name, t in zip(CHANNELS, ORN_TYPES)]
+        self.cells = [np.concatenate([brain.cells(types=t) for t in ts]) for ts in self.types]
         self.sizes = np.array([len(c) for c in self.cells])
         self.all_idx = np.concatenate(self.cells)
         self.owner = np.repeat(np.arange(N_CHANNELS), self.sizes)
@@ -118,7 +145,7 @@ class OdorEncoder:
             sim.inject(self.all_idx, self.current)
 
     def describe(self) -> dict:
-        return {name: {"orn_type": t, "cells": int(n)} for name, t, n in zip(CHANNELS, self.types, self.sizes)}
+        return {name: {"orn_types": list(t), "cells": int(n)} for name, t, n in zip(CHANNELS, self.types, self.sizes)}
 
 
 class MBPolicy:
@@ -132,12 +159,13 @@ class MBPolicy:
             sim.data = sim.data.copy()
         self.actions = list(ACTIONS)
         self.oracle = Oracle(OracleParams(jump_distance=self.p.jump_distance))
-        self.odor = OdorEncoder(brain, self.p.odor_amp)
+        self.odor = OdorEncoder(brain, self.p.odor_amp, self.p.extra_orn)
         g = brain.graph
         n = brain.n
-        # ---- pools
-        mb = dict(self.p.action_mbons)
-        self.pool_idx = {a: brain.cells(types=mb[a]) for a in self.actions}
+        # ---- pools (each action: one or more MBON types)
+        mb = {a: ((t,) if isinstance(t, str) else tuple(t)) for a, t in self.p.action_mbons}
+        self.p.action_mbons = tuple((a, mb[a]) for a in self.actions)
+        self.pool_idx = {a: np.concatenate([brain.cells(types=t) for t in mb[a]]) for a in self.actions}
         self.sizes = np.array([len(self.pool_idx[a]) for a in self.actions], dtype=np.float32)
         self.pool_of = np.full(n, -1, dtype=np.int64)
         for k, a in enumerate(self.actions):
@@ -273,7 +301,14 @@ class MBPolicy:
         self.last_scores = scores
         T = self.p.temperature
         if T <= 0:
-            best = np.flatnonzero(scores == scores.max())
+            order = np.argsort(-scores, kind="stable")
+            k_rev = self.actions.index("reveal")
+            dropped = False
+            if self.p.reveal_margin > 0 and order[0] == k_rev and scores[k_rev] - scores[order[1]] < self.p.reveal_margin:
+                order, dropped = order[1:], True        # decoder engineering: not confident enough to reveal
+            best = np.flatnonzero(scores == scores[order[0]])
+            if dropped:
+                best = best[best != k_rev]
             self.last_probs = np.zeros_like(scores)
             self.last_probs[best] = 1 / len(best)
             return self.actions[int(rng.choice(best))]
@@ -352,12 +387,20 @@ class MBPolicy:
         the teacher's, the teacher's pool is credited (+1 x KC counts) and the chosen pool debited
         (-1 x KC counts); a PAM dopamine pulse marks the teaching event.  Agreement -> no change."""
         act = self._kc_activity()          # always consume the window (keeps the running mean current)
-        if teacher_action == chosen_action:
-            return
+        kt, kc = self.actions.index(teacher_action), self.actions.index(chosen_action)
+        k_rev = self.actions.index("reveal")
+        if self.p.sup_mode == "teacher":
+            # every turn: credit the teacher's pool, debit the others a little; a wrong "reveal" a lot
+            credit = np.where(self.edge_pool == kt, 1.0, -self.p.other_credit).astype(np.float32)
+            if kt != k_rev:
+                credit[self.edge_pool == k_rev] = -self.p.reveal_penalty * self.p.other_credit
+        else:
+            if teacher_action == chosen_action:
+                return
+            debit = self.p.reveal_penalty if kc == k_rev else 1.0
+            credit = np.where(self.edge_pool == kt, 1.0, np.where(self.edge_pool == kc, -debit, 0.0)).astype(np.float32)
         self.pending.append((self.p.dopamine_steps, 1.0))
         self.game_log["supervised"] += 1
-        kt, kc = self.actions.index(teacher_action), self.actions.index(chosen_action)
-        credit = np.where(self.edge_pool == kt, 1.0, np.where(self.edge_pool == kc, -1.0, 0.0)).astype(np.float32)
         self._apply(1.0, act * credit, "teacher")
 
     # ------------------------------------------------------------------ bookkeeping
@@ -397,13 +440,37 @@ class MBPolicy:
             edge_kc=self.edge_kc, actions=np.array(self.actions), baseline=np.array([self.baseline]), score_mean=self.score_mean,
             games_trained=np.array([self.games_trained]),
             params=json.dumps(asdict(self.p)), meta=json.dumps({**self.meta, **(meta or {})}),
-            channels=np.array(CHANNELS), orn_types=np.array(self.odor.types),
+            channels=np.array(CHANNELS), orn_types=np.array(["+".join(t) for t in self.odor.types]),
         )
+
+    @staticmethod
+    def params_from_file(path: str | Path, override: MBParams | None = None) -> MBParams:
+        """The structural settings (pools, odor mapping, KC changes) a weights file was trained with,
+        so a policy can be built that matches it; other settings come from `override` / defaults."""
+        z = np.load(path, allow_pickle=False)
+        saved = json.loads(str(z["params"])) if "params" in z else {}
+        p = MBParams(**asdict(override)) if override is not None else MBParams()
+        if "action_mbons" in saved:
+            p.action_mbons = tuple((a, tuple(t) if not isinstance(t, str) else (t,)) for a, t in saved["action_mbons"])
+        p.extra_orn = bool(saved.get("extra_orn", False))
+        for k in ("kc_kc_gain", "kc_bias", "pn_kc_gain", "pn_bias", "odor_amp", "center_scores", "score_mean_alpha", "reveal_margin"):
+            if k in saved:
+                setattr(p, k, saved[k])
+        if saved and "center_scores" not in saved:
+            p.center_scores = False
+        return p
+
+    @classmethod
+    def from_file(cls, brain: Brain, sim: LIF, path: str | Path, override: MBParams | None = None) -> "MBPolicy":
+        pol = cls(brain, sim, cls.params_from_file(path, override))
+        pol.load(path)
+        return pol
 
     def load(self, path: str | Path) -> dict:
         z = np.load(path, allow_pickle=False)
         if len(z["edge_pos"]) != len(self.edge_pos) or not np.array_equal(z["edge_pos"], self.edge_pos):
-            raise ValueError(f"{path}: plastic edge set does not match this brain / action-MBON assignment")
+            raise ValueError(f"{path}: plastic edge set does not match this brain / action-MBON assignment "
+                             f"(build the policy with MBPolicy.from_file)")
         self.w_learned = z["w"].astype(self.sim.data.dtype)
         if self.attached:
             self.sim.data[self.edge_pos] = self.w_learned
@@ -412,7 +479,7 @@ class MBPolicy:
         self.meta = json.loads(str(z["meta"])) if "meta" in z else {}
         saved = json.loads(str(z["params"])) if "params" in z else {}
         # the decision-side settings the weights were trained under travel with the weights
-        for k in ("center_scores", "score_mean_alpha", "kc_kc_gain", "kc_bias", "pn_kc_gain", "pn_bias", "odor_amp"):
+        for k in ("center_scores", "score_mean_alpha", "kc_kc_gain", "kc_bias", "pn_kc_gain", "pn_bias", "odor_amp", "reveal_margin"):
             if k in saved:
                 setattr(self.p, k, saved[k])
         if saved and "center_scores" not in saved:
