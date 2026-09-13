@@ -263,8 +263,9 @@ one extra per-neuron term, applied by `MBPolicy.apply()` after the idle calibrat
 * *Bias.* `step.wgsl` adds `bitcast<f32>(nmeta[2n + j])` to the external drive of neuron `j` on every
   step — a third segment of the existing metadata buffer that is zero unless a weight set sets
   `kc_bias` on the KCs and `pn_bias` on the PNs (`FlySim.setBias`). One extra 4-byte read per neuron
-  per step, i.e. 0.67 MB against the ~200 MB the gather reads; ms/step is unchanged (1.7–1.9 ms live
-  at `max` with the odour drive, vs. 1.6–1.9 ms frozen).
+  per step, i.e. 0.67 MB against the ~200 MB the gather reads (the gather is dense, so its cost does
+  not depend on the weights or the activity; live headless runs at `max` measured 1.8–1.9 ms/step
+  with round 2 and 1.2–1.6 ms with round 1 / frozen, within the GPU-clock variance seen before).
 * *Pools.* `FlySim.setPools` rewrites the pool-id segment so the atomic counters count the MBON pools
   instead of the descending neurons; the odour current joins the retinal (index, amount) list that
   `scatter.wgsl` adds before each step (≈7 k pairs per step at most; `maxDrive` is 16,384).
@@ -326,8 +327,70 @@ fully inside the viewport; the human board absent by default; zero console error
 `outputs/flysweeper-web-classy.png` (Python page, same look: `outputs/flysweeper-py-classy.png`).
 With `?human=1` the two boards share the left column and are smaller at these sizes.
 
+### Trained fly (fly-mb) in the browser
+
+* `js/oracle.js` vs `flysweeper/oracle.py`: bit-identical on 1,157 sampled board states (300 random
+  games, random cursors; 1,084 "safe", 64 "guess-free", 5 "guess-frontier", 3 untouched, 1 "none"):
+  0 mismatches over 31 × 1,157 channel values.
+* Round 2 (`data/compiled/mb_weights.npz`, default), headless Chrome, `?speed=0`, seeds 1000–1049:
+  **30 wins in 50 games (60 %)**, mean 68.0 safe cells of 71, mean 71 turns per game; 20 losses.
+  Python on held-out seeds 5000–5099: 48/100 wins, 66.7 ± 0.8 safe cells (the browser runs different
+  boards and a different noise stream; 60 % on 50 games is within ~1.7 SE of 48 %). The applied edit
+  matched the file exactly: 59,334 plastic edges replaced (55,832 changed, 5,152 trained to silence),
+  642,933 KC→KC edges × 0, 22,586 PN→KC edges × 3, KC bias −0.3, PN bias −0.3.
+* Round 1 (`outputs/mb/warm/weights_000200.npz`): 0 wins in 6 games, 50.2 safe cells (Python: 0/30,
+  46.9 ± 2.0).
+* Frozen (selector → "Frozen connectome"): 0 wins in 8 games, 48.0 safe cells, the DN pool rates and
+  behaviour as before.
+* Switching the selector (round2 → frozen, round2 → round1) navigated to
+  `?speed=0&weights=<id>&v=<timestamp>`; every module, shader, `config.json` and weight file was
+  re-fetched with the new `?v=`, the chip/label/chips changed accordingly, the step counter restarted.
+* Zero console errors, no scroll at 1440×760, 1280×680 and 1512×982. Screenshot (round 2, 1440×760):
+  `outputs/flysweeper-web-trained.png`.
+
+## Deploying (static hosting)
+
+The page is static files: `index.html`, `config.json`, `js/`, `shaders/`, `weights/` (~0.6 MB,
+committed) and the connectome export `data/` (~205 MB, gitignored). Any static host works — the page
+needs `https` (or `localhost`) for WebGPU and correct `Content-Type` is irrelevant (everything is
+fetched as bytes / text).
+
+* **Small files with the site, big files elsewhere.** Put the eight files of `web/data/` (including
+  `manifest.json`) on a host that allows ~100 MB objects and sends CORS headers
+  (`Access-Control-Allow-Origin: *`): GitHub Release assets (2 GB limit per file; served from
+  `https://github.com/<owner>/<repo>/releases/download/<tag>/`), a Hugging Face dataset repo
+  (`https://huggingface.co/datasets/<owner>/<name>/resolve/main/`), or an S3/R2/GCS bucket with a CORS
+  rule. Then point the app at it, in one of three ways (highest precedence first):
+  `window.FLYSWEEPER_DATA_BASE = 'https://…/'` in `index.html` before the module script;
+  `?data=https://…/` in the URL; or `"data_base": "https://…/"` in `web/config.json` (default
+  `./data/`). The files are byte-verified against `manifest.json` and cached locally after the first
+  visit, so a CDN is not required.
+* **Vercel**: `vercel --prod` from `web/` (or set the project root to `web/`, framework "Other", no
+  build command). Vercel's 100 MB static-file limit means the connectome cannot ship with the site,
+  hence `data_base`. Add `{"headers":[{"source":"/(.*)","headers":[{"key":"Cache-Control","value":"no-cache"}]}]}`
+  to `vercel.json` if you would rather not rely on the version token.
+* **GitHub Pages**: publish `web/` (e.g. `gh-pages` branch or *Deploy from a branch → /web*); same
+  `data_base` note, files are limited to 100 MB there too.
+* **Cache busting**: bump `APP_VERSION` in `index.html` when deploying new JS/WGSL; it becomes the
+  `?v=` on every module (import map), shader and weight fetch. The connectome files are keyed by
+  content hash independently of it.
+* **Adding round 3**: run the export command above with `--name round3 … --default`, commit
+  `web/weights/`, redeploy. No code change: the selector, chip and honesty line read the manifest.
+
 ## Known limitations / open points
 
+* The Python game places its mines on the first reveal (a 3×3 mine-free zone around it); the browser
+  pre-generates a layout with the mine-free zone at the centre so the human can play the same board.
+  A fly first reveal elsewhere is made safe by moving one mine, not a whole 3×3 zone, so its first
+  opening can be smaller than in Python (in practice the trained fly reveals the centre first).
+* Win rates in the browser are on seeds 1000+, not the Python held-out seeds 5000–5099, and the GPU
+  noise stream differs from numpy's; compare rates, not games. The MBON running means start from the
+  values saved in the weight file and then drift with the browser's own games, as in the Python
+  process.
+* No learning in the browser: the trained weights are applied read-only (the Python `fly-learning` /
+  `train_mb.py` dopamine updates are not ported); switching weight sets reloads the page.
+* Round 1's file predates `extra_orn`, `reveal_margin` and `mask_reveal`; the exporter applies the
+  same defaults as `MBPolicy.params_from_file` (extra ORN level 0, margin 0, no mask).
 * The two boards share one mine layout; the human's safe first click is implemented by moving the
   offending mine on both boards (see above), so in rare cases (no hidden cell off the fly's frontier)
   a number the fly has already revealed can change by ±1 mid-game.
@@ -338,4 +401,4 @@ With `?human=1` the two boards share the left column and are smaller at these si
   time including the readback.
 * Firefox/Safari WebGPU were not tested. The kernel needs 8 storage buffers per stage and a ~100 MB
   storage binding, both within WebGPU's default limits.
-* No KC→MBON plasticity (the Python `fly-learning` condition) in the browser; the connectome is frozen.
+* The `fly-learning` condition (dopamine-gated KC→MBON plasticity during play) is not in the browser.
