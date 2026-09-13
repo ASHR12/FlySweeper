@@ -481,8 +481,8 @@ async function sessionComplete() {
   $('session-rate').textContent = `${Math.round(100 * t.wins / Math.max(1, t.games))}%`;
   $('session-mean').textContent = (t.safe / Math.max(1, t.games)).toFixed(1);
   const e = app.weights.entry;
-  const who = app.mb ? `fly-mb · ${e.round != null ? `round ${e.round}` : e.id}` : 'fly · frozen connectome';
-  $('session-who').textContent = who; $('session-who').title = app.mb ? e.label : 'untrained wiring';
+  const who = app.mb ? `fly-mb · ${e.label}` : 'fly · Baseline · untrained (frozen connectome)';
+  $('session-who').textContent = who; $('session-who').title = who;
   $('session').classList.add('on');
   reflectPace();
   for (;;) await sleep(1000);
@@ -611,11 +611,16 @@ function setupUi(model) {
  */
 function setupWeightsUi(model) {
   const w = app.weights, mb = app.mb, sel = $('weights-select');
-  const frozenLabel = 'Frozen connectome (no training)';
-  const opts = [{ id: FROZEN_ID, label: frozenLabel, title: 'The original condition "fly": untrained wiring, descending-neuron pools decode the actions.' }]
-    .concat((w.manifest?.sets || []).map((s) => ({ id: s.id, label: s.label, title: s.notes || s.label })));
+  // standard ML naming: "Baseline · untrained" for the frozen wiring, "Checkpoint k · N episodes" for
+  // trained sets (manifest labels). Win rates are NOT shown in the menu; they live in the "?" tooltip.
+  const frozenLabel = 'Baseline · untrained (frozen connectome)';
+  const evalText = (s) => (s.win_rate != null ? `${Math.round(100 * s.win_rate)}% wins on ${s.eval_games ?? '?'} held-out boards` : 'not evaluated');
+  const opts = [{ id: FROZEN_ID, label: frozenLabel, title: 'The original condition "fly": untrained wiring, descending-neuron pools decode the actions. 0 wins.' }]
+    .concat((w.manifest?.sets || []).map((s) => ({ id: s.id, label: s.label, title: `${s.games_trained?.toLocaleString() ?? '?'} teacher-driven episodes · ${evalText(s)}` + (s.notes ? `\n${s.notes}` : '') })));
   sel.innerHTML = opts.map((o) => `<option value="${o.id}" title="${escapeHtml(o.title)}"${o.id === w.id ? ' selected' : ''}>${escapeHtml(o.label)}</option>`).join('');
   sel.disabled = false;
+  $('weights-help').title = 'Trained KC→MBON weight sets (learning is off in the browser). Held-out evaluation in Python:\n' +
+    opts.map((o) => `• ${o.label}: ${o.id === FROZEN_ID ? '0% wins' : evalText(w.manifest.sets.find((s) => s.id === o.id))}`).join('\n');
   sel.onchange = () => {
     const id = sel.value;
     if (id === w.id) return;
@@ -625,11 +630,11 @@ function setupWeightsUi(model) {
     location.assign(u.href);            // full navigation: fresh module graph, shaders, GPU buffers
   };
   if (mb) {
-    const e = w.entry, s = mb.spec, st = s.stats, round = e.round != null ? `round ${e.round}` : e.id;
-    $('cond-chip').textContent = `fly-mb · ${round}`;
+    const e = w.entry, s = mb.spec, st = s.stats, ckpt = checkpointName(e);
+    $('cond-chip').textContent = `fly-mb · ${ckpt}`;
     $('cond-chip').title = `${e.label}\n${e.notes || ''}`.trim();
     $('label').textContent = `${model.label.replace(/ Not a trained Minesweeper player\. Connectome frozen\.$/, '')} ` +
-      `Connectome frozen except ${st.plastic_edges.toLocaleString()} KC→MBON synapses trained (${round}). A helper reads the board into ${s.channels.length} facts, injected as odours.`;
+      `Connectome frozen except ${st.plastic_edges.toLocaleString()} KC→MBON synapses trained (${ckpt}). A helper reads the board into ${s.channels.length} facts, injected as odours.`;
     $('label').title = `fly-mb, ${e.label}: ${s.games_trained.toLocaleString()} teacher-driven games trained the ${st.plastic_edges.toLocaleString()} Kenyon-cell → MBON synapses onto the six action pools; ` +
       `everything else is the published wiring. The helper's ${s.channels.length} facts (hidden / provably safe / provably mine / frontier / direction to the nearest safe cell, …) drive one group of olfactory receptor neurons each. ` +
       `Documented model changes for this condition only: KC→KC synapses ×${s.kc_model.kc_kc_gain}, PN→KC ×${s.kc_model.pn_kc_gain}, KC bias ${s.kc_model.kc_bias}, PN bias ${s.kc_model.pn_bias}; decision = argmax over centred MBON-pool scores with reveal margin ${s.decision.reveal_margin}. Learning is off in the browser.`;
@@ -638,11 +643,16 @@ function setupWeightsUi(model) {
     document.querySelector('.panel h2 .help[title^="Bars"]')?.setAttribute('title',
       `Bars: per-cell spike rate of each MBON pool this turn (Hz); the tick is the pool's running mean (centred scores). Gold = the action taken. Pools are real MaleCNS mushroom-body output neuron types (${mb.actions.map((a, i) => `${a}: ${s.pools[a].types.join('+')}`).join('; ')}); the button assignment and the trained KC→MBON weights are ours.`);
   } else {
-    $('cond-chip').textContent = `fly · frozen connectome`;
-    $('cond-chip').title = 'Untrained wiring; descending-neuron pools decode the actions.';
+    $('cond-chip').textContent = `fly · baseline`;
+    $('cond-chip').title = 'Baseline: untrained wiring (frozen connectome); descending-neuron pools decode the actions.';
     $('label').textContent = model.label;
     $('chips').innerHTML = '';
   }
+}
+
+/** "checkpoint k" for a manifest entry with a round number, else its id. */
+function checkpointName(e) {
+  return e && e.round != null ? `checkpoint ${e.round}` : (e ? e.id : 'baseline');
 }
 
 // ------------------------------------------------------------------------------------------

@@ -38,7 +38,8 @@ one small JSON + binary pair per set plus a manifest, into web/weights/ (shipped
                               means, reveal margin, mask_reveal), metadata and weight statistics
     web/weights/<name>.bin    plastic KC->MBON edges: u16 KC index (into "kc"), u8 MBON index (into
                               "mbon"), f32 trained weight; the frozen weight is the one in the graph
-    web/weights/manifest.json every exported set (label, win rate, games trained, notes) + default
+    web/weights/manifest.json every exported set (label "Checkpoint k · N episodes", win rate,
+                              games trained, notes) + default
 Re-running with the same --name replaces that entry (idempotent).
 """
 from __future__ import annotations
@@ -332,10 +333,9 @@ def export_weights(args) -> int:
     round_no = int(args.round) if args.round is not None else None
     label = args.label
     if not label:
-        parts = [f"Round {round_no}" if round_no is not None else name, f"{games_trained:,} teacher games"]
-        if args.winrate is not None:
-            parts.append(f"{round(100 * args.winrate)}% wins" + (f" ({args.eval_games} held-out boards)" if args.eval_games else ""))
-        label = " - ".join(parts)
+        # standard ML naming for the selector: "Checkpoint k · N episodes"; the win rate is kept in the
+        # manifest (win_rate / eval_games) for the README and tooltips but not shown in the menu
+        label = f"{f'Checkpoint {round_no}' if round_no is not None else name} · {games_trained:,} episodes"
 
     # ---- binary: u16 kc index | u8 mbon index | f32 trained weight (little-endian, in that order)
     bin_bytes = (kc_index.astype("<u2").tobytes() + mbon_index.astype("u1").tobytes() + w.astype("<f4").tobytes())
@@ -427,7 +427,7 @@ def main(argv: list[str] | None = None) -> int:
     wg = ap.add_argument_group("trained weight sets (fly-mb)", "with --weights only the weight set is exported")
     wg.add_argument("--weights", default=None, help="MBPolicy.save() npz, e.g. data/compiled/mb_weights.npz")
     wg.add_argument("--name", default=None, help="set id / file stem, e.g. round2")
-    wg.add_argument("--label", default=None, help='display label; default "Round k - N teacher games - P% wins (M held-out boards)"')
+    wg.add_argument("--label", default=None, help='display label; default "Checkpoint k · N episodes" (win rate stays in the manifest, not in the label)')
     wg.add_argument("--round", type=int, default=None)
     wg.add_argument("--winrate", type=float, default=None, help="held-out win rate, e.g. 0.48")
     wg.add_argument("--eval-games", type=int, default=None, help="number of held-out boards behind --winrate")

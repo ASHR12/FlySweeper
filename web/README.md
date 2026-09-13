@@ -6,14 +6,14 @@ browser on your GPU**, wired to Minesweeper. The fly plays the left board; you p
 with the same mines.
 
 > MaleCNS v1.0 wiring (Berg et al., Cell 2026, CC BY 4.0) with engineered dynamics, sensors and
-> buttons. Not a validated fly. Connectome frozen except 59,334 KC→MBON synapses trained (round 2).
+> buttons. Not a validated fly. Connectome frozen except 59,334 KC→MBON synapses trained (checkpoint 3).
 > A helper reads the board into 31 facts, injected as odours.
 
 By default the page runs the **trained fly** (the Python `fly-mb` condition: a helper turns the board
 into 31 facts that are injected as odours into olfactory receptor neurons, and six pools of
 mushroom-body output neurons are the buttons, with the Kenyon-cell → MBON synapses onto them trained
-by `flysweeper/train_mb.py`). A selector in the header switches between exported weight sets and the
-original **frozen connectome** (descending-neuron pools decode the actions, nothing trained).
+by `flysweeper/train_mb.py`). A selector in the header switches between exported checkpoints ("Checkpoint k · N episodes") and
+the **baseline** — the untrained frozen connectome (descending-neuron pools decode the actions).
 
 Everything is vanilla JS modules + WGSL; there is no build step. The dynamics, encoder, decoders,
 helper and mushroom-body policy are line-by-line ports of the Python package in `flysweeper/`
@@ -30,11 +30,14 @@ Nightly with WebGPU should also work but were not tested.
 # 1. export the compiled graph into browser-friendly binaries (web/data/, ~205 MB, gitignored; ~8 s)
 ./.venv/bin/python -m flysweeper.export_web
 
-# 2. export the trained weight sets (web/weights/, ~0.6 MB total, committed; already done for rounds 1-2)
+# 2. export the trained weight sets (web/weights/, ~0.6 MB total, committed; already done for checkpoints 1-3)
 ./.venv/bin/python -m flysweeper.export_web --weights outputs/mb/warm/weights_000200.npz \
     --name round1 --round 1 --winrate 0.0 --eval-games 30 --notes "..."
+./.venv/bin/python -m flysweeper.export_web --weights <round-2 npz> \
+    --name round2 --round 2 --winrate 0.48 --eval-games 100 --notes "..."
 ./.venv/bin/python -m flysweeper.export_web --weights data/compiled/mb_weights.npz \
-    --name round2 --round 2 --winrate 0.48 --eval-games 100 --default --notes "..."
+    --name round3 --round 3 --winrate 0.76 --eval-games 100 --games-trained 2000 --default --notes "..."
+# (data/compiled/mb_weights.npz is whatever train_mb.py installed last - checkpoint 3 at the time of writing)
 
 # 3. serve the web/ folder (any static server works; WebGPU needs localhost or https)
 ./.venv/bin/python -m http.server 8780 --directory web --bind 127.0.0.1
@@ -48,7 +51,7 @@ SHA-256 against `data/manifest.json`, and stores the files in the browser Cache 
 from the cache in ~100 ms. Re-running the export changes the hashes, which invalidates the cache
 automatically. `?clearcache=1` wipes it, `?nocache=1` bypasses it.
 
-URL parameters: `?weights=round2|round1|frozen` (weight set; default = `web/weights/manifest.json`
+URL parameters: `?weights=round3|round2|round1|frozen` (weight set; default = `web/weights/manifest.json`
 `"default"`), `?speed=0.5|1|4|0` (0 = as fast as the GPU allows), `?seed=1000` (first board seed),
 `?simseed=0` (GPU noise seed), `?human=1` (show the human-playable board, see below), `?data=<url>`
 (connectome base URL, see *Deploying*), `?games=N` (finished games per session, default 100; 0 =
@@ -72,13 +75,14 @@ self-describing npz `train_mb.py` writes, e.g. `data/compiled/mb_weights.npz`) i
   weight of each edge is the one already in the graph export;
 * `web/weights/manifest.json` — every set with `label`, `win_rate`, `eval_games`, `games_trained`,
   `notes`, file names and hashes, plus `"default"`. Re-running with the same `--name` replaces that
-  entry; `--default` (or the first export) sets the default. When round 3 lands:
-  `--weights <round3.npz> --name round3 --round 3 --winrate 0.52 --eval-games 100 --default`.
+  entry; `--default` (or the first export) sets the default. For a future checkpoint 4:
+  `--weights <ckpt4.npz> --name round4 --round 4 --winrate … --eval-games 100 --default`.
 
 The export recomputes the plastic edge set from the graph exactly as `mb_policy.MBPolicy` does
 (every KC → pool-MBON edge) and refuses files whose `edge_pos`, `w0`, `edge_kc`, `edge_pool` or
 channel list disagree; it reads the binary back and checks the round trip. The label defaults to
-`"Round k - N teacher games - P% wins (M held-out boards)"`.
+`"Checkpoint k · N episodes"` (standard ML naming; the win rate is kept in the manifest for this
+README and the selector's "?" tooltip but is not shown in the menu).
 
 ### Using the page
 
@@ -138,15 +142,16 @@ markers hold the longer explanations (pool anatomy; anatomy vs. engineered; cons
   `CNS_ASPECT` in `js/brainmap.js`) fitted to the panel with a 3 % margin. Quiet somas are a faint
   region-tinted dust; a spike adds a soft 3×3 glow in the region colour that decays over a few frames
   (additive `ImageData`, ~20 fps). Hover to see a neuron's type and region.
-* **Header**: the chip after the product name is the condition — `fly-mb · round 2` for a trained
-  weight set, `fly · frozen connectome` otherwise — followed by the **weights** selector (entries
-  from `web/weights/manifest.json`, e.g. "Round 2 - 1,500 teacher games - 48% wins (100 held-out
-  boards)", plus "Frozen connectome (no training)"). Choosing another entry does a *forced full
+* **Header**: the chip after the product name is the condition — `fly-mb · checkpoint 3` for a
+  trained weight set, `fly · baseline` otherwise — followed by the **weights** selector (entries from
+  `web/weights/manifest.json`: "Baseline · untrained (frozen connectome)", "Checkpoint 1 · 200
+  episodes", "Checkpoint 2 · 1,500 episodes", "Checkpoint 3 · 2,000 episodes"; no win rates in the
+  menu — the "?" next to it lists episodes trained and held-out win rate per checkpoint). Choosing another entry does a *forced full
   reload*: `location.assign(?weights=<id>&v=<timestamp>)`; an import map written by `index.html`
   gives every JS module `?v=<token>`, and the shaders, `config.json` and weight files are fetched with
   the same token, so no stale code or brain state survives the switch (the 205 MB connectome stays in
   the Cache API, keyed by content hash). The honesty line at the bottom changes to "Connectome frozen
-  except N KC→MBON synapses trained (round k). A helper reads the board into 31 facts, injected as
+  except N KC→MBON synapses trained (checkpoint k). A helper reads the board into 31 facts, injected as
   odours." with the full description in its tooltip. The dot on the right pulses green while the step
   counter advances and turns grey when paused.
 * **Trained fly (fly-mb)**: each turn `js/oracle.js` computes the 31 facts about the cell under the
@@ -388,8 +393,8 @@ fetched as bytes / text).
 * **Cache busting**: bump `APP_VERSION` in `index.html` when deploying new JS/WGSL; it becomes the
   `?v=` on every module (import map), shader and weight fetch. The connectome files are keyed by
   content hash independently of it.
-* **Adding round 3**: run the export command above with `--name round3 … --default`, commit
-  `web/weights/`, redeploy. No code change: the selector, chip and honesty line read the manifest.
+* **Adding a checkpoint**: run the export command above with `--name round4 --round 4 … --default`,
+  commit `web/weights/`, redeploy. No code change: the selector, chip and honesty line read the manifest.
 
 ## Known limitations / open points
 

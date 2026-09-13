@@ -4,7 +4,7 @@
   "sets": [
     {
       "id": "round1",
-      "label": "Round 1 - 200 teacher games - 0% wins (30 held-out boards)",
+      "label": "Checkpoint 1 \u00b7 200 episodes",
       "round": 1,
       "win_rate": 0.0,
       "eval_games": 30,
@@ -23,7 +23,7 @@
     },
     {
       "id": "round2",
-      "label": "Round 2 - 1,500 teacher games - 48% wins (100 held-out boards)",
+      "label": "Checkpoint 2 \u00b7 1,500 episodes",
       "round": 2,
       "win_rate": 0.48,
       "eval_games": 100,
@@ -42,7 +42,7 @@
     },
     {
       "id": "round3",
-      "label": "Round 3 - 2,000 teacher games - 76% wins (100 held-out boards)",
+      "label": "Checkpoint 3 \u00b7 2,000 episodes",
       "round": 3,
       "win_rate": 0.76,
       "eval_games": 100,
