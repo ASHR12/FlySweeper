@@ -29,8 +29,9 @@ and the mushroom body learns which of six actions each set of facts calls for.
   in two commands (see [Quickstart](#quickstart)) — [`web/`](web/)
   ([how it works and how it was verified](web/README.md)). Needs Chrome 113+ or Edge (WebGPU on
   by default); loads 205 MB of wiring once, then cached. The trained weight sets ship with the page
-  (`web/weights/`) and a **weights** selector in the header switches between round 1, round 2 and
-  round 3 — **round 3 is the default**; `?weights=frozen` runs the untrained connectome. A session
+  (`web/weights/`) and a **weights** selector in the header switches between checkpoint 1, 2 and 3
+  ("Checkpoint k · N episodes") — **checkpoint 3 (2,000 episodes) is the default**; the untrained
+  baseline is not in the menu, `?weights=frozen` runs it. A session
   is 100 finished games; the simulation then stops behind a summary card with a **Restart session**
   button (`?games=N` changes the length). Hosting it publicly is optional and covered in
   [`docs/deploy.md`](docs/deploy.md).
@@ -38,9 +39,9 @@ and the mushroom body learns which of six actions each set of facts calls for.
   `http://127.0.0.1:8765/` where the trained fly plays forever and every spike of the 139,662
   plotted somas is drawn.
 
-| WebGPU page, trained fly (`fly-mb`, round-2 weights selected; 2 wins in 3 games) | WebGPU page, frozen fly |
+| WebGPU page, trained fly (`fly-mb`, checkpoint 3 · 2,000 episodes; 8 wins in 8 games, mean 71.0 safe cells) | WebGPU page, frozen fly |
 |---|---|
-| ![WebGPU page: the trained mushroom-body policy mid-game, KC→MBON plasticity chip visible](docs/img/flysweeper-web-trained.png) | ![WebGPU page: the frozen connectome, same layout](docs/img/flysweeper-web-classy.png) |
+| ![WebGPU page: checkpoint 3 (2,000 episodes) of the trained mushroom-body policy mid-game, scoreboard 8 games (8 wins), KC→MBON plasticity chip visible](docs/img/flysweeper-web-trained.png) | ![WebGPU page: the frozen connectome, same layout](docs/img/flysweeper-web-classy.png) |
 | **Python spectator, frozen fly** | **A lost game** (Python spectator; mines burst, cursor ring turns red) |
 | ![Python spectator: the frozen connectome mid-game, brain map and pool bars](docs/img/flysweeper-py-classy.png) | ![Python spectator: a lost game with all mines shown](docs/img/flysweeper-lost.png) |
 
@@ -202,8 +203,9 @@ Browser version, also local (needs step 2; Chrome 113+ or Edge):
 open http://127.0.0.1:8780/                                              # ?speed=0 for max, ?human=1 to play the same mines
 ```
 
-The page opens with the round-3 weights; the **weights** selector in the header switches to round 2,
-round 1 or the frozen connectome (`?weights=round2|round1|frozen`). After 100 finished games the
+The page opens with checkpoint 3; the **weights** selector in the header switches to checkpoint 2 or
+checkpoint 1 (`?weights=round3|round2|round1`; the file ids keep the training-round names). The
+untrained frozen connectome is not in the menu — `?weights=frozen` runs it. After 100 finished games the
 simulation stops behind a summary card — **Restart session** starts over with a fresh brain
 (`?games=N` for a different session length, `?games=0` to run forever). Putting the page on a
 public host (Vercel / GitHub Pages, with the 205 MB of wiring on a CORS-enabled bucket) is optional
