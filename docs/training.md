@@ -9,11 +9,13 @@ Honest framing for the second (main) approach:
 
 > a helper reads the board into a few facts; the fly's mushroom body learns what to do about them.
 
-**Current result (round 2, section 4):** with 59,334 KC->MBON synapses trained on 1,500
-teacher-driven games, a sparser Kenyon-cell code and a reveal margin, `fly-mb` wins **18 of 30**
-held-out games (seeds 5000-5029; 67.1 +- 1.8 safe cells) and **48 of 100** (seeds 5000-5099;
-66.7 +- 0.8), versus 0 wins and ~50 safe cells for the frozen fly and random-walk, and 90% / 84%
-for the logic solver / the helper's facts decoded by a fixed rule. Round 1 (section 3.5) had 0 wins.
+**Current result (round 3, section 5):** with 59,334 KC->MBON synapses trained by imitation of a
+solver (2,000 teacher-driven games in total), a sparser Kenyon-cell code and the helper's facts
+delivered as smells, `fly-mb` wins **76 of 100** held-out games (seeds 5000-5099; 67.6 +- 0.9 of
+71 safe cells, 66 turns per game), versus 0 wins and ~50 safe cells for the frozen fly and
+random-walk, 60/100 for the round-2 policy on the same boards, and 86% / 84% for the logic solver /
+the helper's facts decoded by a fixed rule. Round 1 (section 3.5) had 0 wins; round 2 (section 4)
+48-60/100.
 
 ## 1. What is anatomy and what is invented
 
@@ -354,7 +356,8 @@ where a provably-safe cell existed (first click + 0-11 solver moves, seeds 0-399
 reveal's +0.1 to +0.3, so the reward carried almost no gradient between guessing and playing
 correctly (the references' back-of-envelope figure of +0.19 assumes a fresh-board isolated cell with
 P(mine) = 10/81). Under the round-3 reward the same action is worth **-0.50** versus +0.3 for the
-proven-safe reveal.
+proven-safe reveal. (Measured with `flysweeper.minesweeper` + `teacher.infer`; the snippet is in
+the round-3 report, not in the package.)
 
 Round-3 changes (`mb_policy.py`, all in `MBParams`, all saved with the weights):
 
@@ -417,7 +420,60 @@ the teacher phase) but steadily silenced more synapses (2,673 -> 7,649 at the fl
 
 ### 5.3 Final 100-seed comparison and full table
 
-ROUND3_FINAL_TABLE
+All rows in one run (`outputs/validation/mb_round3/report.md`; 100 games, seeds 5000-5099, 4 Numba
+threads, argmax, exploration off). `fly-mb` = the round-2 weights that were installed at the time
+(margin 0.25); `fly-mb r3 (RL 400)` = `r3_rl/weights_000400.npz` (margin 0.25, mask). The
+teacher-only candidate was run on the same 100 seeds in a separate process
+(`outputs/validation/mb_round3_teacher500/`), at the margin stored in its file (0.0) and with the
+mask.
+
+| condition | games | win rate | safe cells | SEM | mean turns | reveals |
+|---|---|---|---|---|---|---|
+| solver (single-point logic, not a brain) | 100 | 0.86 | 69.6 | 0.7 | 24.9 | 16.2 |
+| fly-mb-oracle-only (helper facts + fixed rule, no brain) | 100 | 0.84 | 68.9 | 0.9 | 50.7 | 16.2 |
+| **fly-mb r3, teacher-only (`r3_teacher_l2` 500, margin 0)** -- installed | 100 | **0.76** | 67.6 | 0.9 | 65.9 | 15.2 |
+| **fly-mb r3, RL fine-tuned (`r3_rl` 400, margin 0.25)** | 100 | **0.76** | 67.3 | 1.0 | 107.2 | 15.0 |
+| fly-mb r2 (previously installed) | 100 | 0.60 | 66.8 | 0.9 | 70.8 | 14.4 |
+| fly (frozen, descending-neuron pools) | 100 | 0.00 | 51.7 | 1.3 | 43.2 | 4.9 |
+| random-walk | 100 | 0.00 | 50.1 | 1.4 | 49.5 | 4.4 |
+| fly-blind (no board input) | 100 | 0.00 | 49.6 | 1.3 | 32.8 | 3.9 |
+| random-click | 100 | 0.00 | 41.1 | 1.7 | 3.8 | 3.8 |
+
+Notes and decisions:
+
+- **Round 3 beats round 2 on the same 100 boards: 76 vs 60 wins** (paired, same run, same noise
+  thread count). The round-2 policy scored 48/100 in section 4.1 and 60/100 here: same weights,
+  same boards, but a different Numba thread count (6 vs 4) gives a different Bernoulli noise
+  stream, and the game-level variance across noise realisations is evidently larger than the
+  binomial +-5. Quote fly-mb r3 as 0.76 +- 0.04 (binomial) with this caveat; the 16-point
+  paired gap is robust.
+- **RL vs teacher**: the reward phase reached the same 100-seed win rate as the teacher-only
+  checkpoint it started from (0.76 vs 0.76) while taking 107 instead of 66 turns per game and
+  losing teacher agreement (0.64 vs 0.76). Under the "keep RL only if it does not hurt" rule it
+  is a wash on wins and worse on tempo, so the **teacher-only checkpoint is installed**
+  (`data/compiled/mb_weights.npz` = `r3_teacher_l2/weights_000500.npz`, reveal margin 0.0, mask
+  on, exactly the configuration validated above; the previous file is kept as
+  `data/compiled/mb_weights_r2.npz`). With margin 0.25 the same weights scored 25/30 on seeds
+  5000-5029 (section 5.2); the margin was not re-tuned in round 3.
+- The round-3 reward did what it was designed to do -- the RL phase never increased unproven
+  reveals (reveal FPR stayed 0.000 across all RL checkpoints, training win rate 0.75-0.83 under
+  exploration) -- but with the perceptron-trained starting point there was little left for it to
+  fix, and its movement changes were slower rather than better. A reward-only run from scratch
+  with the r3 reward was not attempted (round-1 evidence and the references both say it would
+  need far more than 10^3 games).
+- Movement remains the gap: move recall 0.57-0.82 for the installed policy, 66 turns per game vs
+  25 for the solver and 51 for the fixed rule on the same facts. Turn windows of 20-25 steps and
+  a third ORN type for the direction channels are the untried levers.
+- Curriculum (installed round-2 policy, section 5.1): 6x6/3 mines 0.80, 6x6/4 0.70, 9x9/10
+  0.48-0.60. The round-3 policy was not re-run on 6x6 (time).
+- Decoder engineering in the installed policy, disclosed: centred pool scores, the reveal mask
+  (cursor cell revealed / provably mine). The reveal margin is 0 in the installed file. The
+  decision between the five remaining actions, and whether to reveal on a hidden unproven cell,
+  is made by the MBON pools.
+- Weight state of the installed policy: 55,907 of 59,334 plastic edges differ from the connectome,
+  2,673 silenced, none at the ceiling, mean ratio 1.68. Everything else in the brain is the
+  connectome's; the `fly` / `fly-blind` rows above are run on the original wiring in the same
+  process and match rounds 1-2.
 
 ## 6. Reproduce
 
@@ -446,6 +502,15 @@ NUMBA_NUM_THREADS=10 ./.venv/bin/python -m flysweeper.mb_eval outputs/mb/r2_erro
 NUMBA_NUM_THREADS=10 ./.venv/bin/python -m flysweeper.validate --games 30  --seed0 5000 --conditions fly-mb fly-mb-oracle-only random-walk random-click solver fly fly-blind --out outputs/validation/mb_round2
 NUMBA_NUM_THREADS=10 ./.venv/bin/python -m flysweeper.validate --games 100 --seed0 5000 --conditions fly-mb fly-mb-oracle-only random-walk --out outputs/validation/mb_round2_100
 ./.venv/bin/python -m flysweeper.server --condition fly-mb      # spectator on the installed weights (data/compiled/mb_weights.npz)
+
+# round 3 (section 5): continue the teacher phase from the round-2 weights with argmax decisions, then RL fine-tune with the r3 reward
+NUMBA_NUM_THREADS=4 ./.venv/bin/python -m flysweeper.train_mb --games 1000 --seed0 14000 --init data/compiled/mb_weights_r2.npz --warmstart-games 1000 --warmstart-follow --sup-mode error --sup-move-weight 2 --odor-level 2 --mask-reveal --temperature 0 --temperature-min 0 --eta 0.03 --no-install --checkpoint-every 250 --out outputs/mb/r3_teacher_l2
+NUMBA_NUM_THREADS=4 ./.venv/bin/python -m flysweeper.train_mb --games 1000 --seed0 14000 --init data/compiled/mb_weights_r2.npz --warmstart-games 1000 --warmstart-follow --sup-mode error --sup-move-weight 2 --odor-level 1 --mask-reveal --temperature 0 --temperature-min 0 --eta 0.03 --no-install --checkpoint-every 250 --out outputs/mb/r3_teacher_l1   # control
+NUMBA_NUM_THREADS=4 ./.venv/bin/python -m flysweeper.train_mb --games 400 --seed0 16000 --init outputs/mb/r3_teacher_l2/weights_000500.npz --warmstart-games 0 --odor-level 2 --mask-reveal --reward-scheme r3 --epsilon 0.2 --epsilon-min 0.02 --anneal-games 300 --trace-decay 0.6 --eta 0.01 --reveal-margin 0.25 --no-install --checkpoint-every 100 --out outputs/mb/r3_rl
+NUMBA_NUM_THREADS=8 ./.venv/bin/python -m flysweeper.mb_eval outputs/mb/r3_teacher_l2/weights_*.npz outputs/mb/r3_rl/weights_*.npz --games 30 --agree-turns 600 --margin-sweep 0.25
+NUMBA_NUM_THREADS=2 ./.venv/bin/python -m flysweeper.mb_eval data/compiled/mb_weights.npz --games 30 --agree-turns 0 --rows 6 --cols 6 --mines 3   # curriculum check
+NUMBA_NUM_THREADS=4 ./.venv/bin/python -m flysweeper.validate --games 100 --seed0 5000 --conditions fly-mb-alt fly-mb fly-mb-oracle-only random-walk random-click solver fly fly-blind --mb-weights-alt outputs/mb/r3_rl/weights_000400.npz --out outputs/validation/mb_round3
+NUMBA_NUM_THREADS=4 ./.venv/bin/python -m flysweeper.mb_eval outputs/mb/r3_teacher_l2/weights_000500.npz --games 0 --agree-turns 0 --margin-sweep 0.0 --install data/compiled/mb_weights.npz
 ```
 
 Spectator parity: `FlyPlayer.play("fly-mb")` loads the weights file by absolute path, applies the

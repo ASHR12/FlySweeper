@@ -18,6 +18,10 @@ const GAME_OVER_HOLD_MS = 2500;   // finished board stays on screen this long (s
 const query = new URLSearchParams(location.search);
 const VERSION = window.FLYSWEEPER_VERSION || query.get('v') || '';   // cache-busting token for shaders / weight files
 const FROZEN_ID = 'frozen';       // selector entry for the untrained connectome (the original "fly" condition)
+// A session is MAX_GAMES finished games (abandoned games do not count); then the simulation stops, a
+// summary card covers the board and "Restart session" reloads the page (fresh brain, fresh counters).
+// `?games=N` overrides for testing; 0 = unlimited. Same as server.py --max-games.
+const MAX_GAMES = Math.max(0, Number(query.get('games') ?? 100) || 0);
 
 // FEATURE FLAG: the human-playable "YOU" board (same mines, click to reveal / right-click to flag,
 // safe first click, own scoreboard row). Hidden by default so the whole UI fits one screen; open the
@@ -46,6 +50,7 @@ const app = {
   idleRates: null,
   events: [],
   history: [],          // finished fly games: { game, outcome, safe, turns } (feeds the sparkline)
+  session: { max: MAX_GAMES, complete: false },
   suspendRequested: false, parked: false, newGameRequested: false,
 };
 
@@ -455,9 +460,32 @@ async function flyLoop() {
     newSharedGame();
     await playFlyGame();
     await holdGameOver();
+    if (MAX_GAMES && app.totals.fly.games >= MAX_GAMES) await sessionComplete();   // never returns
     await waitForNextGame();
     finishHumanBoard();
   }
+}
+
+/**
+ * End of a session: the finished board stays up under the summary card, the brain stops stepping
+ * (LIVE dot goes idle), the pace buttons are disabled. "Restart session" does a full reload with the
+ * same ?weights= (fresh GPU state, counters from zero); until then this just idles.
+ */
+async function sessionComplete() {
+  const t = app.totals.fly, s = app.session;
+  s.complete = true;
+  app.fly.phase = 'complete';
+  addEvent(`session complete: ${t.wins}/${t.games} games won, mean ${(t.safe / Math.max(1, t.games)).toFixed(1)} safe cells` + (t.abandoned ? ` (${t.abandoned} abandoned, not counted)` : ''));
+  $('session-games').textContent = String(t.games);
+  $('session-wins').textContent = String(t.wins);
+  $('session-rate').textContent = `${Math.round(100 * t.wins / Math.max(1, t.games))}%`;
+  $('session-mean').textContent = (t.safe / Math.max(1, t.games)).toFixed(1);
+  const e = app.weights.entry;
+  const who = app.mb ? `fly-mb · ${e.round != null ? `round ${e.round}` : e.id}` : 'fly · frozen connectome';
+  $('session-who').textContent = who; $('session-who').title = app.mb ? e.label : 'untrained wiring';
+  $('session').classList.add('on');
+  reflectPace();
+  for (;;) await sleep(1000);
 }
 
 // ------------------------------------------------------------------------------------------
@@ -554,7 +582,14 @@ function setupUi(model) {
   });
   $('pause').onclick = () => { app.pace.paused = !app.pace.paused; if (!app.pace.paused) pacer.reset(); reflectPace(); };
   reflectPace();
-  $('new-game').onclick = () => { app.newGameRequested = true; app.fly.abort = true; };
+  $('new-game').onclick = () => { if (!app.session.complete) { app.newGameRequested = true; app.fly.abort = true; } };
+  $('session-restart').onclick = () => {
+    // full reload keeping ?weights= / ?games= / ?seed= etc.; a new version token re-fetches shaders + weights
+    const u = new URL(location.href);
+    u.searchParams.set('v', String(Date.now()));
+    $('session-restart').disabled = true; $('session-restart').textContent = 'Restarting…';
+    location.assign(u.href);
+  };
   const brain = $('brain'), tip = $('brain-tip'), brainBox = $('brain-box');
   brain.addEventListener('mousemove', (ev) => {
     const rect = brain.getBoundingClientRect(), box = brainBox.getBoundingClientRect();
@@ -751,7 +786,7 @@ function updateDom() {
   live.lastStep = sim.stepCount;
   const isLive = !app.pace.paused && performance.now() - live.lastChange < 600;
   $('live').classList.toggle('on', isLive);
-  $('live-text').textContent = app.pace.paused ? 'paused' : isLive ? 'live' : 'idle';
+  $('live-text').textContent = app.session.complete ? 'session complete' : app.pace.paused ? 'paused' : isLive ? 'live' : 'idle';
   $('events').innerHTML = app.events.slice(-12).reverse().map((e) => `<div class="${eventClass(e.text)}"><b>${e.t}s</b>${escapeHtml(e.text)}</div>`).join('');
 }
 

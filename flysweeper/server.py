@@ -1,12 +1,15 @@
-"""Live spectator: the fly plays Minesweeper forever; a browser page watches.
+"""Live spectator: the fly plays a session of --max-games Minesweeper games; a browser page watches.
 
-    python -m flysweeper.server [--port 8765] [--speed 1.0] [--condition fly]
+    python -m flysweeper.server [--port 8765] [--speed 1.0] [--condition fly] [--max-games 100]
 
 Binds 127.0.0.1 only.  GET /            the page
-                       GET /state       JSON snapshot (board, cursor, pools, stats, events)
+                       GET /state       JSON snapshot (board, cursor, pools, stats, events, session)
                        GET /atlas       binary soma positions for the brain map (once)
                        GET /spikes      binary uint8 activity per plotted neuron
                        GET /control?speed=4&pause=0
+                       GET /control?restart=1   new session: counters zeroed, fresh seed range
+After --max-games finished games the loop idles (the brain does not step) and /state reports
+session.complete = true until a restart is requested.
 """
 from __future__ import annotations
 
@@ -52,12 +55,13 @@ def region_of(superclass: str) -> int:
 
 
 class Spectator:
-    def __init__(self, player: FlyPlayer, condition: str, speed: float, seed0: int, game_over_hold: float = 2.5):
+    def __init__(self, player: FlyPlayer, condition: str, speed: float, seed0: int, game_over_hold: float = 2.5, max_games: int = 100):
         self.player = player
         self.condition = condition
         self.speed = speed
         self.game_over_hold = game_over_hold   # seconds the finished board stays on screen (paced runs only)
         self.paused = False
+        self.seed0 = seed0
         self.seed = seed0
         self.lock = threading.Lock()
         self.events: list[dict] = []
@@ -65,6 +69,12 @@ class Spectator:
         self.wins = 0
         self.total_safe = 0
         self.last_record = None
+        # a session is max_games finished games; then the loop idles (brain not stepping) until
+        # /control?restart=1, which zeroes the counters and continues from a fresh seed range
+        self.max_games = max_games
+        self.session = 1
+        self.session_complete = False
+        self.restart_requested = False
         self.step_wall = time.perf_counter()
         self.rtf = 0.0
         self.ms_per_step = 0.0
@@ -120,6 +130,18 @@ class Spectator:
                 time.sleep(remaining)
         self.step_wall = time.perf_counter()
 
+    def _restart_session(self) -> None:
+        """Zero the session counters and move to a fresh seed range (called between games)."""
+        with self.lock:
+            self.session += 1
+            self.games = self.wins = self.total_safe = 0
+            self.last_record = None
+            self.events.clear()
+            self.seed = self.seed0 + (self.session - 1) * 10000
+            self.session_complete = False
+            self.restart_requested = False
+            self.events.append({"t": round(self.player.sim.time, 1), "text": f"session {self.session} started (seeds {self.seed}+)"})
+
     def loop(self) -> None:
         while self.running:
             self.player.play(self.condition, self.seed)
@@ -130,6 +152,15 @@ class Spectator:
                 until = time.perf_counter() + self.game_over_hold
                 while self.running and time.perf_counter() < until:
                     time.sleep(0.05)
+            if self.max_games and self.games >= self.max_games and not self.restart_requested:
+                # session complete: the finished board stays up, the brain does not step, /state says so
+                with self.lock:
+                    self.session_complete = True
+                    self.events.append({"t": round(self.player.sim.time, 1), "text": f"session complete: {self.wins}/{self.games} games won"})
+                while self.running and not self.restart_requested:
+                    time.sleep(0.1)
+            if self.restart_requested:
+                self._restart_session()
 
     def spikes(self) -> bytes:
         c = self.player.spike_counts[self.plot_idx]
@@ -165,6 +196,8 @@ class Spectator:
                 "seed": game.seed if game else None,
             },
             "totals": {"games": games, "wins": wins, "mean_safe": round(total_safe / games, 1) if games else None, "last": last and {k: last[k] for k in ("outcome", "safe_revealed", "turns")}},
+            "session": {"number": self.session, "games": games, "max_games": self.max_games, "complete": self.session_complete,
+                        "seed0": self.seed0 + (self.session - 1) * 10000},
             "sim": {
                 "step": int(p.sim.step_count), "time_s": round(p.sim.time, 1), "ms_per_step": round(self.ms_per_step, 2),
                 "rtf": round(self.rtf, 1), "speed": self.speed, "paused": self.paused,
@@ -209,7 +242,10 @@ def make_handler(spec: Spectator):
                     spec.speed = float(q["speed"][0])
                 if "pause" in q:
                     spec.paused = q["pause"][0] in ("1", "true")
-                self._send(200, json.dumps({"speed": spec.speed, "paused": spec.paused}).encode(), "application/json")
+                if q.get("restart", ["0"])[0] in ("1", "true"):
+                    spec.restart_requested = True      # takes effect now if the session is complete, else after the current game
+                self._send(200, json.dumps({"speed": spec.speed, "paused": spec.paused, "restart_requested": spec.restart_requested,
+                                            "session": {"number": spec.session, "games": spec.games, "max_games": spec.max_games, "complete": spec.session_complete}}).encode(), "application/json")
             else:
                 self._send(404, b"not found", "text/plain")
 
@@ -231,6 +267,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--mines", type=int, default=10)
     ap.add_argument("--seed0", type=int, default=1000)
     ap.add_argument("--game-over-hold", type=float, default=2.5, help="seconds to keep a finished board on screen before the next game (ignored at --speed 0)")
+    ap.add_argument("--max-games", type=int, default=100, help="finished games per session; then the loop idles until /control?restart=1 (0 = unlimited)")
     args = ap.parse_args(argv)
 
     brain = Brain()
@@ -239,7 +276,7 @@ def main(argv: list[str] | None = None) -> int:
         brain, cfg, Params.preset(args.preset), EncoderParams(route=args.route, danger_loom=not args.no_loom),
         DecoderParams(), sensory_input=args.sensory_input, seed=args.seed0,
     )
-    spec = Spectator(player, args.condition, args.speed, args.seed0, game_over_hold=args.game_over_hold)
+    spec = Spectator(player, args.condition, args.speed, args.seed0, game_over_hold=args.game_over_hold, max_games=args.max_games)
     threading.Thread(target=spec.loop, daemon=True).start()
     server = ThreadingHTTPServer(("127.0.0.1", args.port), make_handler(spec))
     print(f"[server] FlySweeper live at http://127.0.0.1:{args.port}/  (condition {args.condition}, speed {args.speed}x)")

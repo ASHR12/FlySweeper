@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "default": "round2",
+  "default": "round3",
   "sets": [
     {
       "id": "round1",
@@ -39,7 +39,26 @@
         "bin": "9a809ae194eba16f2d4eaeccc5b755e0140ade1412ce90863ccccb453ca08dda"
       },
       "created": "2026-09-13T13:59:29"
+    },
+    {
+      "id": "round3",
+      "label": "Round 3 - 2,000 teacher games - 76% wins (100 held-out boards)",
+      "round": 3,
+      "win_rate": 0.76,
+      "eval_games": 100,
+      "games_trained": 2000,
+      "notes": "Direction channels strengthened (2 ORN types each), teacher phase continued from round 2 with argmax perceptron updates, reveal mask; RL fine-tune matched wins but doubled game length so the teacher checkpoint is installed.",
+      "json": "round3.json",
+      "bin": "round3.bin",
+      "plastic_edges": 59334,
+      "edges_changed": 55907,
+      "bytes": 470160,
+      "sha256": {
+        "json": "18c1993c692f3a1eb94063ef72999e9893acb5be1a12bef92544c6747630ac88",
+        "bin": "f15aa18ba8cc7c1e7be230a1f39a6036087dad9aafe8d9d710a083b008bc828e"
+      },
+      "created": "2026-09-13T14:05:29"
     }
   ],
-  "updated": "2026-09-13T13:59:29"
+  "updated": "2026-09-13T14:05:29"
 }

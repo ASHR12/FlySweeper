@@ -64,6 +64,23 @@
   .boards > div { display:flex; flex-direction:column; min-height:0; min-width:0; }
   .boards .box { flex:0 1 auto; width:100%; aspect-ratio:1 / 1; }
   .boards .box canvas { top:0; transform:translate(-50%,0); box-shadow:0 8px 30px rgba(0,0,0,0.35); }
+  /* session summary card (shown over the board after MAX_GAMES finished games) */
+  .session { position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(7,9,12,0.72); backdrop-filter:blur(3px); border-radius:8px; z-index:3; }
+  .session.on { display:flex; }
+  .session .card { width:min(86%, 340px); background:linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015)), var(--panel); border:1px solid rgba(242,193,92,0.35); border-radius:12px; padding:14px 16px 14px; box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 20px 50px rgba(0,0,0,0.55), 0 0 40px rgba(242,193,92,0.08); text-align:center; }
+  .session .card h3 { margin:0 0 2px; font:600 11px/1.3 var(--sans); letter-spacing:1.6px; text-transform:uppercase; color:var(--accent); }
+  .session .card .who { color:var(--dim); font:11.5px/1.4 var(--mono); margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .session .grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; margin-bottom:12px; }
+  .session .grid div { background:var(--tile); border:1px solid var(--line); border-radius:8px; padding:6px 4px 5px; min-width:0; }
+  .session .grid b { display:block; font:600 18px/1.15 var(--mono); color:var(--ink); }
+  .session .grid b.gold { color:var(--accent); }
+  .session .grid span { display:block; color:var(--faint); font-size:9.5px; letter-spacing:1px; text-transform:uppercase; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .session .btn.restart { background:linear-gradient(180deg, #f6cd72, #d9a83f); color:#1a1408; border-color:rgba(242,193,92,0.8); font:600 12px/1.4 var(--mono); padding:6px 16px; border-radius:8px; box-shadow:0 0 18px rgba(242,193,92,0.25); }
+  .session .btn.restart:hover { color:#000; filter:brightness(1.06); }
+  /* credit link (bottom line) */
+  .credit { flex:none; display:inline-flex; align-items:center; gap:6px; color:var(--dim); font-size:11.5px; text-decoration:none; padding-left:10px; border-left:1px solid var(--line-2); white-space:nowrap; transition:color .15s; }
+  .credit svg { width:13px; height:13px; fill:currentColor; }
+  .credit:hover { color:var(--accent); }
   /* label/value pairs */
   .line { display:flex; flex-wrap:wrap; gap:4px 16px; font-size:12px; flex:none; align-items:center; }
   .kv { display:flex; align-items:baseline; gap:6px; }
@@ -122,6 +139,7 @@
   .controls button:hover, .btn:hover { color:var(--ink); border-color:var(--line-2); }
   .controls button.on { border-color:rgba(242,193,92,0.5); color:var(--accent); background:var(--accent-soft); }
   .btn.primary { border-color:rgba(242,193,92,0.45); color:var(--accent); }
+  .controls button:disabled, .btn:disabled { opacity:.4; cursor:not-allowed; color:var(--dim); border-color:var(--line); background:var(--tile); }
   #brain-tip { position:absolute; display:none; pointer-events:none; background:rgba(10,12,16,0.92); border:1px solid var(--line-2); border-radius:6px; padding:3px 8px; font:11.5px/1.3 var(--mono); color:var(--ink); white-space:nowrap; z-index:2; backdrop-filter:blur(6px); }
   .scoreline { display:flex; flex-wrap:wrap; gap:2px 10px; align-items:center; font-size:12px; margin-top:6px; padding-top:6px; border-top:1px solid var(--line); }
   .scoreline .who { font-size:10.5px; letter-spacing:1.1px; font-weight:600; color:var(--faint); text-transform:uppercase; }
@@ -164,7 +182,19 @@
       <div class="boards">
         <div>
           <h2><span class="who">FLY</span><span class="status" id="fly-status">loading</span></h2>
-          <div class="box"><canvas id="fly-board" width="342" height="342"></canvas></div>
+          <div class="box"><canvas id="fly-board" width="342" height="342"></canvas>
+            <div class="session" id="session"><div class="card">
+              <h3>Session complete</h3>
+              <div class="who" id="session-who"></div>
+              <div class="grid">
+                <div><b id="session-games">0</b><span>games</span></div>
+                <div><b id="session-wins" class="gold">0</b><span>wins</span></div>
+                <div><b id="session-rate">0%</b><span>win rate</span></div>
+                <div><b id="session-mean">–</b><span>mean safe</span></div>
+              </div>
+              <button class="btn restart" id="session-restart" title="Start again from game 1 with fresh counters and a fresh brain (reloads the page)">Restart session</button>
+            </div></div>
+          </div>
           <div class="line" style="margin-top:8px">
             <div class="kv"><span>last action</span> <b id="last-action">–</b></div>
             <div class="kv" id="danger-kv"><span><i class="danger-dot"></i>danger</span> <b id="danger">0</b></div>
@@ -227,7 +257,8 @@
   </div>
 </main>
 <div class="honest"><span id="label">MaleCNS v1.0 wiring (Berg et al., Cell 2026, CC BY 4.0) with engineered dynamics, sensors and buttons. Not a validated fly. Not a trained Minesweeper player. Connectome frozen.</span>
-  <span class="help" title="Anatomy (from the connectome): neurons, synapse counts, transmitter signs, optic-lobe columns, cell types, soma positions. Engineered (ours): leaky integrate-and-fire dynamics and their constants, how the board is painted onto lamina/R7/R8 cells, the looming stimulus, and which descending neurons count as which button. Browser console: flysweeper.idleTest(), flysweeper.loomTest(), flysweeper.benchmark(). Add ?human=1 to the URL to show the human-playable board.">?</span></div>
+  <span class="help" title="Anatomy (from the connectome): neurons, synapse counts, transmitter signs, optic-lobe columns, cell types, soma positions. Engineered (ours): leaky integrate-and-fire dynamics and their constants, how the board is painted onto lamina/R7/R8 cells, the looming stimulus, and which descending neurons count as which button. Browser console: flysweeper.idleTest(), flysweeper.loomTest(), flysweeper.benchmark(). Add ?human=1 to the URL to show the human-playable board.">?</span>
+  <a class="credit" href="https://github.com/ASHR12/FlySweeper" target="_blank" rel="noopener" title="Source code on GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>Created by Ashutosh Shrivastava · GitHub</a></div>
 <div id="overlay">
   <div class="loader">
     <h1>FlySweeper</h1>
