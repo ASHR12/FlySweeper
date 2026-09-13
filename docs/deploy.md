@@ -208,9 +208,10 @@ on different repos without any further configuration.
 ## 6. Trained weights in the browser
 
 The browser build ships the `fly-mb` policies in `web/weights/`: a `manifest.json` listing the
-sets (`round1`, `round2`, with their held-out numbers and SHA-256s) and one `roundN.json` +
-`roundN.bin` pair per round (~160 KB and ~470 KB), converted from `models/*.npz`. `?weights=<id>`
-on the page URL selects a set; `?weights=frozen` runs the untrained connectome. They deploy with
+sets (`round1`, `round2`, `round3`, with their held-out numbers and SHA-256s; `round3` is the
+default) and one `roundN.json` + `roundN.bin` pair per round (~160 KB and ~470 KB), converted from
+`models/*.npz`. The **weights** selector in the page header or `?weights=<id>` on the URL selects a
+set; `?weights=frozen` runs the untrained connectome. They deploy with
 the page (no CORS question) and are covered by the same CC BY 4.0 attribution as `models/` — they
 contain original MaleCNS weights for the trained edges. The deployed page already carries the
 dataset credit in its bottom label; keep it, and link `DATA-LICENSE.md` from the page or the

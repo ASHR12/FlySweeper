@@ -18,7 +18,7 @@ boards. "SEM" is the standard error over games.
 | folder | seeds | what | headline |
 |---|---|---|---|
 | `validation/mb_round3/` | 5000–5099 (100) | the round-3 comparison run: all conditions in one process with the round-2 weights still installed as `fly-mb` and the RL-fine-tuned round-3 candidate (`r3_rl/weights_000400.npz`, margin 0.25, mask) as `fly-mb-alt` | fly-mb-alt (RL) **76/100, 67.3 ± 1.0, 107 turns**; fly-mb (round 2) **60/100, 66.8 ± 0.9, 71 turns**; solver 86/100, 69.6; oracle-only 84/100, 68.9; frozen fly 0/100, 51.7; random-walk 0/100, 50.1; fly-blind 0/100, 49.6; random-click 0/100, 41.1 |
-| `validation/mb_round3_teacher500/` | 5000–5099 (100) | the teacher-only round-3 checkpoint (`r3_teacher_l2/weights_000500.npz` = `models/mb_weights_round3.npz`, margin 0, mask) on the same seeds in a separate process, run as `fly-mb-alt` | **76/100 wins, 67.6 ± 0.9 safe cells, 66 turns** → installed. (The report header says "0 neurons, 0 edges" because the brain summary is only written for the `fly` conditions, which this run did not include.) |
+| `validation/mb_round3_teacher500/` | 5000–5099 (100) | the teacher-only round-3 checkpoint (`r3_teacher_l2/weights_000500.npz` = `models/mb_weights_round3.npz`, margin 0, mask) on the same seeds in a separate process, run as `fly-mb-alt` | **76/100 wins, 67.6 ± 0.9 safe cells, 66 turns** → installed. (The report header says "0 neurons, 0 edges" because `validate.py` fills that summary only when one of the standard brain conditions is in the run; `fly-mb-alt` alone loads and uses the full brain but skips the header bookkeeping — see the `mb_alt` block in `results.json` for the loaded weights.) |
 | `validation/mb_round2/` | 5000–5029 (30) | all seven conditions in one run, round-2 weights installed (`models/mb_weights_round2.npz`, reveal margin 0.25) | fly-mb **18/30 wins, 67.1 ± 1.8 safe cells**; solver 27/30; oracle-only 26/30; frozen fly 0/30, 51.3; random-walk 0/30, 50.4; fly-blind 0/30, 44.5; random-click 0/30, 39.3 |
 | `validation/mb_round2_100/` | 5000–5099 (100) | the round-2 release estimate and its two reference points (6 Numba threads; the same weights scored 60/100 on the same seeds with 4 threads in `mb_round3/` — a different noise stream) | fly-mb **48/100 wins, 66.7 ± 0.8**; oracle-only 84/100, 68.9; random-walk 0/100, 50.1 |
 | `validation/mb_warm200/` | 5000–5029 (30) | round-1 weights (`models/mb_weights_round1.npz`) | fly-mb **0/30, 46.9 ± 2.0** (still reveals unproven cells ~12 % of the time) |
@@ -53,8 +53,9 @@ exploration off. `.md` is the table, `.json` adds the confusion matrices and per
 For each run: `curve.md` / `curve.json` (100-game blocks: win rate, safe cells, turns, reward,
 teacher agreement, |dw|, mean weight ratio, temperature), `params.json` (the `MBParams` the run
 used) and `design.json` (pools, edge counts, ORN map). Games 0–299 of `warm*` runs and all games of
-the `r2_*` runs are teacher-driven (the cursor follows the teacher), so their in-run win rates are
-the teacher's, not the fly's; the held-out tables above are the fly's own play.
+the `r2_*` and `r3_teacher_*` runs are teacher-driven (the cursor follows the teacher), so their
+in-run win rates are the teacher's, not the fly's; the held-out tables above are the fly's own
+play. The `r3_rl` in-run win rates *are* the fly's (under ε-greedy exploration on training seeds).
 
 | run | round | rule | games | result |
 |---|---|---|---|---|
@@ -68,10 +69,14 @@ the teacher's, not the fly's; the held-out tables above are the fly's own play.
 | `r2_error` | 2 | 34-type pools, floor 0, perceptron rule, dense KC code | 1,500 | agreement 0.625, 0/30 |
 | `r2_teacher` | 2 | as above with the every-turn `teacher` rule | 1,500 | agreement 0.586, 0/30 |
 | `r2_error_sparse` | 2 | perceptron rule + sparse KC code (PN bias −0.3, PN→KC gain 3, KC bias −0.3) | 1,500 | **agreement 0.735; 8/30 wins at margin 0, 18/30 with margin 0.25** → `models/mb_weights_round2.npz` |
+| `r3_teacher_l2` | 3 | continued from the round-2 weights (seeds 14000–14999); level-2 odor map (a second ORN type per graded direction channel, 49/53 ORN types), argmax perceptron rule, move errors ×2, reveal mask, margin 0 | +1,000 (checkpoints every 250) | **checkpoint 500 (2,000 games total): agreement 0.763, 25/30 at margin 0.25, 76/100 at margin 0** → `models/mb_weights_round3.npz` |
+| `r3_teacher_l1` | 3 | the same continuation with the round-2 odor map (control) | +1,000 | agreement 0.707, 16/30 at 1000 — the extra teacher games alone made it worse |
+| `r3_rl` | 3 | RL fine-tune from `r3_teacher_l2` 500 with the round-3 rewards (+0.3 proven-safe reveal, −0.3 unproven reveal even if it succeeds, −1 mine, +1 win, −0.1 wasted turn), ε 0.2 → 0.02, eta 0.01, seeds 16000–16399 | +400 | training win rate 0.75–0.83 under exploration; held-out 27/30 and 76/100 but 100–107 turns per game and agreement 0.64 — not installed |
 
-## Round 3 (pending)
+## Not archived
 
-Round-3 artifacts (`outputs/mb/r3_*`, `outputs/mb/eval_r3_*`, `outputs/validation/mb_round3*`) are
-being produced while this archive was assembled and are **not** copied yet; see `docs/training.md`
-§5 for the design and the final tables once they land. When they do, copy them here with the same
-layout (`mb/eval_r3_*.md|json`, `mb/r3_<run>/{curve,params,design}.*`, `validation/mb_round3*/`).
+The round-2 curriculum runs are in `mb/curriculum_r2_6x6_*`; the round-3 policy was not run on
+6×6. The reward-value analysis of round 3 (324 mid-game states; a random unproven reveal is worth
+−0.07 under the round-1 reward vs −0.50 under the round-3 reward) was computed with an inline
+snippet and is reported in `docs/training.md` §5 only. Training logs (`*.log`, `games.jsonl`) and
+weight checkpoints other than the three in `models/` stay in the gitignored `outputs/` tree.

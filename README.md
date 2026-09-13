@@ -219,7 +219,7 @@ described in [`models/README.md`](models/README.md).
 |---|---|
 | Python / numba simulator, event-driven (only the out-edges of spiking neurons are visited) | **1.3 ms per 20 ms brain step ≈ 15× real time**; ≈ 7,600 spikes/step at 2.3 Hz mean rate; ≈ 0.6 GB resident for the bare simulator |
 | WebGPU simulator, one fused gather kernel over all 25.1 M active edges | **0.88 ms GPU time per step** (`flysweeper.benchmark(300)`), 15.8× real time in live play including decisions, readbacks and the brain map; 209 MB of GPU buffers |
-| a full game (15 steps/turn, ~75 turns for `fly-mb`) | ≈ 1.5–2 s of compute at full speed |
+| a full game (15 steps/turn, ~66–75 turns for `fly-mb`) | ≈ 1.5–2 s of compute at full speed |
 | a 1,500-game teacher-driven training run (`train_mb`, 4 threads, three runs in parallel) | ≈ 45 min |
 | download / compile / export | 1.1 GB from the Janelia bucket · ~20 s to compile · ~8 s to export for the browser |
 

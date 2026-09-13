@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Install a trained KC->MBON weight set as the active `fly-mb` policy.
 #
-#   scripts/install_weights.sh round2            # models/mb_weights_round2.npz -> data/compiled/mb_weights.npz
+#   scripts/install_weights.sh round3            # models/mb_weights_round3.npz -> data/compiled/mb_weights.npz (current release)
+#   scripts/install_weights.sh round2            # previous release
 #   scripts/install_weights.sh round1
 #   scripts/install_weights.sh path/to/weights.npz
 #   scripts/install_weights.sh --list
@@ -18,7 +19,7 @@ DATA_ROOT="${FLYSWEEPER_DATA:-$ROOT/data}"
 TARGET="$DATA_ROOT/compiled/mb_weights.npz"
 
 usage() {
-  sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'
 }
 
 sha256_of() {
@@ -44,7 +45,7 @@ case "$1" in
   round[0-9]*)
     SRC="$MODELS/mb_weights_$1.npz"
     if [[ ! -e "$SRC" ]]; then
-      echo "no such weight set: $SRC (round 3 is pending; see models/README.md)" >&2; exit 1
+      echo "no such weight set: $SRC (try --list; see models/README.md)" >&2; exit 1
     fi
     expected="$(awk -v f="mb_weights_$1.npz" '$2 == f {print $1}' "$MODELS/SHA256SUMS" || true)"
     actual="$(sha256_of "$SRC")"
