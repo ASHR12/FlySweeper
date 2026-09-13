@@ -1,0 +1,6 @@
+numpy>=2.0
+scipy>=1.13
+pandas>=2.2
+pyarrow>=16
+numba>=0.60
+scikit-learn>=1.4

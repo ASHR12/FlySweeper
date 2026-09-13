@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FlySweeper — a fruit-fly connectome plays Minesweeper</title>
+<style>
+  :root { --bg:#0b0e12; --panel:#141a22; --ink:#e6edf3; --dim:#8b98a5; --line:#233041; --accent:#ffc45a; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.45 -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif; }
+  header { padding:14px 20px 8px; display:flex; align-items:baseline; gap:16px; flex-wrap:wrap; }
+  header h1 { margin:0; font-size:20px; letter-spacing:.3px; }
+  header .sub { color:var(--dim); }
+  main { display:grid; grid-template-columns: 420px 1fr; gap:14px; padding:0 20px 20px; }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px; }
+  .panel h2 { margin:0 0 8px; font-size:12px; text-transform:uppercase; letter-spacing:1.2px; color:var(--dim); }
+  canvas { display:block; width:100%; border-radius:6px; background:#0a0d11; }
+  .stats { display:grid; grid-template-columns: 1fr 1fr; gap:4px 12px; font-variant-numeric: tabular-nums; }
+  .stats div span { color:var(--dim); }
+  .pools { display:grid; grid-template-columns: 62px 1fr 74px; gap:4px 8px; align-items:center; font-variant-numeric: tabular-nums; }
+  .bar { height:12px; background:#0a0d11; border-radius:3px; overflow:hidden; border:1px solid var(--line); }
+  .bar i { display:block; height:100%; background:#4f7dff; }
+  .bar i.win { background:var(--accent); }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size:12px; }
+  .events { max-height:220px; overflow:auto; }
+  .events div { color:var(--dim); }
+  .events div b { color:var(--ink); font-weight:500; }
+  .label { color:var(--dim); font-size:12px; border-top:1px solid var(--line); padding-top:8px; margin-top:8px; }
+  .legend { display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:6px; color:var(--dim); font-size:12px; }
+  .legend i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:5px; vertical-align:-1px; }
+  .controls button { background:#1d2733; color:var(--ink); border:1px solid var(--line); border-radius:6px; padding:4px 10px; margin-right:4px; cursor:pointer; }
+  .controls button.on { border-color:var(--accent); color:var(--accent); }
+  .big { font-size:26px; font-weight:600; }
+  .danger { color:#ff5a78; }
+  .right { display:flex; flex-direction:column; gap:14px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>FlySweeper</h1>
+  <div class="sub">MaleCNS v1.0 · 166,700 neurons · 25,582,938 connections · one fruit fly, one Minesweeper board</div>
+</header>
+<main>
+  <div class="left">
+    <div class="panel">
+      <h2>Board <span id="game-title" class="mono"></span></h2>
+      <canvas id="board" width="396" height="396"></canvas>
+      <div class="stats" style="margin-top:10px">
+        <div><span>last action</span> <b id="last-action">–</b></div>
+        <div><span>danger under cursor</span> <b id="danger">0</b></div>
+        <div><span>safe cells</span> <b id="safe">0 / 0</b></div>
+        <div><span>games (wins)</span> <b id="games">0 (0)</b></div>
+        <div><span>mean safe / game</span> <b id="mean-safe">–</b></div>
+        <div><span>last game</span> <b id="last-game">–</b></div>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:14px">
+      <h2>Descending-neuron pools → buttons</h2>
+      <div class="pools" id="pools"></div>
+      <div class="label">Bars: per-cell spike rate this turn above the pool's running baseline (Hz). Gold = the action taken. Pools are real MaleCNS cell types; the button assignment is ours.</div>
+    </div>
+  </div>
+  <div class="right">
+    <div class="panel">
+      <h2>Whole nervous system — 139,662 somas, live spikes</h2>
+      <canvas id="brain" width="960" height="560"></canvas>
+      <div class="legend" id="legend"></div>
+      <div class="stats" style="margin-top:8px">
+        <div><span>sim time</span> <b id="sim-time">0 s</b></div>
+        <div><span>spikes last step</span> <b id="spikes">0</b></div>
+        <div><span>compute</span> <b id="ms">– ms/step</b></div>
+        <div><span>speed</span> <b id="rtf">–× realtime</b></div>
+        <div><span>dynamics</span> <b id="preset" class="mono"></b></div>
+        <div><span>input route</span> <b id="route" class="mono"></b></div>
+      </div>
+      <div class="controls" style="margin-top:8px">
+        <span style="color:var(--dim)">pace:</span>
+        <button data-speed="0.5">½×</button><button data-speed="1" class="on">1×</button><button data-speed="4">4×</button><button data-speed="0">max</button>
+        <button id="pause">pause</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Log</h2>
+      <div class="events mono" id="events"></div>
+      <div class="label" id="label"></div>
+    </div>
+  </div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const boardC = $('board'), bctx = boardC.getContext('2d');
+const brainC = $('brain'), kctx = brainC.getContext('2d');
+let atlas = null, img = null, pix = null, regions = null;
+const numColors = ['', '#4f7dff', '#4caf50', '#ff5a78', '#8e44ad', '#c0392b', '#16a085', '#111', '#777'];
+
+async function loadAtlas() {
+  const buf = await (await fetch('/atlas')).arrayBuffer();
+  const n = new DataView(buf).getUint32(0, true);
+  const xy = new Float32Array(buf, 4, n * 2);
+  const region = new Uint8Array(buf, 4 + n * 8, n);
+  const W = brainC.width, H = brainC.height, pad = 14;
+  pix = new Int32Array(n);
+  for (let i = 0; i < n; i++) {
+    const x = Math.round(pad + xy[2 * i] * (W - 2 * pad));
+    const y = Math.round(pad + xy[2 * i + 1] * (H - 2 * pad));
+    pix[i] = y * W + x;
+  }
+  atlas = { n, region };
+  img = kctx.createImageData(W, H);
+}
+
+function drawBrain(spikes) {
+  if (!atlas || !regions) return;
+  const d = img.data, W = brainC.width;
+  d.fill(0);
+  for (let i = 3; i < d.length; i += 4) d[i] = 255;
+  const base = 22;
+  for (let i = 0; i < atlas.n; i++) {
+    const p = pix[i] * 4;
+    const c = regions[atlas.region[i]].color;
+    const a = spikes[i] / 255;
+    d[p]     = Math.min(255, d[p]     + base * 0.35 + c[0] * a);
+    d[p + 1] = Math.min(255, d[p + 1] + base * 0.35 + c[1] * a);
+    d[p + 2] = Math.min(255, d[p + 2] + base * 0.35 + c[2] * a);
+  }
+  kctx.putImageData(img, 0, 0);
+}
+
+function drawBoard(s) {
+  const rows = s.rows, cols = s.cols, W = boardC.width, cell = Math.floor(W / cols);
+  bctx.fillStyle = '#0a0d11'; bctx.fillRect(0, 0, W, W);
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+    const v = s.board ? s.board[r][c] : -1, x = c * cell, y = r * cell;
+    bctx.fillStyle = v === -1 ? '#26313f' : v === 9 ? '#5a3d1a' : v === 10 ? '#7a1b2a' : '#0f151c';
+    bctx.fillRect(x + 1, y + 1, cell - 2, cell - 2);
+    if (v >= 1 && v <= 8) { bctx.fillStyle = numColors[v]; bctx.font = `bold ${Math.floor(cell * 0.5)}px sans-serif`; bctx.textAlign = 'center'; bctx.textBaseline = 'middle'; bctx.fillText(v, x + cell / 2, y + cell / 2 + 1); }
+    if (v === 9) { bctx.fillStyle = '#ffb347'; bctx.font = `${Math.floor(cell * 0.45)}px sans-serif`; bctx.textAlign = 'center'; bctx.textBaseline = 'middle'; bctx.fillText('⚑', x + cell / 2, y + cell / 2 + 1); }
+    if (v === 10) { bctx.fillStyle = '#ff5a78'; bctx.font = `${Math.floor(cell * 0.5)}px sans-serif`; bctx.textAlign = 'center'; bctx.textBaseline = 'middle'; bctx.fillText('✸', x + cell / 2, y + cell / 2 + 1); }
+  }
+  const [cr, cc] = s.cursor;
+  bctx.strokeStyle = s.danger >= (s.encoder.loom_threshold || 2) ? '#ff5a78' : '#ffc45a'; bctx.lineWidth = 3;
+  bctx.strokeRect(cc * cell + 2, cr * cell + 2, cell - 4, cell - 4);
+  // eye split marker
+  bctx.strokeStyle = 'rgba(255,255,255,0.12)'; bctx.lineWidth = 1; bctx.setLineDash([4, 4]);
+  bctx.beginPath(); bctx.moveTo(W / 2, 0); bctx.lineTo(W / 2, W); bctx.stroke(); bctx.setLineDash([]);
+}
+
+function drawPools(s) {
+  const el = $('pools'); const max = Math.max(0.5, ...s.scores);
+  let html = '';
+  s.actions.forEach((a, i) => {
+    const win = a === s.last_action;
+    html += `<div class="mono">${a}</div><div class="bar"><i class="${win ? 'win' : ''}" style="width:${Math.min(100, 100 * s.scores[i] / max)}%"></i></div><div class="mono" style="color:var(--dim)">${s.rates[i].toFixed(1)} Hz · ${s.pools[a]} cells</div>`;
+  });
+  el.innerHTML = html;
+}
+
+async function tick() {
+  try {
+    const [s, spikesBuf] = await Promise.all([fetch('/state').then(r => r.json()), fetch('/spikes').then(r => r.arrayBuffer())]);
+    if (!regions) {
+      regions = s.regions;
+      $('legend').innerHTML = regions.map(r => `<span><i style="background:rgb(${r.color.join(',')})"></i>${r.name}</span>`).join('');
+      $('label').textContent = s.label;
+    }
+    drawBoard(s); drawPools(s); drawBrain(new Uint8Array(spikesBuf));
+    $('game-title').textContent = `game ${s.game.number} · seed ${s.game.seed} · ${s.condition}`;
+    $('last-action').textContent = s.last_action;
+    $('danger').textContent = s.danger; $('danger').className = s.danger >= s.encoder.loom_threshold ? 'danger' : '';
+    $('safe').textContent = `${s.game.safe_revealed} / ${s.game.total_safe}`;
+    $('games').textContent = `${s.totals.games} (${s.totals.wins})`;
+    $('mean-safe').textContent = s.totals.mean_safe ?? '–';
+    $('last-game').textContent = s.totals.last ? `${s.totals.last.outcome}, ${s.totals.last.safe_revealed} safe, ${s.totals.last.turns} turns` : '–';
+    $('sim-time').textContent = `${s.sim.time_s} s`;
+    $('spikes').textContent = s.sim.spikes_last_step.toLocaleString();
+    $('ms').textContent = `${s.sim.ms_per_step} ms/step`;
+    $('rtf').textContent = s.sim.paused ? 'paused' : `${s.sim.rtf}× realtime`;
+    $('preset').textContent = `dt ${s.sim.preset.dt}s τ ${s.sim.preset.tau}s gain ${s.sim.preset.gain} tonic ${s.sim.preset.tonic}`;
+    $('route').textContent = `${s.encoder.route}${s.encoder.danger_loom ? ' + looming→DNp01' : ''}`;
+    $('events').innerHTML = s.events.map(e => `<div><b>${e.t}s</b> ${e.text}</div>`).join('');
+  } catch (e) { /* server restarting */ }
+  setTimeout(tick, 100);
+}
+
+document.querySelectorAll('button[data-speed]').forEach(b => b.onclick = async () => {
+  await fetch(`/control?speed=${b.dataset.speed}&pause=0`);
+  document.querySelectorAll('button[data-speed]').forEach(x => x.classList.toggle('on', x === b));
+  $('pause').classList.remove('on');
+});
+$('pause').onclick = async () => {
+  const on = !$('pause').classList.contains('on');
+  await fetch(`/control?pause=${on ? 1 : 0}`);
+  $('pause').classList.toggle('on', on);
+};
+
+loadAtlas().then(tick);
+</script>
+</body>
+</html>
