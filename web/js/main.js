@@ -723,9 +723,9 @@ function updateDom() {
     });
   }
   // fly stats
-  const flyStatus = fly.phase === 'calibrating' ? 'calibrating' : fly.phase === 'waiting' ? (human.started && !human.game.over ? 'waiting for you' : 'next game soon') : fly.phase;
+  const flyStatus = fly.phase === 'calibrating' ? 'calibrating' : fly.phase === 'complete' ? 'session complete' : fly.phase === 'waiting' ? (human.started && !human.game.over ? 'waiting for you' : 'next game soon') : fly.phase;
   $('fly-status').textContent = flyStatus;
-  $('fly-status-top').textContent = fly.phase === 'over' && (fly.outcome === 'won' || fly.outcome === 'lost') ? '' : ` · ${flyStatus}`;
+  $('fly-status-top').textContent = (fly.phase === 'over' || fly.phase === 'complete') && (fly.outcome === 'won' || fly.outcome === 'lost') ? '' : ` · ${flyStatus}`;
   $('last-action').textContent = fly.lastAction + (fly.lastResult && fly.lastAction === 'reveal' ? ` (${fly.lastResult})` : '');
   $('danger').textContent = fly.danger; $('danger-kv').className = 'kv' + (fly.danger >= app.model.encoder.params.loom_threshold ? ' danger' : '');
   $('fly-turn').textContent = fly.game ? `${fly.phase === 'settle' || fly.phase === 'calibrating' ? 0 : fly.turn + 1} / ${g.max_turns}` : '–';
@@ -796,9 +796,11 @@ const live = { lastStep: -1, lastChange: 0 };
 function reflectPace() {
   const speed = Number(app.pace.speed);
   let matched = false;
-  document.querySelectorAll('button[data-speed]').forEach((b) => { const on = Number(b.dataset.speed) === speed; matched ||= on; b.classList.toggle('on', on); });
-  $('pause').classList.toggle('on', !!app.pace.paused);
-  $('speed-label').textContent = matched ? '' : `${Number.isInteger(speed) ? speed : speed.toFixed(2).replace(/0+$/, '')}×`;
+  const done = app.session.complete;   // pace + new game are disabled once the session is complete
+  document.querySelectorAll('button[data-speed]').forEach((b) => { const on = Number(b.dataset.speed) === speed; matched ||= on; b.classList.toggle('on', on && !done); b.disabled = done; });
+  $('pause').classList.toggle('on', !!app.pace.paused && !done); $('pause').disabled = done;
+  $('new-game').disabled = done;
+  $('speed-label').textContent = matched || done ? '' : `${Number.isInteger(speed) ? speed : speed.toFixed(2).replace(/0+$/, '')}×`;
 }
 function eventClass(text) {
   if (/→ mine|\blost\b|BOOM|crashed/.test(text)) return 'bad';
@@ -859,7 +861,7 @@ window.flysweeper = {
     step: app.sim.stepCount, time: app.sim.time, phase: app.fly.phase, cursor: app.fly.cursor, lastAction: app.fly.lastAction,
     rates: Array.from(app.decoder.lastRates), scores: Array.from(app.decoder.lastScores), idle: app.idleRates && Array.from(app.idleRates),
     stats: { ...app.stats }, totals: app.totals, flySafe: app.fly.game?.safeRevealed, gameNumber: app.gameNumber, events: app.events.slice(-10),
-    weights: app.weights.id, condition: app.mb ? 'fly-mb' : 'fly', history: app.history.slice(),
+    weights: app.weights.id, condition: app.mb ? 'fly-mb' : 'fly', history: app.history.slice(), session: { ...app.session, games: app.totals.fly.games },
     mb: app.mb ? { applied: app.mb.applied, features: Array.from(app.mb.features), oracle: app.mb.oracle.last, scoreMean: Array.from(app.mb.scoreMean), turns: app.mb.turnsSeen } : null,
   }),
   /** The helper's 31 facts for the fly's current board and cursor (fly-mb only). */

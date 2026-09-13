@@ -15,7 +15,6 @@ __pycache__/
 
 # Local experiment outputs: training runs, checkpoints, validation reports, screenshots.
 # Curated copies live in docs/results/, docs/img/ and models/.
-/outputs/
 
 # Browser export of the connectome (~205 MB; hosted separately, see docs/deploy.md)
 web/data/
@@ -26,3 +25,6 @@ web/data/
 !docs/results/
 !docs/img/
 !web/weights/
+
+# Raw feature matrices from the round-1 readout experiments (0.5-1 GB each, regenerable)
+outputs/training/**/X.npy

@@ -1,0 +1,32 @@
+[
+ {
+  "file": "data/compiled/mb_weights.npz",
+  "games_trained": 1500,
+  "margin": 0.25,
+  "pool_ratio": {
+   "up": 1.4095,
+   "down": 1.2441,
+   "left": 1.412,
+   "right": 1.1265,
+   "reveal": 1.8699,
+   "jump": 1.6224
+  },
+  "weights": {
+   "edges": 59334,
+   "changed": 55832,
+   "mean_ratio": 1.45,
+   "at_floor": 5152,
+   "at_ceiling": 0
+  },
+  "heldout": {
+   "games": 30,
+   "win_rate": 0.8,
+   "wins": 24,
+   "mean_safe": 32.73,
+   "sem_safe": 0.12,
+   "mean_turns": 33.2,
+   "mean_reveals": 5.1,
+   "timeouts": 0
+  }
+ }
+]

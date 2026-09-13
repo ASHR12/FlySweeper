@@ -1,0 +1,29 @@
+[train_readout] data outputs/training/run1: 32,008 turns from 472 games (seeds 20000..20471); features 13,562 = 13,562 cells x 1 window(s) from groups ['dn', 'vp', 'cx', 'mbon']; train 24,672 turns / 378 games, held-out 7,336 turns / 94 games
+[train_readout] ridge: fold 1/3 done (30s)
+[train_readout] ridge: fold 2/3 done (59s)
+[train_readout] ridge: fold 3/3 done (87s)
+[train_readout] ridge/brain: ridge CV accuracy by alpha 10: 0.218, 100: 0.222, 1000: 0.233, 10000: 0.255, 100000: 0.282, 1e+06: 0.276 -> alpha 100000
+[train_readout] ridge/diag:cursor_row: ridge CV accuracy by alpha 10: 0.234, 100: 0.261, 1000: 0.351, 10000: 0.487, 100000: 0.520, 1e+06: 0.384 -> alpha 100000
+[train_readout] ridge/diag:cursor_col: ridge CV accuracy by alpha 10: 0.256, 100: 0.287, 1000: 0.395, 10000: 0.552, 100000: 0.584, 1e+06: 0.441 -> alpha 100000
+[train_readout] ridge/diag:cell_under_cursor_hidden: ridge CV accuracy by alpha 10: 0.513, 100: 0.515, 1000: 0.520, 10000: 0.530, 100000: 0.543, 1e+06: 0.539 -> alpha 100000
+[train_readout] ridge/diag:cursor_left_half: ridge CV accuracy by alpha 10: 0.647, 100: 0.669, 1000: 0.736, 10000: 0.814, 100000: 0.818, 1e+06: 0.799 -> alpha 100000
+[train_readout] ridge/shuffled: ridge CV accuracy by alpha 10: 0.203, 100: 0.205, 1000: 0.207, 10000: 0.210, 100000: 0.239, 1e+06: 0.264 -> alpha 1e+06
+[train_readout] ridge: ridge for 6 target(s) in 98s
+[train_readout] brain: logreg CV accuracy by C 0.0001: 0.275, 0.001: 0.254, 0.01: 0.245 -> C 0.0001
+[train_readout] brain: logreg done in 74s
+[train_readout] brain readout: chose ridge {'alpha': 100000.0} (CV 0.282)
+[train_readout] brain readout held-out accuracy 0.279 (balanced 0.215); majority 0.267
+[train_readout] diagnostic cursor_row: held-out accuracy 0.532 vs majority 0.115
+[train_readout] diagnostic cursor_col: held-out accuracy 0.594 vs majority 0.117
+[train_readout] diagnostic cell_under_cursor_hidden: held-out accuracy 0.540 vs majority 0.497
+[train_readout] diagnostic cursor_left_half: held-out accuracy 0.821 vs majority 0.583
+[train_readout] shuffled-label control held-out accuracy 0.267
+[train_readout] board_3x3: logreg CV accuracy by C 0.01: 0.525, 0.1: 0.523, 1: 0.523, 10: 0.523 -> C 0.01
+[train_readout] board_3x3: logreg done in 1s
+[train_readout] board_3x3: chose logreg {'C': 0.01} (CV 0.525)
+[train_readout] board_3x3 control (135 features) held-out accuracy 0.510
+[train_readout] board_full: logreg CV accuracy by C 0.01: 0.320, 0.1: 0.311, 1: 0.308, 10: 0.307 -> C 0.01
+[train_readout] board_full: logreg done in 5s
+[train_readout] board_full: chose logreg {'C': 0.01} (CV 0.320)
+[train_readout] board_full control (1053 features) held-out accuracy 0.322
+[train_readout] saved readout to /Users/ashutosh/development-work/fruit-fly/data/compiled/readout.npz; report outputs/training/run1/readout_report_A_dn_vp_cx_mbon_w1.md

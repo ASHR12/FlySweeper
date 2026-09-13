@@ -1,0 +1,232 @@
+{
+ "raw": {
+  "blind": {
+   "PN_Hz": 14.875485908649173,
+   "KC_Hz": 49.984416010498684,
+   "KC_active_frac": 1.0,
+   "MBON_Hz": 46.00515463917526
+  },
+  "ORN_DM1_only": {
+   "ORN_DM1_Hz": 50.0,
+   "DM1_PN_Hz": 50.0,
+   "all_PN_Hz": 15.625607385811469,
+   "KC_Hz": 49.98882463910761,
+   "MBON_Hz": 46.06099656357389
+  },
+  "odor_setA": {
+   "PN_Hz": 26.344144800777457,
+   "KC_Hz": 49.99364337270342,
+   "KC_active_frac": 1.0,
+   "MBON_Hz": 46.1426116838488,
+   "pool_spikes_per_cell": {
+    "up": 15.0,
+    "down": 15.0,
+    "left": 15.0,
+    "right": 15.0,
+    "reveal": 15.0,
+    "jump": 15.0
+   }
+  },
+  "kc_code": {
+   "dprime_A_vs_B": 7.045028468341616,
+   "dprime_A_vs_A_other_seed": 0.7945857734357975,
+   "corr_A_B": 0.20542632326990554
+  }
+ },
+ "fly-mb": {
+  "blind": {
+   "PN_Hz": 14.693877551020407,
+   "KC_Hz": 1.465817749343832,
+   "KC_active_frac": 0.500738188976378,
+   "MBON_Hz": 3.3805841924398625
+  },
+  "ORN_DM1_only": {
+   "ORN_DM1_Hz": 50.0,
+   "DM1_PN_Hz": 50.0,
+   "all_PN_Hz": 15.440962099125366,
+   "KC_Hz": 2.3231422244094486,
+   "MBON_Hz": 4.596219931271478
+  },
+  "odor_setA": {
+   "PN_Hz": 26.235422740524783,
+   "KC_Hz": 7.645689796587926,
+   "KC_active_frac": 0.8068405511811023,
+   "MBON_Hz": 12.457044673539519,
+   "pool_spikes_per_cell": {
+    "up": 4.8125,
+    "down": 5.4375,
+    "left": 7.625,
+    "right": 4.0625,
+    "reveal": 6.0,
+    "jump": 5.15625
+   }
+  },
+  "kc_code": {
+   "dprime_A_vs_B": 4.885985411765361,
+   "dprime_A_vs_A_other_seed": 0.35294069823465235,
+   "corr_A_B": 0.29015536997114766
+  }
+ },
+ "design": {
+  "action_mbons": {
+   "up": "MBON01",
+   "down": "MBON05",
+   "left": "MBON06",
+   "right": "MBON03",
+   "reveal": "MBON11",
+   "jump": "MBON09"
+  },
+  "pool_cells": {
+   "up": 2,
+   "down": 2,
+   "left": 2,
+   "right": 2,
+   "reveal": 2,
+   "jump": 4
+  },
+  "plastic_edges": 16167,
+  "plastic_edges_per_pool": {
+   "up": 2109,
+   "down": 1999,
+   "left": 1944,
+   "right": 1249,
+   "reveal": 4184,
+   "jump": 4682
+  },
+  "kc_cells": 4064,
+  "kc_kc_edges_silenced": 642933,
+  "pn_kc_edges": 22586,
+  "kc_bias": -0.2,
+  "kc_kc_gain": 0.0,
+  "pn_kc_gain": 1.0,
+  "odor": {
+   "cursor_hidden": {
+    "orn_type": "ORN_DA1",
+    "cells": 204
+   },
+   "cursor_revealed": {
+    "orn_type": "ORN_VA1d",
+    "cells": 132
+   },
+   "cursor_flagged": {
+    "orn_type": "ORN_VA1v",
+    "cells": 130
+   },
+   "cursor_safe": {
+    "orn_type": "ORN_DL3",
+    "cells": 103
+   },
+   "cursor_mine": {
+    "orn_type": "ORN_VL2a",
+    "cells": 98
+   },
+   "cursor_frontier": {
+    "orn_type": "ORN_VM5d",
+    "cells": 84
+   },
+   "cursor_free": {
+    "orn_type": "ORN_VA2",
+    "cells": 83
+   },
+   "adj_numbers_0": {
+    "orn_type": "ORN_DL1",
+    "cells": 83
+   },
+   "adj_numbers_1_2": {
+    "orn_type": "ORN_VL1",
+    "cells": 82
+   },
+   "adj_numbers_3p": {
+    "orn_type": "ORN_VM4",
+    "cells": 78
+   },
+   "adj_hidden_0": {
+    "orn_type": "ORN_DM1",
+    "cells": 74
+   },
+   "adj_hidden_1_3": {
+    "orn_type": "ORN_VA6",
+    "cells": 63
+   },
+   "adj_hidden_4p": {
+    "orn_type": "ORN_DM3",
+    "cells": 63
+   },
+   "adj_max_0": {
+    "orn_type": "ORN_DL4",
+    "cells": 62
+   },
+   "adj_max_1_2": {
+    "orn_type": "ORN_DM6",
+    "cells": 58
+   },
+   "adj_max_3p": {
+    "orn_type": "ORN_V",
+    "cells": 55
+   },
+   "safe_up": {
+    "orn_type": "ORN_DM2",
+    "cells": 54
+   },
+   "safe_down": {
+    "orn_type": "ORN_DA2",
+    "cells": 48
+   },
+   "safe_left": {
+    "orn_type": "ORN_VL2p",
+    "cells": 45
+   },
+   "safe_right": {
+    "orn_type": "ORN_DL5",
+    "cells": 43
+   },
+   "no_safe_known": {
+    "orn_type": "ORN_VM3",
+    "cells": 43
+   },
+   "guess_up": {
+    "orn_type": "ORN_VM2",
+    "cells": 41
+   },
+   "guess_down": {
+    "orn_type": "ORN_VC4",
+    "cells": 38
+   },
+   "guess_left": {
+    "orn_type": "ORN_VM7d",
+    "cells": 36
+   },
+   "guess_right": {
+    "orn_type": "ORN_DA4m",
+    "cells": 35
+   },
+   "guess_here": {
+    "orn_type": "ORN_DC3",
+    "cells": 35
+   },
+   "guess_far": {
+    "orn_type": "ORN_DM5",
+    "cells": 35
+   },
+   "cleared_lt_third": {
+    "orn_type": "ORN_VM6v",
+    "cells": 34
+   },
+   "cleared_mid": {
+    "orn_type": "ORN_VM5v",
+    "cells": 34
+   },
+   "cleared_gt_two_thirds": {
+    "orn_type": "ORN_VA4",
+    "cells": 34
+   },
+   "untouched": {
+    "orn_type": "ORN_VC3",
+    "cells": 34
+   }
+  },
+  "pam_cells": 316,
+  "ppl1_cells": 16,
+  "games_trained": 0
+ }
+}

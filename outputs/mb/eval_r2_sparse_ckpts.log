@@ -1,0 +1,8 @@
+[mb_eval] outputs/mb/r2_error_sparse/weights_000500.npz margin 0.0: agree 0.696 recall {'up': 0.722, 'down': 0.452, 'left': 0.628, 'right': 0.514, 'reveal': 0.947, 'jump': 1.0} reveal-FPR 0.01 | held-out win 0.067 (2) safe 52.1+-2.46 turns 42.1 | {'edges': 59334, 'changed': 55739, 'mean_ratio': 1.556, 'at_floor': 5901, 'at_ceiling': 0} [196s]
+[mb_eval] outputs/mb/r2_error_sparse/weights_000750.npz margin 0.0: agree 0.691 recall {'up': 0.423, 'down': 0.516, 'left': 0.669, 'right': 0.636, 'reveal': 0.963, 'jump': 0.5} reveal-FPR 0.007 | held-out win 0.067 (2) safe 54.5+-2.36 turns 32.8 | {'edges': 59334, 'changed': 55776, 'mean_ratio': 1.573, 'at_floor': 2187, 'at_ceiling': 0} [296s]
+[mb_eval] outputs/mb/r2_error_sparse/weights_001000.npz margin 0.0: agree 0.725 recall {'up': 0.536, 'down': 0.548, 'left': 0.719, 'right': 0.636, 'reveal': 0.963, 'jump': 1.0} reveal-FPR 0.017 | held-out win 0.167 (5) safe 55.8+-2.26 turns 40.6 | {'edges': 59334, 'changed': 55800, 'mean_ratio': 1.546, 'at_floor': 4092, 'at_ceiling': 0} [449s]
+| file | games_trained | margin | agree | reveal_recall | reveal_FPR | win_rate | mean_safe | sem | turns | changed | mean_ratio |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| r2_error_sparse/weights_000500.npz | 500 | 0.0 | 0.696 | 0.947 | 0.01 | 0.067 | 52.1 | 2.46 | 42.1 | 55739 | 1.556 |
+| r2_error_sparse/weights_000750.npz | 750 | 0.0 | 0.691 | 0.963 | 0.007 | 0.067 | 54.5 | 2.36 | 32.8 | 55776 | 1.573 |
+| r2_error_sparse/weights_001000.npz | 1000 | 0.0 | 0.725 | 0.963 | 0.017 | 0.167 | 55.8 | 2.26 | 40.6 | 55800 | 1.546 |

@@ -1,0 +1,27 @@
+[train_readout] data outputs/training/run2_ego: 32,044 turns from 485 games (seeds 30000..30484); features 13,562 = 13,562 cells x 1 window(s) from groups ['dn', 'vp', 'cx', 'mbon']; train 25,770 turns / 388 games, held-out 6,274 turns / 97 games
+[train_readout] ridge: fold 1/3 done (36s)
+[train_readout] ridge: fold 2/3 done (69s)
+[train_readout] ridge: fold 3/3 done (102s)
+[train_readout] ridge/brain: ridge CV accuracy by alpha 10: 0.237, 100: 0.243, 1000: 0.266, 10000: 0.328, 100000: 0.376, 1e+06: 0.300 -> alpha 100000
+[train_readout] ridge/diag:cursor_row: ridge CV accuracy by alpha 10: 0.284, 100: 0.311, 1000: 0.420, 10000: 0.573, 100000: 0.606, 1e+06: 0.502 -> alpha 100000
+[train_readout] ridge/diag:cursor_col: ridge CV accuracy by alpha 10: 0.293, 100: 0.322, 1000: 0.428, 10000: 0.585, 100000: 0.626, 1e+06: 0.557 -> alpha 100000
+[train_readout] ridge/diag:cell_under_cursor_hidden: ridge CV accuracy by alpha 10: 0.670, 100: 0.687, 1000: 0.746, 10000: 0.816, 100000: 0.822, 1e+06: 0.773 -> alpha 100000
+[train_readout] ridge/diag:cursor_left_half: ridge CV accuracy by alpha 10: 0.773, 100: 0.801, 1000: 0.877, 10000: 0.928, 100000: 0.929, 1e+06: 0.915 -> alpha 100000
+[train_readout] ridge/shuffled: ridge CV accuracy by alpha 10: 0.203, 100: 0.202, 1000: 0.203, 10000: 0.205, 100000: 0.238, 1e+06: 0.264 -> alpha 1e+06
+[train_readout] ridge: ridge for 6 target(s) in 122s
+[train_readout] brain readout: chose ridge {'alpha': 100000.0} (CV 0.376)
+[train_readout] brain readout held-out accuracy 0.384 (balanced 0.296); majority 0.252
+[train_readout] diagnostic cursor_row: held-out accuracy 0.630 vs majority 0.130
+[train_readout] diagnostic cursor_col: held-out accuracy 0.637 vs majority 0.135
+[train_readout] diagnostic cell_under_cursor_hidden: held-out accuracy 0.840 vs majority 0.513
+[train_readout] diagnostic cursor_left_half: held-out accuracy 0.931 vs majority 0.559
+[train_readout] shuffled-label control held-out accuracy 0.253
+[train_readout] board_3x3: logreg CV accuracy by C 0.01: 0.519, 0.1: 0.519, 1: 0.519, 10: 0.519 -> C 0.01
+[train_readout] board_3x3: logreg done in 0s
+[train_readout] board_3x3: chose logreg {'C': 0.01} (CV 0.519)
+[train_readout] board_3x3 control (135 features) held-out accuracy 0.505
+[train_readout] board_full: logreg CV accuracy by C 0.01: 0.317, 0.1: 0.304, 1: 0.301, 10: 0.298 -> C 0.01
+[train_readout] board_full: logreg done in 3s
+[train_readout] board_full: chose logreg {'C': 0.01} (CV 0.317)
+[train_readout] board_full control (1053 features) held-out accuracy 0.337
+[train_readout] saved readout to outputs/training/run2_ego/readout_D.npz; report outputs/training/run2_ego/readout_report_D_ego_default_w1.md

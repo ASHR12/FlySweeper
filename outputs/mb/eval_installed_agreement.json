@@ -1,0 +1,93 @@
+[
+ {
+  "file": "data/compiled/mb_weights.npz",
+  "games_trained": 1500,
+  "margin": 0.25,
+  "pool_ratio": {
+   "up": 1.4095,
+   "down": 1.2441,
+   "left": 1.412,
+   "right": 1.1265,
+   "reveal": 1.8699,
+   "jump": 1.6224
+  },
+  "weights": {
+   "edges": 59334,
+   "changed": 55832,
+   "mean_ratio": 1.45,
+   "at_floor": 5152,
+   "at_ceiling": 0
+  },
+  "agreement": {
+   "turns": 608,
+   "accuracy": 0.722,
+   "recall": {
+    "up": 0.495,
+    "down": 0.57,
+    "left": 0.678,
+    "right": 0.701,
+    "reveal": 0.952,
+    "jump": 1.0
+   },
+   "precision": {
+    "up": 0.558,
+    "down": 0.477,
+    "left": 0.707,
+    "right": 0.708,
+    "reveal": 0.994,
+    "jump": 0.222
+   },
+   "confusion": [
+    [
+     48,
+     19,
+     15,
+     13,
+     0,
+     2
+    ],
+    [
+     10,
+     53,
+     15,
+     14,
+     1,
+     0
+    ],
+    [
+     13,
+     22,
+     82,
+     3,
+     0,
+     1
+    ],
+    [
+     11,
+     17,
+     3,
+     75,
+     0,
+     1
+    ],
+    [
+     4,
+     0,
+     1,
+     1,
+     179,
+     3
+    ],
+    [
+     0,
+     0,
+     0,
+     0,
+     0,
+     2
+    ]
+   ],
+   "reveal_false_positive_rate": 0.002
+  }
+ }
+]

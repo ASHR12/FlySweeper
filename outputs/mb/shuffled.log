@@ -1,0 +1,33 @@
+[train_mb] design: {"action_mbons": {"up": "MBON01", "down": "MBON05", "left": "MBON06", "right": "MBON03", "reveal": "MBON11", "jump": "MBON09"}, "pool_cells": {"up": 2, "down": 2, "left": 2, "right": 2, "reveal": 2, "jump": 4}, "plastic_edges": 16167, "plastic_edges_per_pool": {"up": 2109, "down": 1999, "left": 1944, "right": 1249, "reveal": 4184, "jump": 4682}, "kc_cells": 4064, "kc_kc_edges_silenced": 642933, "pn_kc_edges": 22586, "kc_bias": -0.2, "kc_kc_gain": 0.0, "pn_kc_gain": 1.0, "pn_bias": 0.0, "pn_cells": 686, "pam_cells": 316, "ppl1_cells": 16, "games_trained": 0}
+[train_mb] game     1/500 seed 10000  last 1: wins 0, safe  47.0, turns  25.0, reward -0.100, agree 0.16, |dw| 0.1965, ratio 1.000 pools {'up': 0.9998, 'down': 1.0044, 'left': 1.0014, 'right': 1.0009, 'reveal': 0.9952, 'jump': 1.0009}, T 1.00, 0.66s/game
+[train_mb] game    25/500 seed 10024  last 25: wins 0, safe  46.4, turns  36.8, reward +0.338, agree 0.18, |dw| 0.2499, ratio 1.002 pools {'up': 0.9982, 'down': 0.9973, 'left': 0.9881, 'right': 0.977, 'reveal': 1.0376, 'jump': 0.988}, T 0.95, 1.14s/game
+[train_mb] game    50/500 seed 10049  last 25: wins 0, safe  48.4, turns  54.0, reward -0.112, agree 0.17, |dw| 0.3061, ratio 1.007 pools {'up': 1.0083, 'down': 0.9884, 'left': 0.9867, 'right': 0.9672, 'reveal': 1.0359, 'jump': 1.0091}, T 0.90, 1.38s/game
+[train_mb] game    75/500 seed 10074  last 25: wins 0, safe  49.4, turns  44.6, reward +0.304, agree 0.16, |dw| 0.2800, ratio 1.007 pools {'up': 0.9935, 'down': 0.997, 'left': 0.9915, 'right': 0.9491, 'reveal': 1.0744, 'jump': 0.9796}, T 0.84, 1.34s/game
+[train_mb] game   100/500 seed 10099  last 25: wins 1, safe  50.3, turns  64.6, reward +0.114, agree 0.17, |dw| 0.3212, ratio 0.999 pools {'up': 1.002, 'down': 1.007, 'left': 1.0034, 'right': 0.949, 'reveal': 1.0113, 'jump': 0.9944}, T 0.79, 1.45s/game
+[train_mb] game   125/500 seed 10124  last 25: wins 0, safe  47.6, turns  38.9, reward +0.044, agree 0.15, |dw| 0.2858, ratio 0.993 pools {'up': 1.0195, 'down': 1.02, 'left': 1.0397, 'right': 0.9411, 'reveal': 0.9483, 'jump': 1.0047}, T 0.73, 1.38s/game
+[train_mb] game   150/500 seed 10149  last 25: wins 0, safe  47.9, turns  50.8, reward +0.286, agree 0.15, |dw| 0.3123, ratio 0.990 pools {'up': 1.0145, 'down': 1.0309, 'left': 1.0319, 'right': 0.9318, 'reveal': 0.9304, 'jump': 1.012}, T 0.68, 1.42s/game
+[train_mb] game   175/500 seed 10174  last 25: wins 0, safe  51.1, turns  38.8, reward +0.102, agree 0.17, |dw| 0.2825, ratio 0.990 pools {'up': 1.0034, 'down': 1.0424, 'left': 1.0488, 'right': 0.9239, 'reveal': 0.9532, 'jump': 0.9885}, T 0.63, 1.39s/game
+[train_mb] game   200/500 seed 10199  last 25: wins 0, safe  48.8, turns  36.9, reward -0.140, agree 0.15, |dw| 0.2820, ratio 0.991 pools {'up': 1.0038, 'down': 1.0294, 'left': 1.0417, 'right': 0.9253, 'reveal': 0.9596, 'jump': 0.9929}, T 0.57, 1.35s/game
+[train_mb] game   225/500 seed 10224  last 25: wins 0, safe  45.3, turns  36.6, reward +0.130, agree 0.13, |dw| 0.2576, ratio 0.992 pools {'up': 1.0022, 'down': 1.0292, 'left': 1.035, 'right': 0.9171, 'reveal': 0.9529, 'jump': 1.0082}, T 0.52, 1.32s/game
+[train_mb] game   250/500 seed 10249  last 25: wins 0, safe  54.0, turns  54.3, reward -0.492, agree 0.18, |dw| 0.3565, ratio 0.999 pools {'up': 0.9961, 'down': 1.0534, 'left': 1.0177, 'right': 0.9211, 'reveal': 0.9583, 'jump': 1.0275}, T 0.47, 1.36s/game
+[train_mb] game   275/500 seed 10274  last 25: wins 0, safe  49.4, turns  44.2, reward -0.050, agree 0.16, |dw| 0.2900, ratio 1.002 pools {'up': 1.0151, 'down': 1.0641, 'left': 1.0151, 'right': 0.9094, 'reveal': 0.9689, 'jump': 1.0177}, T 0.41, 1.37s/game
+[train_mb] game   300/500 seed 10299  last 25: wins 0, safe  47.7, turns  41.6, reward +0.212, agree 0.16, |dw| 0.2519, ratio 0.987 pools {'up': 1.0088, 'down': 1.0693, 'left': 1.0286, 'right': 0.91, 'reveal': 0.919, 'jump': 1.0067}, T 0.36, 1.37s/game
+[train_mb] game   325/500 seed 10324  last 25: wins 0, safe  52.6, turns  43.3, reward -0.194, agree 0.16, |dw| 0.2843, ratio 0.994 pools {'up': 1.0024, 'down': 1.0892, 'left': 1.0386, 'right': 0.8911, 'reveal': 0.9214, 'jump': 1.0227}, T 0.31, 1.37s/game
+[train_mb] game   350/500 seed 10349  last 25: wins 0, safe  50.2, turns  49.1, reward +0.354, agree 0.19, |dw| 0.2831, ratio 0.997 pools {'up': 0.9956, 'down': 1.0595, 'left': 1.0219, 'right': 0.8649, 'reveal': 0.9759, 'jump': 1.0138}, T 0.26, 1.38s/game
+[train_mb] game   375/500 seed 10374  last 25: wins 0, safe  53.4, turns  40.6, reward +0.396, agree 0.16, |dw| 0.2783, ratio 0.985 pools {'up': 0.9933, 'down': 1.0503, 'left': 1.0374, 'right': 0.8336, 'reveal': 0.9553, 'jump': 0.9994}, T 0.20, 1.37s/game
+[train_mb] game   400/500 seed 10399  last 25: wins 0, safe  51.6, turns  43.7, reward +0.246, agree 0.17, |dw| 0.2748, ratio 0.983 pools {'up': 1.0049, 'down': 1.0515, 'left': 1.0447, 'right': 0.7934, 'reveal': 0.9507, 'jump': 0.997}, T 0.20, 1.37s/game
+[train_mb] game   425/500 seed 10424  last 25: wins 0, safe  51.3, turns  37.5, reward +0.046, agree 0.16, |dw| 0.2764, ratio 0.989 pools {'up': 0.9951, 'down': 1.0635, 'left': 1.0645, 'right': 0.7878, 'reveal': 0.9597, 'jump': 1.0033}, T 0.20, 1.35s/game
+[train_mb] game   450/500 seed 10449  last 25: wins 0, safe  51.0, turns  40.6, reward +0.200, agree 0.17, |dw| 0.2931, ratio 0.989 pools {'up': 1.0133, 'down': 1.0525, 'left': 1.0647, 'right': 0.7758, 'reveal': 0.9667, 'jump': 0.9969}, T 0.20, 1.33s/game
+[train_mb] game   475/500 seed 10474  last 25: wins 0, safe  50.3, turns  28.7, reward +0.612, agree 0.22, |dw| 0.2381, ratio 0.988 pools {'up': 1.0082, 'down': 1.0433, 'left': 1.0609, 'right': 0.7644, 'reveal': 0.96, 'jump': 1.0111}, T 0.20, 1.30s/game
+[train_mb] game   500/500 seed 10499  last 25: wins 0, safe  55.7, turns  32.8, reward +0.596, agree 0.19, |dw| 0.2606, ratio 1.000 pools {'up': 1.0026, 'down': 1.019, 'left': 1.052, 'right': 0.7387, 'reveal': 1.0424, 'jump': 0.9992}, T 0.20, 1.28s/game
+# shuffled
+
+| games | n | win_rate | mean_safe | mean_turns | mean_reward | teacher_agreement | mean_abs_dw | mean_ratio | temperature |
+|---|---|---|---|---|---|---|---|---|---|
+| 0-99 | 100 | 0.01 | 48.63 | 50.0 | 0.161 | 0.169 | 0.2893 | 1.0032 | 0.894 |
+| 100-199 | 100 | 0.0 | 48.84 | 41.3 | 0.073 | 0.155 | 0.2906 | 0.9922 | 0.681 |
+| 200-299 | 100 | 0.0 | 49.09 | 44.2 | -0.05 | 0.159 | 0.289 | 0.9951 | 0.468 |
+| 300-399 | 100 | 0.0 | 51.96 | 44.2 | 0.201 | 0.171 | 0.2801 | 0.9908 | 0.261 |
+| 400-499 | 100 | 0.0 | 52.08 | 34.9 | 0.363 | 0.186 | 0.267 | 0.9898 | 0.2 |
+
+[train_mb] done: 500 games in 638s -> outputs/mb/shuffled

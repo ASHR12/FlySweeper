@@ -1,0 +1,93 @@
+[validate] idle rates: {'up': 0.2666666805744171, 'down': 0.22499999403953552, 'left': 0.699999988079071, 'right': 0.6333333253860474, 'reveal': 0.9750000238418579, 'jump': 0.550000011920929}
+[validate] fly          seed 6000  lost    safe 65/71  turns  24  reveals   2 noop   0 holds   0  0.6s
+[validate] fly          seed 6001  lost    safe 50/71  turns  32  reveals   5 noop   2 holds   0  0.8s
+[validate] fly          seed 6002  lost    safe 51/71  turns  47  reveals   6 noop   2 holds   2  1.1s
+[validate] fly          seed 6003  lost    safe 61/71  turns  86  reveals   9 noop   5 holds   3  2.2s
+[validate] fly          seed 6004  lost    safe 60/71  turns  21  reveals   3 noop   0 holds   1  0.6s
+[validate] fly          seed 6005  lost    safe 60/71  turns  54  reveals   4 noop   3 holds   2  1.3s
+[validate] fly          seed 6006  lost    safe 56/71  turns  20  reveals   4 noop   1 holds   1  0.5s
+[validate] fly          seed 6007  lost    safe 47/71  turns  66  reveals   6 noop   3 holds   5  1.5s
+[validate] fly          seed 6008  lost    safe 56/71  turns  40  reveals   4 noop   1 holds   0  0.9s
+[validate] fly          seed 6009  lost    safe 59/71  turns  33  reveals   5 noop   1 holds   0  0.8s
+[validate] fly          seed 6010  lost    safe 47/71  turns  17  reveals   3 noop   0 holds   0  0.4s
+[validate] fly          seed 6011  lost    safe 36/71  turns  22  reveals   3 noop   0 holds   0  0.5s
+[validate] fly          seed 6012  lost    safe 54/71  turns  20  reveals   5 noop   1 holds   0  0.5s
+[validate] fly          seed 6013  lost    safe 64/71  turns  59  reveals   4 noop   2 holds   4  1.4s
+[validate] fly          seed 6014  lost    safe 55/71  turns  99  reveals  11 noop   5 holds   4  2.3s
+[validate] fly          seed 6015  lost    safe 55/71  turns  30  reveals   5 noop   4 holds   0  0.7s
+[validate] fly          seed 6016  lost    safe 56/71  turns  29  reveals   3 noop   1 holds   0  0.7s
+[validate] fly          seed 6017  lost    safe 60/71  turns  24  reveals   4 noop   0 holds   0  0.6s
+[validate] fly          seed 6018  lost    safe 63/71  turns  20  reveals   5 noop   0 holds   0  0.5s
+[validate] fly          seed 6019  lost    safe 58/71  turns  14  reveals   2 noop   2 holds   0  0.3s
+[validate] fly          seed 6020  lost    safe 55/71  turns  18  reveals   3 noop   1 holds   1  0.5s
+[validate] fly          seed 6021  lost    safe 53/71  turns  55  reveals   7 noop   4 holds   3  1.4s
+[validate] fly          seed 6022  lost    safe 63/71  turns  74  reveals   8 noop   3 holds   2  1.9s
+[validate] fly          seed 6023  lost    safe 54/71  turns  28  reveals   4 noop   2 holds   0  0.8s
+[validate] fly          seed 6024  lost    safe 26/71  turns   9  reveals   2 noop   0 holds   0  0.3s
+[validate] fly          seed 6025  lost    safe 60/71  turns  29  reveals   5 noop   0 holds   2  0.8s
+[validate] fly          seed 6026  lost    safe 63/71  turns  15  reveals   2 noop   0 holds   0  0.4s
+[validate] fly          seed 6027  lost    safe 49/71  turns 113  reveals  13 noop   8 holds   2  3.2s
+[validate] fly          seed 6028  lost    safe 52/71  turns  42  reveals   7 noop   0 holds   2  1.4s
+[validate] fly          seed 6029  lost    safe 45/71  turns  39  reveals   6 noop   0 holds   1  1.2s
+[validate] fly-learning seed 6000  lost    safe 51/71  turns  18  reveals   4 noop   1 holds   1  1.9s
+[validate] fly-learning seed 6001  lost    safe 14/71  turns  44  reveals   4 noop   0 holds   1  4.5s
+[validate] fly-learning seed 6002  lost    safe 50/71  turns  46  reveals   6 noop   3 holds   1  5.1s
+[validate] fly-learning seed 6003  lost    safe 53/71  turns  31  reveals   7 noop   0 holds   0  3.2s
+[validate] fly-learning seed 6004  lost    safe 51/71  turns  18  reveals   2 noop   0 holds   0  1.9s
+[validate] fly-learning seed 6005  lost    safe 65/71  turns  46  reveals   6 noop   0 holds   0  4.4s
+[validate] fly-learning seed 6006  lost    safe 67/71  turns  50  reveals   5 noop   2 holds   2  4.8s
+[validate] fly-learning seed 6007  lost    safe 31/71  turns  23  reveals   2 noop   1 holds   1  2.3s
+[validate] fly-learning seed 6008  lost    safe 26/71  turns  16  reveals   3 noop   0 holds   0  1.7s
+[validate] fly-learning seed 6009  lost    safe 47/71  turns  26  reveals   3 noop   0 holds   1  3.1s
+[validate] fly-learning seed 6010  lost    safe 46/71  turns   6  reveals   2 noop   0 holds   0  0.9s
+[validate] fly-learning seed 6011  lost    safe 20/71  turns   6  reveals   2 noop   0 holds   0  0.8s
+[validate] fly-learning seed 6012  lost    safe 63/71  turns 121  reveals  15 noop   3 holds   6  11.6s
+[validate] fly-learning seed 6013  lost    safe 61/71  turns  66  reveals   7 noop   2 holds   1  6.2s
+[validate] fly-learning seed 6014  lost    safe 59/71  turns  47  reveals   7 noop   2 holds   2  4.3s
+[validate] fly-learning seed 6015  lost    safe 48/71  turns  17  reveals   3 noop   1 holds   0  1.7s
+[validate] fly-learning seed 6016  lost    safe 60/71  turns  13  reveals   2 noop   0 holds   0  1.3s
+[validate] fly-learning seed 6017  lost    safe 49/71  turns  17  reveals   2 noop   0 holds   0  1.6s
+[validate] fly-learning seed 6018  lost    safe 63/71  turns  44  reveals   5 noop   0 holds   1  4.0s
+[validate] fly-learning seed 6019  lost    safe 42/71  turns  31  reveals   4 noop   4 holds   1  2.8s
+[validate] fly-learning seed 6020  lost    safe 37/71  turns  19  reveals   3 noop   0 holds   1  1.8s
+[validate] fly-learning seed 6021  lost    safe 53/71  turns  46  reveals   6 noop   0 holds   0  4.3s
+[validate] fly-learning seed 6022  lost    safe 58/71  turns  43  reveals   4 noop   3 holds   1  3.9s
+[validate] fly-learning seed 6023  lost    safe 63/71  turns  44  reveals   8 noop   0 holds   0  4.1s
+[validate] fly-learning seed 6024  lost    safe 55/71  turns  22  reveals   3 noop   0 holds   0  2.0s
+[validate] fly-learning seed 6025  lost    safe 52/71  turns  23  reveals   2 noop   1 holds   1  2.0s
+[validate] fly-learning seed 6026  lost    safe 65/71  turns  26  reveals   3 noop   1 holds   1  2.2s
+[validate] fly-learning seed 6027  lost    safe 57/71  turns 132  reveals  14 noop  11 holds   4  10.9s
+[validate] fly-learning seed 6028  lost    safe 45/71  turns  22  reveals   3 noop   0 holds   1  1.9s
+[validate] fly-learning seed 6029  lost    safe 56/71  turns  58  reveals   8 noop   0 holds   0  4.8s
+[validate] plasticity: {"games": 30, "dopamine_events_total": 145, "kc_mbon_edges": 61210, "edges_changed_vs_frozen": 61210, "total_abs_delta": 9720.731, "mean_weight_ratio": 0.1, "min_weight_ratio": 0.1, "max_weight_ratio": 0.1, "edges_at_floor": 61210, "edges_at_ceiling": 0, "mean_weight_ratio_by_game": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]}
+{
+  "fly": {
+    "games": 30,
+    "win_rate": 0.0,
+    "loss_rate": 1.0,
+    "timeout_rate": 0.0,
+    "mean_safe_revealed": 54.43,
+    "mean_cleared_fraction": 0.767,
+    "mean_turns": 39.3,
+    "mean_reveals": 5.0,
+    "mean_noop_reveals": 1.7,
+    "mean_holds": 1.2,
+    "sem_safe_revealed": 1.53,
+    "seconds": 30.1
+  },
+  "fly-learning": {
+    "games": 30,
+    "win_rate": 0.0,
+    "loss_rate": 1.0,
+    "timeout_rate": 0.0,
+    "mean_safe_revealed": 50.23,
+    "mean_cleared_fraction": 0.708,
+    "mean_turns": 37.4,
+    "mean_reveals": 4.8,
+    "mean_noop_reveals": 1.2,
+    "mean_holds": 0.9,
+    "sem_safe_revealed": 2.44,
+    "seconds": 105.8
+  }
+}
+[validate] wrote outputs/validation/readout/learning_seeds6000 in 136s

@@ -1,0 +1,50 @@
+[
+ {
+  "games": "0-99",
+  "n": 100,
+  "win_rate": 0.75,
+  "mean_safe": 67.42,
+  "mean_turns": 70.1,
+  "mean_reward": 4.463,
+  "mean_abs_dw": 2.5173,
+  "temperature": 0.0,
+  "mean_ratio": 1.6655,
+  "teacher_agreement": 0.621
+ },
+ {
+  "games": "100-199",
+  "n": 100,
+  "win_rate": 0.83,
+  "mean_safe": 70.34,
+  "mean_turns": 79.8,
+  "mean_reward": 4.949,
+  "mean_abs_dw": 2.6445,
+  "temperature": 0.0,
+  "mean_ratio": 1.6955,
+  "teacher_agreement": 0.627
+ },
+ {
+  "games": "200-299",
+  "n": 100,
+  "win_rate": 0.81,
+  "mean_safe": 67.7,
+  "mean_turns": 93.2,
+  "mean_reward": 4.754,
+  "mean_abs_dw": 2.7315,
+  "temperature": 0.0,
+  "mean_ratio": 1.7623,
+  "teacher_agreement": 0.558
+ },
+ {
+  "games": "300-399",
+  "n": 100,
+  "win_rate": 0.8,
+  "mean_safe": 69.39,
+  "mean_turns": 112.6,
+  "mean_reward": 4.578,
+  "mean_abs_dw": 2.7813,
+  "temperature": 0.0,
+  "mean_ratio": 1.8408,
+  "teacher_agreement": 0.52
+ }
+]

@@ -1,0 +1,141 @@
+{
+ "mb": {
+  "action_mbons": [
+   [
+    "up",
+    [
+     "MBON09",
+     "MBON32",
+     "MBON30",
+     "MBON31",
+     "MBON25-like",
+     "MBON28"
+    ]
+   ],
+   [
+    "down",
+    [
+     "MBON02",
+     "MBON06",
+     "MBON04",
+     "MBON15-like",
+     "MBON25",
+     "MBON17-like"
+    ]
+   ],
+   [
+    "left",
+    [
+     "MBON11",
+     "MBON05",
+     "MBON21",
+     "MBON23",
+     "MBON27"
+    ]
+   ],
+   [
+    "right",
+    [
+     "MBON12",
+     "MBON29",
+     "MBON24",
+     "MBON03",
+     "MBON16"
+    ]
+   ],
+   [
+    "reveal",
+    [
+     "MBON07",
+     "MBON01",
+     "MBON18",
+     "MBON10",
+     "MBON15",
+     "MBON26"
+    ]
+   ],
+   [
+    "jump",
+    [
+     "MBON14",
+     "MBON22",
+     "MBON20",
+     "MBON19",
+     "MBON13",
+     "MBON17"
+    ]
+   ]
+  ],
+  "extra_orn": true,
+  "odor_amp": 1.0,
+  "kc_kc_gain": 0.0,
+  "kc_bias": -0.3,
+  "pn_kc_gain": 3.0,
+  "pn_bias": -0.3,
+  "eta": 0.03,
+  "other_credit": 0.2,
+  "w_min_ratio": 0.0,
+  "w_max_ratio": 5.0,
+  "sup_mode": "error",
+  "reveal_penalty": 3.0,
+  "reveal_margin": 0.0,
+  "trace_decay": 0.5,
+  "baseline_alpha": 0.05,
+  "centered": true,
+  "kc_mean_alpha": 0.05,
+  "temperature": 1.0,
+  "center_scores": true,
+  "score_mean_alpha": 0.02,
+  "dopamine_amount": 0.8,
+  "dopamine_steps": 2,
+  "r_safe": 0.1,
+  "r_cap": 1.0,
+  "r_mine": -1.0,
+  "r_noop": -0.05,
+  "r_win": 1.0,
+  "jump_distance": 5
+ },
+ "game": {
+  "rows": 9,
+  "cols": 9,
+  "mines": 10,
+  "turn_steps": 15,
+  "max_turns": 400,
+  "settle_steps": 25,
+  "idle_steps": 500,
+  "reward_scale": 0.25
+ },
+ "args": {
+  "games": 1500,
+  "seed0": 12000,
+  "out": "outputs/mb/r2_error_sparse",
+  "checkpoint_every": 250,
+  "warmstart_games": 1500,
+  "warmstart_follow": true,
+  "shuffle_reward": false,
+  "init": null,
+  "no_install": true,
+  "eta": 0.03,
+  "other_credit": 0.2,
+  "trace_decay": 0.5,
+  "temperature": 1.0,
+  "temperature_min": 0.2,
+  "anneal_games": 1500,
+  "kc_bias": -0.3,
+  "pn_bias": -0.3,
+  "pn_kc_gain": 3.0,
+  "raw_eligibility": false,
+  "raw_scores": false,
+  "pools": "groups",
+  "no_extra_orn": false,
+  "sup_mode": "error",
+  "reveal_penalty": 3.0,
+  "w_min_ratio": 0.0,
+  "kc_kc_gain": 0.0,
+  "w_max_ratio": 5.0,
+  "turn_steps": 15,
+  "max_turns": 400,
+  "blind": false,
+  "report_every": 25
+ }
+}

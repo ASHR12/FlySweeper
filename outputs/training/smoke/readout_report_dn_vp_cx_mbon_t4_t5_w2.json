@@ -1,0 +1,259 @@
+{
+ "generated": "2026-09-13T04:22:15+00:00",
+ "data": "outputs/training/smoke, outputs/training/smoke",
+ "collect": {
+  "generated": "2026-09-13T04:19:07+00:00",
+  "config": {
+   "rows": 9,
+   "cols": 9,
+   "mines": 10,
+   "turn_steps": 15,
+   "max_turns": 400,
+   "settle_steps": 25,
+   "idle_steps": 500,
+   "reward_scale": 0.25
+  },
+  "preset": "flyai",
+  "route": "lamina",
+  "sensory_input": false,
+  "sim_params": {
+   "dt": 0.02,
+   "tau": 0.1,
+   "gain": 3.0,
+   "tonic": 0.14,
+   "noise_rate": 1.2,
+   "noise_amp": 0.22,
+   "threshold": 1.0,
+   "reset": 0.0,
+   "refractory_steps": 0,
+   "floor": -5.0
+  },
+  "encoder": {
+   "route": "lamina",
+   "retina_gain": 0.62,
+   "lum_weight": 0.45,
+   "temporal_weight": 1.6,
+   "color_weight": 0.25,
+   "cursor_flicker": 0.35,
+   "lum_hidden": 0.1,
+   "lum_number_base": 0.35,
+   "lum_number_step": 0.075,
+   "lum_flag": 0.55,
+   "lum_mine": 1.0,
+   "binocular": false,
+   "lamina_types": [
+    "L1",
+    "L2",
+    "L3"
+   ],
+   "danger_loom": true,
+   "loom_gain": 0.5,
+   "loom_threshold": 2,
+   "loom_types": [
+    "LC4",
+    "LPLC2"
+   ]
+  },
+  "decoder_mode": "argmax",
+  "seeds": [
+   90000,
+   90007
+  ],
+  "games": 16,
+  "turns": 908,
+  "rows": 462,
+  "explore": 0.25,
+  "explore_policy": "pool",
+  "explored_turns": 212,
+  "jump_distance": 5,
+  "record_groups": [
+   "dn",
+   "vp",
+   "cx",
+   "mbon",
+   "t4",
+   "t5",
+   "kc",
+   "an"
+  ],
+  "n_cells": 33057,
+  "teacher_action_counts": {
+   "up": 84,
+   "down": 74,
+   "left": 66,
+   "right": 94,
+   "reveal": 136,
+   "jump": 0
+  },
+  "seconds": 10.9,
+  "seed_ranges": [
+   [
+    90000,
+    90007
+   ],
+   [
+    90000,
+    90007
+   ]
+  ],
+  "sources": [
+   "outputs/training/smoke",
+   "outputs/training/smoke"
+  ]
+ },
+ "groups": [
+  "dn",
+  "vp",
+  "cx",
+  "mbon",
+  "t4",
+  "t5"
+ ],
+ "n_cells": 27147,
+ "windows": 2,
+ "dim": 54294,
+ "train_turns": 856,
+ "test_turns": 52,
+ "train_games": 7,
+ "test_games": 1,
+ "test_seeds": [
+  90004
+ ],
+ "cv_folds": 2,
+ "label_mix_test": {
+  "up": 0.192,
+  "down": 0.115,
+  "left": 0.154,
+  "right": 0.192,
+  "reveal": 0.346,
+  "jump": 0.0
+ },
+ "majority_class": "reveal",
+ "controls": {
+  "majority": {
+   "accuracy": 0.34615384615384615,
+   "balanced_accuracy": 0.16666666666666666
+  }
+ },
+ "brain": {
+  "kind": "ridge",
+  "hyper": {
+   "alpha": 1000000.0
+  },
+  "cv_accuracy": 0.29455967358041485,
+  "cv": {
+   "ridge": {
+    "hyper": {
+     "alpha": 1000000.0
+    },
+    "cv_accuracy": 0.29455967358041485,
+    "cv_all": {
+     "10.0": 0.2315,
+     "100.0": 0.2315,
+     "1000.0": 0.2315,
+     "10000.0": 0.2374,
+     "100000.0": 0.2509,
+     "1000000.0": 0.2946
+    }
+   }
+  },
+  "held_out": {
+   "accuracy": 0.34615384615384615,
+   "balanced_accuracy": 0.2,
+   "per_class_recall": {
+    "up": 0.0,
+    "down": 0.0,
+    "left": 0.0,
+    "right": 0.0,
+    "reveal": 1.0,
+    "jump": null
+   },
+   "predicted_mix": {
+    "up": 0,
+    "down": 0,
+    "left": 0,
+    "right": 0,
+    "reveal": 52,
+    "jump": 0
+   },
+   "confusion": [
+    [
+     0,
+     0,
+     0,
+     0,
+     10,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     0,
+     6,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     0,
+     8,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     0,
+     10,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     0,
+     18,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   ],
+   "n": 52
+  }
+ },
+ "diagnostics": {
+  "cursor_row": {
+   "classes": 9,
+   "held_out_accuracy": 0.308,
+   "majority": 0.0,
+   "alpha": 10.0
+  },
+  "cursor_col": {
+   "classes": 9,
+   "held_out_accuracy": 0.385,
+   "majority": 0.038,
+   "alpha": 10.0
+  },
+  "cell_under_cursor_hidden": {
+   "classes": 2,
+   "held_out_accuracy": 0.423,
+   "majority": 0.462,
+   "alpha": 10.0
+  },
+  "cursor_left_half": {
+   "classes": 2,
+   "held_out_accuracy": 0.462,
+   "majority": 0.462,
+   "alpha": 100000.0
+  }
+ },
+ "saved": "outputs/training/smoke/readout_smoke.npz"
+}

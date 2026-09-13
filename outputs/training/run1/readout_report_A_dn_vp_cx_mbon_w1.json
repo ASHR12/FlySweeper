@@ -1,0 +1,594 @@
+{
+ "generated": "2026-09-13T04:45:11+00:00",
+ "data": "outputs/training/run1",
+ "collect": {
+  "generated": "2026-09-13T04:33:37+00:00",
+  "config": {
+   "rows": 9,
+   "cols": 9,
+   "mines": 10,
+   "turn_steps": 15,
+   "max_turns": 400,
+   "settle_steps": 25,
+   "idle_steps": 500,
+   "reward_scale": 0.25
+  },
+  "preset": "flyai",
+  "route": "lamina",
+  "sensory_input": false,
+  "sim_params": {
+   "dt": 0.02,
+   "tau": 0.1,
+   "gain": 3.0,
+   "tonic": 0.14,
+   "noise_rate": 1.2,
+   "noise_amp": 0.22,
+   "threshold": 1.0,
+   "reset": 0.0,
+   "refractory_steps": 0,
+   "floor": -5.0
+  },
+  "encoder": {
+   "route": "lamina",
+   "retina_gain": 0.62,
+   "lum_weight": 0.45,
+   "temporal_weight": 1.6,
+   "color_weight": 0.25,
+   "cursor_flicker": 0.35,
+   "lum_hidden": 0.1,
+   "lum_number_base": 0.35,
+   "lum_number_step": 0.075,
+   "lum_flag": 0.55,
+   "lum_mine": 1.0,
+   "binocular": false,
+   "lamina_types": [
+    "L1",
+    "L2",
+    "L3"
+   ],
+   "danger_loom": true,
+   "loom_gain": 0.5,
+   "loom_threshold": 2,
+   "loom_types": [
+    "LC4",
+    "LPLC2"
+   ]
+  },
+  "decoder_mode": "argmax",
+  "seeds": [
+   20000,
+   20471
+  ],
+  "games": 472,
+  "turns": 32008,
+  "rows": 32480,
+  "explore": 0.25,
+  "explore_policy": "pool",
+  "explored_turns": 8081,
+  "jump_distance": 5,
+  "record_groups": [
+   "dn",
+   "vp",
+   "cx",
+   "mbon",
+   "t4",
+   "t5",
+   "kc",
+   "an"
+  ],
+  "n_cells": 33057,
+  "teacher_action_counts": {
+   "up": 5985,
+   "down": 5764,
+   "left": 5836,
+   "right": 5778,
+   "reveal": 8469,
+   "jump": 176
+  },
+  "seconds": 811.8
+ },
+ "groups": [
+  "dn",
+  "vp",
+  "cx",
+  "mbon"
+ ],
+ "n_cells": 13562,
+ "windows": 1,
+ "dim": 13562,
+ "train_turns": 24672,
+ "test_turns": 7336,
+ "train_games": 378,
+ "test_games": 94,
+ "test_seeds": [
+  20004,
+  20009,
+  20014,
+  20019,
+  20024,
+  20029,
+  20034,
+  20039,
+  20044,
+  20049,
+  20054,
+  20059,
+  20064,
+  20069,
+  20074,
+  20079,
+  20084,
+  20089,
+  20094,
+  20099,
+  20104,
+  20109,
+  20114,
+  20119,
+  20124,
+  20129,
+  20134,
+  20139,
+  20144,
+  20149,
+  20154,
+  20159,
+  20164,
+  20169,
+  20174,
+  20179,
+  20184,
+  20189,
+  20194,
+  20199,
+  20204,
+  20209,
+  20214,
+  20219,
+  20224,
+  20229,
+  20234,
+  20239,
+  20244,
+  20249,
+  20254,
+  20259,
+  20264,
+  20269,
+  20274,
+  20279,
+  20284,
+  20289,
+  20294,
+  20299,
+  20304,
+  20309,
+  20314,
+  20319,
+  20324,
+  20329,
+  20334,
+  20339,
+  20344,
+  20349,
+  20354,
+  20359,
+  20364,
+  20369,
+  20374,
+  20379,
+  20384,
+  20389,
+  20394,
+  20399,
+  20404,
+  20409,
+  20414,
+  20419,
+  20424,
+  20429,
+  20434,
+  20439,
+  20444,
+  20449,
+  20454,
+  20459,
+  20464,
+  20469
+ ],
+ "cv_folds": 3,
+ "label_mix_test": {
+  "up": 0.185,
+  "down": 0.188,
+  "left": 0.182,
+  "right": 0.173,
+  "reveal": 0.267,
+  "jump": 0.004
+ },
+ "majority_class": "reveal",
+ "controls": {
+  "majority": {
+   "accuracy": 0.2674482006543075,
+   "balanced_accuracy": 0.16666666666666666
+  },
+  "shuffled_labels": {
+   "accuracy": 0.2674482006543075,
+   "balanced_accuracy": 0.16666666666666666,
+   "per_class_recall": {
+    "up": 0.0,
+    "down": 0.0,
+    "left": 0.0,
+    "right": 0.0,
+    "reveal": 1.0,
+    "jump": 0.0
+   },
+   "predicted_mix": {
+    "up": 0,
+    "down": 0,
+    "left": 1,
+    "right": 1,
+    "reveal": 7334,
+    "jump": 0
+   },
+   "confusion": [
+    [
+     0,
+     0,
+     1,
+     1,
+     1357,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     0,
+     1382,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     0,
+     1338,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     0,
+     1268,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     0,
+     1962,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     0,
+     27,
+     0
+    ]
+   ],
+   "n": 7336,
+   "cv_accuracy_on_shuffled": 0.26374517472812026,
+   "kind": "ridge"
+  },
+  "board_3x3": {
+   "accuracy": 0.5095419847328244,
+   "balanced_accuracy": 0.3930573156107489,
+   "per_class_recall": {
+    "up": 0.389,
+    "down": 0.34,
+    "left": 0.364,
+    "right": 0.332,
+    "reveal": 0.934,
+    "jump": 0.0
+   },
+   "predicted_mix": {
+    "up": 1201,
+    "down": 995,
+    "left": 1001,
+    "right": 940,
+    "reveal": 3199,
+    "jump": 0
+   },
+   "confusion": [
+    [
+     528,
+     186,
+     131,
+     129,
+     385,
+     0
+    ],
+    [
+     240,
+     470,
+     174,
+     183,
+     315,
+     0
+    ],
+    [
+     213,
+     167,
+     487,
+     166,
+     305,
+     0
+    ],
+    [
+     178,
+     148,
+     165,
+     421,
+     356,
+     0
+    ],
+    [
+     37,
+     20,
+     38,
+     35,
+     1832,
+     0
+    ],
+    [
+     5,
+     4,
+     6,
+     6,
+     6,
+     0
+    ]
+   ],
+   "n": 7336,
+   "dim": 135,
+   "kind": "logreg",
+   "hyper": {
+    "C": 0.01
+   }
+  },
+  "board_full": {
+   "accuracy": 0.32211014176663033,
+   "balanced_accuracy": 0.2612819717866604,
+   "per_class_recall": {
+    "up": 0.261,
+    "down": 0.355,
+    "left": 0.348,
+    "right": 0.19,
+    "reveal": 0.413,
+    "jump": 0.0
+   },
+   "predicted_mix": {
+    "up": 1278,
+    "down": 1592,
+    "left": 1476,
+    "right": 854,
+    "reveal": 2134,
+    "jump": 2
+   },
+   "confusion": [
+    [
+     355,
+     248,
+     242,
+     142,
+     372,
+     0
+    ],
+    [
+     209,
+     491,
+     224,
+     143,
+     314,
+     1
+    ],
+    [
+     191,
+     232,
+     466,
+     135,
+     314,
+     0
+    ],
+    [
+     226,
+     254,
+     228,
+     241,
+     319,
+     0
+    ],
+    [
+     292,
+     361,
+     307,
+     191,
+     810,
+     1
+    ],
+    [
+     5,
+     6,
+     9,
+     2,
+     5,
+     0
+    ]
+   ],
+   "n": 7336,
+   "dim": 1053,
+   "kind": "logreg",
+   "hyper": {
+    "C": 0.01
+   }
+  }
+ },
+ "brain": {
+  "kind": "ridge",
+  "hyper": {
+   "alpha": 100000.0
+  },
+  "cv_accuracy": 0.2818643866739557,
+  "cv": {
+   "ridge": {
+    "hyper": {
+     "alpha": 100000.0
+    },
+    "cv_accuracy": 0.2818643866739557,
+    "cv_all": {
+     "10.0": 0.2181,
+     "100.0": 0.2222,
+     "1000.0": 0.2334,
+     "10000.0": 0.2545,
+     "100000.0": 0.2819,
+     "1000000.0": 0.2757
+    }
+   },
+   "logreg": {
+    "hyper": {
+     "C": 0.0001
+    },
+    "cv_accuracy": 0.27529752521166645,
+    "cv_all": {
+     "0.0001": 0.2753,
+     "0.001": 0.2537,
+     "0.01": 0.2451
+    }
+   }
+  },
+  "held_out": {
+   "accuracy": 0.27903489640130863,
+   "balanced_accuracy": 0.21540117789396962,
+   "per_class_recall": {
+    "up": 0.208,
+    "down": 0.192,
+    "left": 0.185,
+    "right": 0.196,
+    "reveal": 0.511,
+    "jump": 0.0
+   },
+   "predicted_mix": {
+    "up": 1090,
+    "down": 976,
+    "left": 936,
+    "right": 971,
+    "reveal": 3363,
+    "jump": 0
+   },
+   "confusion": [
+    [
+     282,
+     152,
+     159,
+     165,
+     601,
+     0
+    ],
+    [
+     194,
+     266,
+     154,
+     169,
+     599,
+     0
+    ],
+    [
+     177,
+     166,
+     248,
+     140,
+     607,
+     0
+    ],
+    [
+     184,
+     151,
+     141,
+     249,
+     543,
+     0
+    ],
+    [
+     248,
+     239,
+     230,
+     243,
+     1002,
+     0
+    ],
+    [
+     5,
+     2,
+     4,
+     5,
+     11,
+     0
+    ]
+   ],
+   "n": 7336
+  },
+  "held_out_by_teacher_mode": {
+   "first": {
+    "n": 138,
+    "accuracy": 0.819
+   },
+   "guess-free": {
+    "n": 266,
+    "accuracy": 0.32
+   },
+   "guess-frontier": {
+    "n": 139,
+    "accuracy": 0.237
+   },
+   "safe": {
+    "n": 6793,
+    "accuracy": 0.267
+   }
+  },
+  "held_out_on_explored_turns": {
+   "n": 1838,
+   "accuracy": 0.297
+  }
+ },
+ "diagnostics": {
+  "cursor_row": {
+   "classes": 9,
+   "held_out_accuracy": 0.532,
+   "majority": 0.115,
+   "alpha": 100000.0
+  },
+  "cursor_col": {
+   "classes": 9,
+   "held_out_accuracy": 0.594,
+   "majority": 0.117,
+   "alpha": 100000.0
+  },
+  "cell_under_cursor_hidden": {
+   "classes": 2,
+   "held_out_accuracy": 0.54,
+   "majority": 0.497,
+   "alpha": 100000.0
+  },
+  "cursor_left_half": {
+   "classes": 2,
+   "held_out_accuracy": 0.821,
+   "majority": 0.583,
+   "alpha": 100000.0
+  }
+ },
+ "saved": "/Users/ashutosh/development-work/fruit-fly/data/compiled/readout.npz"
+}

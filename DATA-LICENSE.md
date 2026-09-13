@@ -38,7 +38,7 @@ We redistribute only **derived artifacts**, which are adaptations of the dataset
 
 | artifact | where | what it contains |
 |---|---|---|
-| trained KC→MBON weight sets | `models/*.npz` | for 16,167 (round 1) or 59,334 (round 2) Kenyon-cell → MBON edges: the edge's position in our compiled graph, its original normalized MaleCNS weight (`w0`) and its trained value (`w`), plus our training settings. No other connectome values. |
+| trained KC→MBON weight sets | `models/*.npz` | for 16,167 (round 1) or 59,334 (rounds 2 and 3) Kenyon-cell → MBON edges: the edge's position in our compiled graph, its original normalized MaleCNS weight (`w0`) and its trained value (`w`), plus our training settings. No other connectome values. |
 | the browser export | `web/data/` (gitignored; hosted separately, see `docs/deploy.md`) | the full signed, normalized adjacency (25,088,107 active edges after silencing synapses onto sensory neurons), cell-type ids, soma positions and region labels — a re-encoding of the released tables under our sign and normalization policies, not the original synapse tables |
 | the browser copies of the weight sets | `web/weights/` | the same trained edges as `models/`, converted to JSON + binary for the page |
 | counts, digests and policies | `data/compiled/meta.json` (regenerated locally), `docs/`, this file | numbers derived from the tables |

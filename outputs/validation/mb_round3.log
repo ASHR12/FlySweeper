@@ -1,0 +1,920 @@
+[fly-mb] weights /Users/ashutosh/development-work/fruit-fly/outputs/mb/r3_rl/weights_000400.npz: 59334 plastic KC->MBON edges, 2400 games trained; pools up=16 cells, down=14 cells, left=10 cells, right=12 cells, reveal=23 cells, jump=16 cells; KC settings kc_kc_gain 0.0 kc_bias -0.3 pn_bias -0.3 pn_kc_gain 3.0; decision argmax (temperature 0.0), reveal margin 0.25, centred scores True
+[fly-mb] weights /Users/ashutosh/development-work/fruit-fly/data/compiled/mb_weights.npz: 59334 plastic KC->MBON edges, 1500 games trained; pools up=16 cells, down=14 cells, left=10 cells, right=12 cells, reveal=23 cells, jump=16 cells; KC settings kc_kc_gain 0.0 kc_bias -0.3 pn_bias -0.3 pn_kc_gain 3.0; decision argmax (temperature 0.0), reveal margin 0.25, centred scores True
+[validate] fly-mb: {"action_mbons": {"up": ["MBON09", "MBON32", "MBON30", "MBON31", "MBON25-like", "MBON28"], "down": ["MBON02", "MBON06", "MBON04", "MBON15-like", "MBON25", "MBON17-like"], "left": ["MBON11", "MBON05", "MBON21", "MBON23", "MBON27"], "right": ["MBON12", "MBON29", "MBON24", "MBON03", "MBON16"], "reveal": ["MBON07", "MBON01", "MBON18", "MBON10", "MBON15", "MBON26"], "jump": ["MBON14", "MBON22", "MBON20", "MBON19", "MBON13", "MBON17"]}, "pool_cells": {"up": 16, "down": 14, "left": 10, "right": 12, "reveal": 23, "jump": 16}, "plastic_edges": 59334, "plastic_edges_per_pool": {"up": 9982, "down": 9999, "left": 9645, "right": 9681, "reveal": 10026, "jump": 10001}, "kc_cells": 4064, "kc_kc_edges_silenced": 642933, "pn_kc_edges": 22586, "kc_bias": -0.3, "kc_kc_gain": 0.0, "pn_kc_gain": 3.0, "pn_bias": -0.3, "pn_cells": 686, "pam_cells": 316, "ppl1_cells": 16, "games_trained": 1500, "weights": "/Users/ashutosh/development-work/fruit-fly/data/compiled/mb_weights.npz", "trained": {"trained_on": {"seed0": 12000, "games": 1500}, "args": {"games": 1500, "seed0": 12000, "out": "outputs/mb/r2_error_sparse", "checkpoint_every": 250, "warmstart_games": 1500, "warmstart_follow": true, "shuffle_reward": false, "init": null, "no_install": true, "eta": 0.03, "other_credit": 0.2, "trace_decay": 0.5, "temperature": 1.0, "temperature_min": 0.2, "anneal_games": 1500, "kc_bias": -0.3, "pn_bias": -0.3, "pn_kc_gain": 3.0, "raw_eligibility": false, "raw_scores": false, "pools": "groups", "no_extra_orn": false, "sup_mode": "error", "reveal_penalty": 3.0, "w_min_ratio": 0.0, "kc_kc_gain": 0.0, "w_max_ratio": 5.0, "turn_steps": 15, "max_turns": 400, "blind": false, "report_every": 25}, "started": "2026-09-13T06:18:04+00:00", "init": null, "games_done": 1500, "installed_from": "outputs/mb/r2_error_sparse/weights_001500.npz", "reveal_margin": 0.25, "eval": {"file": "outputs/mb/r2_error_sparse/weights_001500.npz", "games_trained": 1500, "margin": 0.25, "pool_ratio": {"up": 1.4095, "down": 1.2441, "left": 1.412, "right": 1.1265, "reveal": 1.8699, "jump": 1.6224}, "weights": {"edges": 59334, "changed": 55832, "mean_ratio": 1.45, "at_floor": 5152, "at_ceiling": 0}}}, "temperature": 0.0, "pool_ratio": {"up": 1.4095, "down": 1.2441, "left": 1.412, "right": 1.1265, "reveal": 1.8699, "jump": 1.6224}, "channels": 31}
+[validate] idle rates: {'up': 0.3333333432674408, 'down': 0.15000000596046448, 'left': 0.6666666865348816, 'right': 0.5333333611488342, 'reveal': 1.149999976158142, 'jump': 0.44999998807907104}
+[validate] fly-mb-alt   seed 5000  won     safe 71/71  turns 145  reveals  17 noop   0 holds   0  5.6s
+[validate] fly-mb-alt   seed 5001  won     safe 71/71  turns 158  reveals  22 noop   0 holds   0  8.4s
+[validate] fly-mb-alt   seed 5002  lost    safe 51/71  turns  11  reveals   2 noop   0 holds   0  0.6s
+[validate] fly-mb-alt   seed 5003  won     safe 71/71  turns  76  reveals  26 noop   0 holds   0  4.6s
+[validate] fly-mb-alt   seed 5004  won     safe 71/71  turns  41  reveals  14 noop   0 holds   0  3.2s
+[validate] fly-mb-alt   seed 5005  won     safe 71/71  turns 117  reveals  18 noop   0 holds   0  12.7s
+[validate] fly-mb-alt   seed 5006  won     safe 71/71  turns 326  reveals  23 noop   0 holds   0  50.3s
+[validate] fly-mb-alt   seed 5007  lost    safe 63/71  turns  20  reveals   7 noop   0 holds   0  1.7s
+[validate] fly-mb-alt   seed 5008  won     safe 71/71  turns  79  reveals  25 noop   0 holds   0  2.8s
+[validate] fly-mb-alt   seed 5009  won     safe 71/71  turns  60  reveals  14 noop   0 holds   0  1.7s
+[validate] fly-mb-alt   seed 5010  won     safe 71/71  turns  65  reveals  14 noop   0 holds   0  1.7s
+[validate] fly-mb-alt   seed 5011  lost    safe 60/71  turns 147  reveals  16 noop   0 holds   0  4.0s
+[validate] fly-mb-alt   seed 5012  lost    safe 65/71  turns  43  reveals  10 noop   0 holds   0  1.4s
+[validate] fly-mb-alt   seed 5013  won     safe 71/71  turns  79  reveals  23 noop   0 holds   0  2.8s
+[validate] fly-mb-alt   seed 5014  won     safe 71/71  turns 168  reveals  19 noop   0 holds   0  6.4s
+[validate] fly-mb-alt   seed 5015  lost    safe 67/71  turns  67  reveals  10 noop   0 holds   0  2.7s
+[validate] fly-mb-alt   seed 5016  won     safe 71/71  turns  28  reveals  12 noop   0 holds   0  1.0s
+[validate] fly-mb-alt   seed 5017  won     safe 71/71  turns 120  reveals  15 noop   0 holds   0  4.2s
+[validate] fly-mb-alt   seed 5018  lost    safe 41/71  turns  21  reveals   2 noop   0 holds   0  0.8s
+[validate] fly-mb-alt   seed 5019  won     safe 71/71  turns  65  reveals  19 noop   0 holds   0  2.4s
+[validate] fly-mb-alt   seed 5020  won     safe 71/71  turns  53  reveals  16 noop   0 holds   0  2.1s
+[validate] fly-mb-alt   seed 5021  lost    safe 33/71  turns 309  reveals   9 noop   0 holds   0  11.6s
+[validate] fly-mb-alt   seed 5022  lost    safe 42/71  turns  65  reveals   6 noop   0 holds   0  2.4s
+[validate] fly-mb-alt   seed 5023  won     safe 71/71  turns 112  reveals  25 noop   0 holds   0  4.3s
+[validate] fly-mb-alt   seed 5024  won     safe 71/71  turns  60  reveals  14 noop   0 holds   0  2.5s
+[validate] fly-mb-alt   seed 5025  won     safe 71/71  turns  44  reveals  13 noop   0 holds   0  1.9s
+[validate] fly-mb-alt   seed 5026  won     safe 71/71  turns  51  reveals  15 noop   0 holds   0  2.2s
+[validate] fly-mb-alt   seed 5027  won     safe 71/71  turns  89  reveals  22 noop   0 holds   0  3.5s
+[validate] fly-mb-alt   seed 5028  won     safe 71/71  turns 160  reveals  21 noop   0 holds   0  7.1s
+[validate] fly-mb-alt   seed 5029  won     safe 71/71  turns 144  reveals  12 noop   0 holds   0  6.2s
+[validate] fly-mb-alt   seed 5030  won     safe 71/71  turns 162  reveals  16 noop   0 holds   0  8.5s
+[validate] fly-mb-alt   seed 5031  won     safe 71/71  turns  43  reveals  11 noop   0 holds   0  2.5s
+[validate] fly-mb-alt   seed 5032  won     safe 71/71  turns  75  reveals  15 noop   0 holds   0  11.1s
+[validate] fly-mb-alt   seed 5033  won     safe 71/71  turns  29  reveals   5 noop   0 holds   0  1.5s
+[validate] fly-mb-alt   seed 5034  lost    safe 65/71  turns 189  reveals  10 noop   0 holds   0  7.4s
+[validate] fly-mb-alt   seed 5035  lost    safe 50/71  turns  49  reveals   6 noop   0 holds   0  1.6s
+[validate] fly-mb-alt   seed 5036  won     safe 71/71  turns 148  reveals  17 noop   0 holds   0  4.3s
+[validate] fly-mb-alt   seed 5037  won     safe 71/71  turns 228  reveals  23 noop   0 holds   0  5.7s
+[validate] fly-mb-alt   seed 5038  lost    safe 50/71  turns  12  reveals   3 noop   0 holds   0  0.3s
+[validate] fly-mb-alt   seed 5039  won     safe 71/71  turns 395  reveals   9 noop   0 holds   0  12.8s
+[validate] fly-mb-alt   seed 5040  won     safe 71/71  turns  67  reveals  18 noop   0 holds   0  1.5s
+[validate] fly-mb-alt   seed 5041  won     safe 71/71  turns  59  reveals  18 noop   0 holds   0  1.4s
+[validate] fly-mb-alt   seed 5042  won     safe 71/71  turns  69  reveals  14 noop   0 holds   0  1.6s
+[validate] fly-mb-alt   seed 5043  won     safe 71/71  turns 103  reveals  22 noop   0 holds   0  2.5s
+[validate] fly-mb-alt   seed 5044  won     safe 71/71  turns  99  reveals  23 noop   0 holds   0  2.6s
+[validate] fly-mb-alt   seed 5045  won     safe 71/71  turns  69  reveals  16 noop   0 holds   0  2.0s
+[validate] fly-mb-alt   seed 5046  won     safe 71/71  turns  49  reveals  19 noop   0 holds   0  1.4s
+[validate] fly-mb-alt   seed 5047  won     safe 71/71  turns 155  reveals  20 noop   0 holds   0  4.5s
+[validate] fly-mb-alt   seed 5048  won     safe 71/71  turns  62  reveals  18 noop   0 holds   0  1.9s
+[validate] fly-mb-alt   seed 5049  lost    safe 55/71  turns 308  reveals  13 noop   0 holds   0  7.8s
+[validate] fly-mb-alt   seed 5050  won     safe 71/71  turns  92  reveals  10 noop   0 holds   0  2.2s
+[validate] fly-mb-alt   seed 5051  lost    safe 70/71  turns 182  reveals  13 noop   0 holds   0  5.1s
+[validate] fly-mb-alt   seed 5052  won     safe 71/71  turns  70  reveals  23 noop   0 holds   0  1.9s
+[validate] fly-mb-alt   seed 5053  won     safe 71/71  turns  99  reveals  21 noop   0 holds   0  2.5s
+[validate] fly-mb-alt   seed 5054  timeout safe 70/71  turns 400  reveals  12 noop   0 holds   0  10.4s
+[validate] fly-mb-alt   seed 5055  lost    safe 28/71  turns   8  reveals   3 noop   0 holds   0  0.2s
+[validate] fly-mb-alt   seed 5056  won     safe 71/71  turns  33  reveals  12 noop   0 holds   0  0.9s
+[validate] fly-mb-alt   seed 5057  won     safe 71/71  turns 114  reveals  25 noop   0 holds   0  3.2s
+[validate] fly-mb-alt   seed 5058  won     safe 71/71  turns 162  reveals  18 noop   0 holds   0  4.1s
+[validate] fly-mb-alt   seed 5059  won     safe 71/71  turns  61  reveals  16 noop   0 holds   0  1.5s
+[validate] fly-mb-alt   seed 5060  timeout safe 70/71  turns 400  reveals  15 noop   0 holds   0  8.6s
+[validate] fly-mb-alt   seed 5061  lost    safe 70/71  turns 221  reveals  16 noop   0 holds   0  4.9s
+[validate] fly-mb-alt   seed 5062  won     safe 71/71  turns  78  reveals  18 noop   0 holds   0  1.6s
+[validate] fly-mb-alt   seed 5063  won     safe 71/71  turns  37  reveals   5 noop   0 holds   0  0.8s
+[validate] fly-mb-alt   seed 5064  won     safe 71/71  turns  57  reveals  18 noop   0 holds   0  1.1s
+[validate] fly-mb-alt   seed 5065  lost    safe 64/71  turns 174  reveals  23 noop   0 holds   0  3.6s
+[validate] fly-mb-alt   seed 5066  won     safe 71/71  turns  89  reveals  21 noop   0 holds   0  1.8s
+[validate] fly-mb-alt   seed 5067  won     safe 71/71  turns 294  reveals  19 noop   0 holds   0  6.2s
+[validate] fly-mb-alt   seed 5068  won     safe 71/71  turns 175  reveals  24 noop   0 holds   0  3.5s
+[validate] fly-mb-alt   seed 5069  won     safe 71/71  turns  18  reveals   5 noop   0 holds   0  0.4s
+[validate] fly-mb-alt   seed 5070  won     safe 71/71  turns  63  reveals  21 noop   0 holds   0  1.3s
+[validate] fly-mb-alt   seed 5071  won     safe 71/71  turns 122  reveals  21 noop   0 holds   0  2.5s
+[validate] fly-mb-alt   seed 5072  won     safe 71/71  turns  56  reveals  15 noop   0 holds   0  1.2s
+[validate] fly-mb-alt   seed 5073  won     safe 71/71  turns  56  reveals  11 noop   0 holds   0  1.1s
+[validate] fly-mb-alt   seed 5074  won     safe 71/71  turns  41  reveals  13 noop   0 holds   0  0.9s
+[validate] fly-mb-alt   seed 5075  won     safe 71/71  turns  53  reveals  11 noop   0 holds   0  1.1s
+[validate] fly-mb-alt   seed 5076  lost    safe 62/71  turns  78  reveals   4 noop   0 holds   0  1.7s
+[validate] fly-mb-alt   seed 5077  won     safe 71/71  turns  59  reveals  14 noop   0 holds   0  1.2s
+[validate] fly-mb-alt   seed 5078  won     safe 71/71  turns  43  reveals   6 noop   0 holds   0  0.9s
+[validate] fly-mb-alt   seed 5079  won     safe 71/71  turns  77  reveals   6 noop   0 holds   0  1.6s
+[validate] fly-mb-alt   seed 5080  won     safe 71/71  turns  57  reveals  15 noop   0 holds   0  1.2s
+[validate] fly-mb-alt   seed 5081  won     safe 71/71  turns  70  reveals  18 noop   0 holds   0  1.4s
+[validate] fly-mb-alt   seed 5082  won     safe 71/71  turns 182  reveals  29 noop   0 holds   0  3.8s
+[validate] fly-mb-alt   seed 5083  won     safe 71/71  turns  90  reveals  23 noop   0 holds   0  1.9s
+[validate] fly-mb-alt   seed 5084  lost    safe 67/71  turns 147  reveals  10 noop   0 holds   0  3.2s
+[validate] fly-mb-alt   seed 5085  won     safe 71/71  turns  44  reveals  14 noop   0 holds   0  0.9s
+[validate] fly-mb-alt   seed 5086  won     safe 71/71  turns  57  reveals  17 noop   0 holds   0  1.2s
+[validate] fly-mb-alt   seed 5087  won     safe 71/71  turns  64  reveals  15 noop   0 holds   0  1.4s
+[validate] fly-mb-alt   seed 5088  won     safe 71/71  turns 180  reveals  15 noop   0 holds   0  3.9s
+[validate] fly-mb-alt   seed 5089  won     safe 71/71  turns  67  reveals  19 noop   0 holds   0  1.6s
+[validate] fly-mb-alt   seed 5090  won     safe 71/71  turns  68  reveals   7 noop   0 holds   0  1.5s
+[validate] fly-mb-alt   seed 5091  won     safe 71/71  turns 229  reveals  31 noop   0 holds   0  4.9s
+[validate] fly-mb-alt   seed 5092  lost    safe 55/71  turns  35  reveals   8 noop   0 holds   0  0.7s
+[validate] fly-mb-alt   seed 5093  won     safe 71/71  turns  33  reveals   7 noop   0 holds   0  0.7s
+[validate] fly-mb-alt   seed 5094  lost    safe 15/71  turns   6  reveals   2 noop   0 holds   0  0.1s
+[validate] fly-mb-alt   seed 5095  won     safe 71/71  turns  98  reveals  14 noop   0 holds   0  2.2s
+[validate] fly-mb-alt   seed 5096  lost    safe 54/71  turns 186  reveals  11 noop   0 holds   0  4.1s
+[validate] fly-mb-alt   seed 5097  won     safe 71/71  turns  79  reveals  15 noop   0 holds   0  1.6s
+[validate] fly-mb-alt   seed 5098  lost    safe 62/71  turns 171  reveals  12 noop   0 holds   0  3.6s
+[validate] fly-mb-alt   seed 5099  won     safe 71/71  turns 154  reveals  20 noop   0 holds   0  3.1s
+[validate] fly-mb       seed 5000  won     safe 71/71  turns  67  reveals  17 noop   0 holds   0  1.3s
+[validate] fly-mb       seed 5001  won     safe 71/71  turns 106  reveals  23 noop   0 holds   0  2.2s
+[validate] fly-mb       seed 5002  lost    safe 59/71  turns  46  reveals   9 noop   0 holds   0  0.9s
+[validate] fly-mb       seed 5003  won     safe 71/71  turns 185  reveals  29 noop   0 holds   0  3.4s
+[validate] fly-mb       seed 5004  lost    safe 56/71  turns  19  reveals   5 noop   0 holds   0  0.4s
+[validate] fly-mb       seed 5005  won     safe 71/71  turns  66  reveals  21 noop   0 holds   0  1.2s
+[validate] fly-mb       seed 5006  won     safe 71/71  turns  97  reveals  25 noop   0 holds   0  1.8s
+[validate] fly-mb       seed 5007  lost    safe 61/71  turns  65  reveals   5 noop   0 holds   0  1.2s
+[validate] fly-mb       seed 5008  won     safe 71/71  turns 110  reveals  24 noop   0 holds   0  2.1s
+[validate] fly-mb       seed 5009  won     safe 71/71  turns  47  reveals  15 noop   0 holds   0  0.9s
+[validate] fly-mb       seed 5010  won     safe 71/71  turns  97  reveals  14 noop   0 holds   0  1.9s
+[validate] fly-mb       seed 5011  lost    safe 44/71  turns  24  reveals   5 noop   0 holds   0  0.5s
+[validate] fly-mb       seed 5012  won     safe 71/71  turns  60  reveals  14 noop   0 holds   0  1.2s
+[validate] fly-mb       seed 5013  lost    safe 70/71  turns 124  reveals  23 noop   0 holds   0  2.6s
+[validate] fly-mb       seed 5014  won     safe 71/71  turns  82  reveals  23 noop   0 holds   0  1.8s
+[validate] fly-mb       seed 5015  lost    safe 65/71  turns  49  reveals   8 noop   0 holds   0  1.1s
+[validate] fly-mb       seed 5016  won     safe 71/71  turns  47  reveals  13 noop   0 holds   0  1.0s
+[validate] fly-mb       seed 5017  won     safe 71/71  turns 105  reveals  16 noop   0 holds   0  2.2s
+[validate] fly-mb       seed 5018  lost    safe 42/71  turns  23  reveals   3 noop   0 holds   0  0.5s
+[validate] fly-mb       seed 5019  won     safe 71/71  turns  56  reveals  13 noop   0 holds   0  1.2s
+[validate] fly-mb       seed 5020  won     safe 71/71  turns  53  reveals  16 noop   0 holds   0  1.1s
+[validate] fly-mb       seed 5021  lost    safe 69/71  turns 105  reveals  18 noop   0 holds   0  2.2s
+[validate] fly-mb       seed 5022  won     safe 71/71  turns  74  reveals  25 noop   0 holds   0  1.5s
+[validate] fly-mb       seed 5023  won     safe 71/71  turns  71  reveals  24 noop   0 holds   0  1.5s
+[validate] fly-mb       seed 5024  won     safe 71/71  turns  76  reveals  16 noop   0 holds   0  1.5s
+[validate] fly-mb       seed 5025  lost    safe 70/71  turns 102  reveals  13 noop   0 holds   0  2.0s
+[validate] fly-mb       seed 5026  won     safe 71/71  turns  57  reveals  15 noop   0 holds   0  1.1s
+[validate] fly-mb       seed 5027  won     safe 71/71  turns 100  reveals  23 noop   0 holds   0  1.9s
+[validate] fly-mb       seed 5028  lost    safe 70/71  turns 132  reveals  19 noop   0 holds   0  2.6s
+[validate] fly-mb       seed 5029  won     safe 71/71  turns  64  reveals  14 noop   0 holds   0  1.2s
+[validate] fly-mb       seed 5030  lost    safe 70/71  turns  79  reveals  16 noop   0 holds   0  1.9s
+[validate] fly-mb       seed 5031  lost    safe 62/71  turns  11  reveals   3 noop   0 holds   0  0.3s
+[validate] fly-mb       seed 5032  won     safe 71/71  turns  53  reveals  15 noop   0 holds   0  1.6s
+[validate] fly-mb       seed 5033  won     safe 71/71  turns  38  reveals   5 noop   0 holds   0  1.1s
+[validate] fly-mb       seed 5034  won     safe 71/71  turns  97  reveals  15 noop   0 holds   0  2.9s
+[validate] fly-mb       seed 5035  won     safe 71/71  turns  70  reveals  19 noop   0 holds   0  2.1s
+[validate] fly-mb       seed 5036  won     safe 71/71  turns  63  reveals  17 noop   0 holds   0  1.9s
+[validate] fly-mb       seed 5037  lost    safe 17/71  turns  15  reveals   4 noop   0 holds   0  0.5s
+[validate] fly-mb       seed 5038  won     safe 71/71  turns  69  reveals  19 noop   0 holds   0  2.1s
+[validate] fly-mb       seed 5039  lost    safe 70/71  turns  53  reveals   9 noop   0 holds   0  1.7s
+[validate] fly-mb       seed 5040  won     safe 71/71  turns  61  reveals  19 noop   0 holds   0  1.9s
+[validate] fly-mb       seed 5041  won     safe 71/71  turns 121  reveals  18 noop   0 holds   0  2.5s
+[validate] fly-mb       seed 5042  won     safe 71/71  turns  47  reveals  12 noop   0 holds   0  0.9s
+[validate] fly-mb       seed 5043  won     safe 71/71  turns  85  reveals  20 noop   0 holds   0  1.7s
+[validate] fly-mb       seed 5044  won     safe 71/71  turns 112  reveals  19 noop   0 holds   0  2.1s
+[validate] fly-mb       seed 5045  won     safe 71/71  turns  66  reveals  16 noop   0 holds   0  1.1s
+[validate] fly-mb       seed 5046  won     safe 71/71  turns  56  reveals  20 noop   0 holds   0  1.0s
+[validate] fly-mb       seed 5047  lost    safe 68/71  turns  59  reveals  15 noop   0 holds   0  1.1s
+[validate] fly-mb       seed 5048  won     safe 71/71  turns 128  reveals  18 noop   0 holds   0  2.4s
+[validate] fly-mb       seed 5049  lost    safe 52/71  turns  82  reveals  10 noop   0 holds   0  1.5s
+[validate] fly-mb       seed 5050  won     safe 71/71  turns  96  reveals  12 noop   0 holds   0  1.6s
+[validate] fly-mb       seed 5051  won     safe 71/71  turns  62  reveals  14 noop   0 holds   0  1.0s
+[validate] fly-mb       seed 5052  lost    safe 61/71  turns  86  reveals  20 noop   0 holds   0  1.5s
+[validate] fly-mb       seed 5053  won     safe 71/71  turns  65  reveals  21 noop   0 holds   0  1.3s
+[validate] fly-mb       seed 5054  lost    safe 70/71  turns  86  reveals  13 noop   0 holds   0  2.0s
+[validate] fly-mb       seed 5055  lost    safe 57/71  turns  32  reveals   9 noop   0 holds   0  0.8s
+[validate] fly-mb       seed 5056  won     safe 71/71  turns  75  reveals  11 noop   0 holds   0  1.4s
+[validate] fly-mb       seed 5057  won     safe 71/71  turns  80  reveals  25 noop   0 holds   0  1.4s
+[validate] fly-mb       seed 5058  won     safe 71/71  turns  86  reveals  18 noop   0 holds   0  1.5s
+[validate] fly-mb       seed 5059  lost    safe 61/71  turns  28  reveals   7 noop   0 holds   0  0.5s
+[validate] fly-mb       seed 5060  lost    safe 68/71  turns  80  reveals  14 noop   1 holds   0  1.5s
+[validate] fly-mb       seed 5061  lost    safe 70/71  turns  63  reveals  14 noop   0 holds   0  1.2s
+[validate] fly-mb       seed 5062  won     safe 71/71  turns  50  reveals  15 noop   0 holds   0  0.9s
+[validate] fly-mb       seed 5063  won     safe 71/71  turns  27  reveals   5 noop   0 holds   0  0.5s
+[validate] fly-mb       seed 5064  won     safe 71/71  turns 117  reveals  17 noop   0 holds   0  2.1s
+[validate] fly-mb       seed 5065  lost    safe 57/71  turns  71  reveals  15 noop   1 holds   0  1.2s
+[validate] fly-mb       seed 5066  lost    safe 47/71  turns  42  reveals   8 noop   0 holds   0  0.8s
+[validate] fly-mb       seed 5067  won     safe 71/71  turns  62  reveals  18 noop   0 holds   0  1.1s
+[validate] fly-mb       seed 5068  won     safe 71/71  turns  92  reveals  26 noop   0 holds   0  1.7s
+[validate] fly-mb       seed 5069  won     safe 71/71  turns  47  reveals   5 noop   0 holds   0  0.8s
+[validate] fly-mb       seed 5070  won     safe 71/71  turns  70  reveals  18 noop   0 holds   0  1.3s
+[validate] fly-mb       seed 5071  won     safe 71/71  turns 122  reveals  21 noop   0 holds   0  2.2s
+[validate] fly-mb       seed 5072  lost    safe 70/71  turns  97  reveals  15 noop   0 holds   0  1.8s
+[validate] fly-mb       seed 5073  lost    safe 61/71  turns   5  reveals   2 noop   0 holds   0  0.1s
+[validate] fly-mb       seed 5074  won     safe 71/71  turns  36  reveals  13 noop   0 holds   0  0.7s
+[validate] fly-mb       seed 5075  lost    safe 69/71  turns 115  reveals  10 noop   0 holds   0  2.0s
+[validate] fly-mb       seed 5076  lost    safe 63/71  turns  40  reveals   5 noop   1 holds   0  0.7s
+[validate] fly-mb       seed 5077  lost    safe 63/71  turns  23  reveals   7 noop   0 holds   0  0.4s
+[validate] fly-mb       seed 5078  won     safe 71/71  turns  50  reveals   5 noop   0 holds   0  0.9s
+[validate] fly-mb       seed 5079  won     safe 71/71  turns  35  reveals   6 noop   2 holds   0  0.7s
+[validate] fly-mb       seed 5080  won     safe 71/71  turns  94  reveals  16 noop   0 holds   0  1.7s
+[validate] fly-mb       seed 5081  lost    safe 66/71  turns  85  reveals  14 noop   0 holds   0  1.5s
+[validate] fly-mb       seed 5082  lost    safe 23/71  turns   5  reveals   2 noop   0 holds   0  0.1s
+[validate] fly-mb       seed 5083  lost    safe 64/71  turns  75  reveals  15 noop   0 holds   0  1.4s
+[validate] fly-mb       seed 5084  lost    safe 60/71  turns  15  reveals   6 noop   0 holds   0  0.3s
+[validate] fly-mb       seed 5085  won     safe 71/71  turns  59  reveals  14 noop   0 holds   0  1.1s
+[validate] fly-mb       seed 5086  won     safe 71/71  turns  86  reveals  16 noop   0 holds   0  1.6s
+[validate] fly-mb       seed 5087  won     safe 71/71  turns  89  reveals  17 noop   0 holds   0  1.6s
+[validate] fly-mb       seed 5088  lost    safe 67/71  turns  67  reveals  12 noop   0 holds   0  1.2s
+[validate] fly-mb       seed 5089  lost    safe 69/71  turns 109  reveals  15 noop   0 holds   0  1.9s
+[validate] fly-mb       seed 5090  won     safe 71/71  turns  28  reveals   7 noop   0 holds   0  0.5s
+[validate] fly-mb       seed 5091  lost    safe 68/71  turns 157  reveals  28 noop   0 holds   0  2.8s
+[validate] fly-mb       seed 5092  lost    safe 59/71  turns  25  reveals   9 noop   0 holds   0  0.5s
+[validate] fly-mb       seed 5093  won     safe 71/71  turns  31  reveals   7 noop   0 holds   0  0.6s
+[validate] fly-mb       seed 5094  lost    safe 69/71  turns 151  reveals  31 noop   0 holds   0  2.6s
+[validate] fly-mb       seed 5095  lost    safe 70/71  turns  66  reveals  13 noop   0 holds   0  1.2s
+[validate] fly-mb       seed 5096  lost    safe 46/71  turns  14  reveals   3 noop   0 holds   0  0.3s
+[validate] fly-mb       seed 5097  won     safe 71/71  turns  84  reveals  14 noop   0 holds   0  1.5s
+[validate] fly-mb       seed 5098  won     safe 71/71  turns 112  reveals  20 noop   0 holds   0  2.3s
+[validate] fly-mb       seed 5099  won     safe 71/71  turns 109  reveals  19 noop   0 holds   0  2.3s
+[validate] fly-mb-oracle-only seed 5000  won     safe 71/71  turns  67  reveals  17 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5001  won     safe 71/71  turns  68  reveals  23 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5002  won     safe 71/71  turns  67  reveals  15 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5003  won     safe 71/71  turns  80  reveals  31 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5004  won     safe 71/71  turns  49  reveals  14 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5005  won     safe 71/71  turns  57  reveals  21 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5006  won     safe 71/71  turns  74  reveals  25 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5007  lost    safe 68/71  turns  51  reveals  12 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5008  won     safe 71/71  turns  66  reveals  24 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5009  won     safe 71/71  turns  44  reveals  15 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5010  won     safe 71/71  turns  50  reveals  14 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5011  lost    safe 60/71  turns  46  reveals  17 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5012  won     safe 71/71  turns  46  reveals  14 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5013  won     safe 71/71  turns  69  reveals  23 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5014  won     safe 71/71  turns  60  reveals  23 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5015  lost    safe 68/71  turns  45  reveals  11 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5016  won     safe 71/71  turns  37  reveals  13 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5017  won     safe 71/71  turns  54  reveals  16 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5018  lost    safe 70/71  turns  39  reveals  12 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5019  won     safe 71/71  turns  58  reveals  20 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5020  won     safe 71/71  turns  46  reveals  16 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5021  won     safe 71/71  turns  60  reveals  18 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5022  won     safe 71/71  turns  74  reveals  24 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5023  won     safe 71/71  turns  62  reveals  24 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5024  won     safe 71/71  turns  56  reveals  17 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5025  won     safe 71/71  turns  41  reveals  13 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5026  won     safe 71/71  turns  43  reveals  15 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5027  won     safe 71/71  turns  70  reveals  22 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5028  won     safe 71/71  turns  52  reveals  18 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5029  won     safe 71/71  turns  45  reveals  12 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5030  lost    safe 70/71  turns  48  reveals  16 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5031  won     safe 71/71  turns  36  reveals  11 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5032  won     safe 71/71  turns  44  reveals  15 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5033  won     safe 71/71  turns  23  reveals   5 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5034  lost    safe 67/71  turns  42  reveals  12 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5035  won     safe 71/71  turns  54  reveals  20 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5036  won     safe 71/71  turns  61  reveals  17 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5037  lost    safe 17/71  turns  11  reveals   4 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5038  won     safe 71/71  turns  53  reveals  19 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5039  lost    safe 70/71  turns  30  reveals   9 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5040  won     safe 71/71  turns  56  reveals  19 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5041  won     safe 71/71  turns  53  reveals  18 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5042  won     safe 71/71  turns  38  reveals  12 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5043  won     safe 71/71  turns  66  reveals  20 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5044  won     safe 71/71  turns  67  reveals  21 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5045  won     safe 71/71  turns  52  reveals  16 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5046  won     safe 71/71  turns  54  reveals  20 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5047  won     safe 71/71  turns  52  reveals  17 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5048  lost    safe  9/71  turns   5  reveals   2 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5049  lost    safe 48/71  turns  26  reveals   6 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5050  won     safe 71/71  turns  43  reveals  12 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5051  won     safe 71/71  turns  48  reveals  16 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5052  won     safe 71/71  turns  70  reveals  26 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5053  won     safe 71/71  turns  56  reveals  21 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5054  lost    safe 70/71  turns  48  reveals  13 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5055  won     safe 71/71  turns  60  reveals  22 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5056  won     safe 71/71  turns  41  reveals  12 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5057  won     safe 71/71  turns  67  reveals  25 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5058  won     safe 71/71  turns  62  reveals  18 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5059  won     safe 71/71  turns  60  reveals  16 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5060  won     safe 71/71  turns  61  reveals  16 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5061  lost    safe 70/71  turns  52  reveals  15 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5062  won     safe 71/71  turns  48  reveals  17 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5063  won     safe 71/71  turns  16  reveals   5 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5064  won     safe 71/71  turns  58  reveals  17 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5065  lost    safe 66/71  turns  67  reveals  26 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5066  won     safe 71/71  turns  50  reveals  20 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5067  won     safe 71/71  turns  48  reveals  18 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5068  won     safe 71/71  turns  64  reveals  24 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5069  won     safe 71/71  turns  31  reveals   5 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5070  won     safe 71/71  turns  58  reveals  21 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5071  won     safe 71/71  turns  65  reveals  21 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5072  won     safe 71/71  turns  47  reveals  15 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5073  won     safe 71/71  turns  36  reveals  11 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5074  won     safe 71/71  turns  32  reveals  11 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5075  won     safe 71/71  turns  41  reveals  11 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5076  lost    safe 63/71  turns  17  reveals   5 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5077  won     safe 71/71  turns  47  reveals  14 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5078  won     safe 71/71  turns  23  reveals   6 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5079  won     safe 71/71  turns  33  reveals   6 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5080  won     safe 71/71  turns  57  reveals  16 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5081  won     safe 71/71  turns  54  reveals  18 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5082  won     safe 71/71  turns  97  reveals  29 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5083  won     safe 71/71  turns  61  reveals  21 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5084  won     safe 71/71  turns  50  reveals  13 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5085  won     safe 71/71  turns  40  reveals  14 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5086  won     safe 71/71  turns  52  reveals  16 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5087  won     safe 71/71  turns  46  reveals  15 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5088  won     safe 71/71  turns  60  reveals  19 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5089  won     safe 71/71  turns  52  reveals  15 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5090  won     safe 71/71  turns  18  reveals   7 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5091  won     safe 71/71  turns  92  reveals  31 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5092  lost    safe 60/71  turns  29  reveals  10 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5093  won     safe 71/71  turns  19  reveals   7 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5094  won     safe 71/71  turns  92  reveals  32 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5095  won     safe 71/71  turns  50  reveals  14 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5096  lost    safe 54/71  turns  41  reveals  11 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5097  won     safe 71/71  turns  45  reveals  13 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5098  won     safe 71/71  turns  57  reveals  20 noop   0 holds   0  0.0s
+[validate] fly-mb-oracle-only seed 5099  won     safe 71/71  turns  59  reveals  20 noop   0 holds   0  0.0s
+[validate] random-walk  seed 5000  lost    safe 65/71  turns  50  reveals   6 noop   7 holds   0  0.0s
+[validate] random-walk  seed 5001  lost    safe 34/71  turns  50  reveals   5 noop   6 holds   0  0.0s
+[validate] random-walk  seed 5002  lost    safe 51/71  turns  15  reveals   2 noop   1 holds   0  0.0s
+[validate] random-walk  seed 5003  lost    safe 42/71  turns  17  reveals   3 noop   1 holds   0  0.0s
+[validate] random-walk  seed 5004  lost    safe 59/71  turns  51  reveals   5 noop   1 holds   0  0.0s
+[validate] random-walk  seed 5005  lost    safe 50/71  turns  33  reveals   4 noop   2 holds   0  0.0s
+[validate] random-walk  seed 5006  lost    safe 61/71  turns  21  reveals   2 noop   0 holds   0  0.0s
+[validate] random-walk  seed 5007  lost    safe 28/71  turns  84  reveals   8 noop   7 holds   0  0.0s
+[validate] random-walk  seed 5008  lost    safe 48/71  turns  68  reveals   7 noop   3 holds   0  0.0s
+[validate] random-walk  seed 5009  lost    safe 58/71  turns  16  reveals   2 noop   1 holds   0  0.0s
+[validate] random-walk  seed 5010  lost    safe 40/71  turns  19  reveals   2 noop   4 holds   0  0.0s
+[validate] random-walk  seed 5011  lost    safe 38/71  turns  24  reveals   2 noop   1 holds   0  0.0s
+[validate] random-walk  seed 5012  lost    safe 42/71  turns  21  reveals   2 noop   0 holds   0  0.0s
+[validate] random-walk  seed 5013  lost    safe 41/71  turns  33  reveals   3 noop   0 holds   0  0.0s
+[validate] random-walk  seed 5014  lost    safe 62/71  turns  39  reveals   2 noop   2 holds   0  0.0s
+[validate] random-walk  seed 5015  lost    safe 60/71  turns  46  reveals   4 noop   0 holds   0  0.0s
+[validate] random-walk  seed 5016  lost    safe 63/71  turns  34  reveals   4 noop   2 holds   0  0.0s
+[validate] random-walk  seed 5017  lost    safe 58/71  turns  40  reveals   4 noop   1 holds   0  0.0s
+[validate] random-walk  seed 5018  lost    safe 63/71  turns  39  reveals   3 noop   0 holds   0  0.0s
+[validate] random-walk  seed 5019  lost    safe  9/71  turns  14  reveals   2 noop   0 holds   0  0.0s
+[validate] random-walk  seed 5020  lost    safe 60/71  turns  49  reveals   5 noop   3 holds   0  0.0s
+[validate] random-walk  seed 5021  lost    safe 51/71  turns   8  reveals   2 noop   1 holds   0  0.0s
+[validate] random-walk  seed 5022  lost    safe 38/71  turns  22  reveals   2 noop   2 holds   0  0.0s
+[validate] random-walk  seed 5023  lost    safe 33/71  turns  18  reveals   2 noop   0 holds   0  0.0s
+[validate] random-walk  seed 5024  lost    safe 66/71  turns 145  reveals   6 noop  19 holds   0  0.0s
+[validate] random-walk  seed 5025  lost    safe 54/71  turns  21  reveals   4 noop   0 holds   0  0.0s
+[validate] random-walk  seed 5026  lost    safe 48/71  turns  58  reveals   6 noop   4 holds   0  0.0s
+[validate] random-walk  seed 5027  lost    safe 61/71  turns 177  reveals  13 noop  13 holds   0  0.0s
+[validate] random-walk  seed 5028  lost    safe 61/71  turns  80  reveals   9 noop   5 holds   0  0.0s
+[validate] random-walk  seed 5029  lost    safe 68/71  turns 122  reveals   7 noop   9 holds   0  0.0s
+[validate] random-walk  seed 5030  lost    safe 62/71  turns  86  reveals   5 noop   9 holds   0  0.0s
+[validate] random-walk  seed 5031  lost    safe 64/71  turns  93  reveals   6 noop   7 holds   0  0.0s
+[validate] random-walk  seed 5032  lost    safe 18/71  turns  28  reveals   4 noop   4 holds   0  0.0s
+[validate] random-walk  seed 5033  lost    safe 22/71  turns  32  reveals   2 noop   0 holds   0  0.0s
+[validate] random-walk  seed 5034  lost    safe 52/71  turns  34  reveals   4 noop   5 holds   0  0.0s
+[validate] random-walk  seed 5035  lost    safe 59/71  turns  64  reveals   6 noop   7 holds   0  0.0s
+[validate] random-walk  seed 5036  lost    safe 51/71  turns  17  reveals   3 noop   0 holds   0  0.0s
+[validate] random-walk  seed 5037  lost    safe 17/71  turns  34  reveals   7 noop   2 holds   0  0.0s
+[validate] random-walk  seed 5038  lost    safe 45/71  turns  20  reveals   2 noop   0 holds   0  0.0s
+[validate] random-walk  seed 5039  lost    safe 35/71  turns  34  reveals   4 noop   1 holds   0  0.0s
+[validate] random-walk  seed 5040  lost    safe 39/71  turns  59  reveals   4 noop  10 holds   0  0.0s
+[validate] random-walk  seed 5041  lost    safe 56/71  turns  46  reveals   4 noop   4 holds   0  0.0s
+[validate] random-walk  seed 5042  lost    safe 52/71  turns  18  reveals   2 noop   3 holds   0  0.0s
+[validate] random-walk  seed 5043  lost    safe 55/71  turns 101  reveals  11 noop   5 holds   0  0.0s
+[validate] random-walk  seed 5044  lost    safe 43/71  turns  67  reveals   7 noop   8 holds   0  0.0s
+[validate] random-walk  seed 5045  lost    safe 55/71  turns  85  reveals   4 noop  12 holds   0  0.0s
+[validate] random-walk  seed 5046  lost    safe 46/71  turns  75  reveals   4 noop   8 holds   0  0.0s
+[validate] random-walk  seed 5047  lost    safe 56/71  turns  27  reveals   2 noop   3 holds   0  0.0s
+[validate] random-walk  seed 5048  lost    safe 45/71  turns  28  reveals   3 noop   2 holds   0  0.0s
+[validate] random-walk  seed 5049  lost    safe 53/71  turns  93  reveals   6 noop   4 holds   0  0.0s
+[validate] random-walk  seed 5050  lost    safe 32/71  turns  19  reveals   2 noop   1 holds   0  0.0s
+[validate] random-walk  seed 5051  lost    safe 61/71  turns  37  reveals   4 noop   2 holds   0  0.0s
+[validate] random-walk  seed 5052  lost    safe 62/71  turns  96  reveals   9 noop   9 holds   0  0.0s
+[validate] random-walk  seed 5053  lost    safe 33/71  turns  32  reveals   6 noop   1 holds   0  0.0s
+[validate] random-walk  seed 5054  lost    safe 52/71  turns  26  reveals   3 noop   2 holds   0  0.0s
+[validate] random-walk  seed 5055  lost    safe 51/71  turns  31  reveals   2 noop   3 holds   0  0.0s
+[validate] random-walk  seed 5056  lost    safe 56/71  turns  83  reveals   4 noop   9 holds   0  0.0s
+[validate] random-walk  seed 5057  lost    safe 35/71  turns  20  reveals   3 noop   1 holds   0  0.0s
+[validate] random-walk  seed 5058  lost    safe 55/71  turns  60  reveals   4 noop   3 holds   0  0.0s
+[validate] random-walk  seed 5059  lost    safe 63/71  turns  54  reveals   4 noop   3 holds   0  0.0s
+[validate] random-walk  seed 5060  lost    safe 69/71  turns 104  reveals   9 noop   6 holds   0  0.0s
+[validate] random-walk  seed 5061  lost    safe 57/71  turns  53  reveals   6 noop   7 holds   0  0.0s
+[validate] random-walk  seed 5062  lost    safe 46/71  turns  10  reveals   2 noop   3 holds   0  0.0s
+[validate] random-walk  seed 5063  lost    safe 67/71  turns  19  reveals   2 noop   1 holds   0  0.0s
+[validate] random-walk  seed 5064  lost    safe 58/71  turns  63  reveals   7 noop   5 holds   0  0.0s
+[validate] random-walk  seed 5065  lost    safe 41/71  turns  39  reveals   3 noop   1 holds   0  0.0s
+[validate] random-walk  seed 5066  lost    safe 38/71  turns  24  reveals   3 noop   1 holds   0  0.0s
+[validate] random-walk  seed 5067  lost    safe 54/71  turns  34  reveals   4 noop   7 holds   0  0.0s
+[validate] random-walk  seed 5068  lost    safe 51/71  turns  96  reveals   9 noop   8 holds   0  0.0s
+[validate] random-walk  seed 5069  lost    safe 69/71  turns  67  reveals   3 noop   7 holds   0  0.0s
+[validate] random-walk  seed 5070  lost    safe 59/71  turns  67  reveals   8 noop   3 holds   0  0.0s
+[validate] random-walk  seed 5071  lost    safe 51/71  turns  27  reveals   4 noop   0 holds   0  0.0s
+[validate] random-walk  seed 5072  lost    safe 56/71  turns 122  reveals   9 noop  13 holds   0  0.0s
+[validate] random-walk  seed 5073  lost    safe 64/71  turns  89  reveals   4 noop  13 holds   0  0.0s
+[validate] random-walk  seed 5074  lost    safe 64/71  turns 111  reveals   5 noop  10 holds   0  0.0s
+[validate] random-walk  seed 5075  lost    safe 60/71  turns   9  reveals   2 noop   0 holds   0  0.0s
+[validate] random-walk  seed 5076  lost    safe 60/71  turns   7  reveals   2 noop   0 holds   0  0.0s
+[validate] random-walk  seed 5077  lost    safe 39/71  turns  28  reveals   2 noop   3 holds   0  0.0s
+[validate] random-walk  seed 5078  lost    safe 30/71  turns  54  reveals   4 noop   0 holds   0  0.0s
+[validate] random-walk  seed 5079  lost    safe 61/71  turns  66  reveals   5 noop   3 holds   0  0.0s
+[validate] random-walk  seed 5080  lost    safe  9/71  turns  10  reveals   2 noop   0 holds   0  0.0s
+[validate] random-walk  seed 5081  lost    safe 61/71  turns  87  reveals  10 noop   5 holds   0  0.0s
+[validate] random-walk  seed 5082  lost    safe 36/71  turns  17  reveals   3 noop   0 holds   0  0.0s
+[validate] random-walk  seed 5083  lost    safe 43/71  turns  16  reveals   3 noop   0 holds   0  0.0s
+[validate] random-walk  seed 5084  lost    safe 57/71  turns  25  reveals   3 noop   1 holds   0  0.0s
+[validate] random-walk  seed 5085  lost    safe 63/71  turns  84  reveals   7 noop   6 holds   0  0.0s
+[validate] random-walk  seed 5086  lost    safe 47/71  turns  30  reveals   2 noop   2 holds   0  0.0s
+[validate] random-walk  seed 5087  lost    safe 61/71  turns  26  reveals   2 noop   1 holds   0  0.0s
+[validate] random-walk  seed 5088  lost    safe 53/71  turns  96  reveals   6 noop  10 holds   0  0.0s
+[validate] random-walk  seed 5089  lost    safe 61/71  turns  30  reveals   3 noop   2 holds   0  0.0s
+[validate] random-walk  seed 5090  lost    safe 65/71  turns  99  reveals   5 noop   6 holds   0  0.0s
+[validate] random-walk  seed 5091  lost    safe 13/71  turns  39  reveals   4 noop   0 holds   0  0.0s
+[validate] random-walk  seed 5092  lost    safe 61/71  turns  30  reveals   2 noop   0 holds   0  0.0s
+[validate] random-walk  seed 5093  lost    safe 36/71  turns  68  reveals   8 noop   3 holds   0  0.0s
+[validate] random-walk  seed 5094  lost    safe 60/71  turns  94  reveals   7 noop   4 holds   0  0.0s
+[validate] random-walk  seed 5095  lost    safe 54/71  turns  30  reveals   2 noop   1 holds   0  0.0s
+[validate] random-walk  seed 5096  lost    safe 44/71  turns  45  reveals   4 noop   2 holds   0  0.0s
+[validate] random-walk  seed 5097  lost    safe 55/71  turns  73  reveals   8 noop   8 holds   0  0.0s
+[validate] random-walk  seed 5098  lost    safe 49/71  turns  41  reveals   3 noop   1 holds   0  0.0s
+[validate] random-walk  seed 5099  lost    safe 51/71  turns  11  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5000  lost    safe 18/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5001  lost    safe 41/71  turns   3  reveals   3 noop   0 holds   0  0.0s
+[validate] random-click seed 5002  lost    safe 34/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5003  lost    safe 33/71  turns   3  reveals   3 noop   0 holds   0  0.0s
+[validate] random-click seed 5004  lost    safe 27/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5005  lost    safe 48/71  turns   4  reveals   4 noop   0 holds   0  0.0s
+[validate] random-click seed 5006  lost    safe 15/71  turns   3  reveals   3 noop   0 holds   0  0.0s
+[validate] random-click seed 5007  lost    safe 54/71  turns   4  reveals   4 noop   0 holds   0  0.0s
+[validate] random-click seed 5008  lost    safe 58/71  turns   6  reveals   6 noop   0 holds   0  0.0s
+[validate] random-click seed 5009  lost    safe 19/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5010  lost    safe 30/71  turns   4  reveals   4 noop   0 holds   0  0.0s
+[validate] random-click seed 5011  lost    safe 34/71  turns   7  reveals   7 noop   0 holds   0  0.0s
+[validate] random-click seed 5012  lost    safe 29/71  turns   4  reveals   4 noop   0 holds   0  0.0s
+[validate] random-click seed 5013  lost    safe 48/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5014  lost    safe 42/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5015  lost    safe 52/71  turns   3  reveals   3 noop   0 holds   0  0.0s
+[validate] random-click seed 5016  lost    safe 28/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5017  lost    safe 58/71  turns   7  reveals   7 noop   0 holds   0  0.0s
+[validate] random-click seed 5018  lost    safe 41/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5019  lost    safe 16/71  turns   3  reveals   3 noop   0 holds   0  0.0s
+[validate] random-click seed 5020  lost    safe 55/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5021  lost    safe 60/71  turns   4  reveals   4 noop   0 holds   0  0.0s
+[validate] random-click seed 5022  lost    safe 27/71  turns   3  reveals   3 noop   0 holds   0  0.0s
+[validate] random-click seed 5023  lost    safe 22/71  turns   5  reveals   5 noop   0 holds   0  0.0s
+[validate] random-click seed 5024  lost    safe 35/71  turns   5  reveals   5 noop   0 holds   0  0.0s
+[validate] random-click seed 5025  lost    safe 63/71  turns   3  reveals   3 noop   0 holds   0  0.0s
+[validate] random-click seed 5026  lost    safe 58/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5027  lost    safe 57/71  turns   5  reveals   5 noop   0 holds   0  0.0s
+[validate] random-click seed 5028  lost    safe 24/71  turns   4  reveals   4 noop   0 holds   0  0.0s
+[validate] random-click seed 5029  lost    safe 53/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5030  lost    safe 34/71  turns   4  reveals   4 noop   0 holds   0  0.0s
+[validate] random-click seed 5031  lost    safe 54/71  turns   4  reveals   4 noop   0 holds   0  0.0s
+[validate] random-click seed 5032  lost    safe 16/71  turns   3  reveals   3 noop   0 holds   0  0.0s
+[validate] random-click seed 5033  lost    safe 63/71  turns   4  reveals   4 noop   0 holds   0  0.0s
+[validate] random-click seed 5034  lost    safe 53/71  turns   6  reveals   6 noop   0 holds   0  0.0s
+[validate] random-click seed 5035  lost    safe 16/71  turns   4  reveals   4 noop   0 holds   0  0.0s
+[validate] random-click seed 5036  lost    safe 26/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5037  lost    safe 31/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5038  lost    safe 30/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5039  lost    safe 11/71  turns   5  reveals   5 noop   0 holds   0  0.0s
+[validate] random-click seed 5040  lost    safe 52/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5041  lost    safe 12/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5042  lost    safe 44/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5043  lost    safe 61/71  turns   5  reveals   5 noop   0 holds   0  0.0s
+[validate] random-click seed 5044  lost    safe 58/71  turns   7  reveals   7 noop   0 holds   0  0.0s
+[validate] random-click seed 5045  lost    safe 56/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5046  lost    safe 47/71  turns   4  reveals   4 noop   0 holds   0  0.0s
+[validate] random-click seed 5047  lost    safe 29/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5048  lost    safe 55/71  turns   6  reveals   6 noop   0 holds   0  0.0s
+[validate] random-click seed 5049  lost    safe 56/71  turns   3  reveals   3 noop   0 holds   0  0.0s
+[validate] random-click seed 5050  lost    safe 60/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5051  lost    safe 38/71  turns   6  reveals   6 noop   0 holds   0  0.0s
+[validate] random-click seed 5052  lost    safe 26/71  turns   3  reveals   3 noop   0 holds   0  0.0s
+[validate] random-click seed 5053  lost    safe 44/71  turns   8  reveals   8 noop   0 holds   0  0.0s
+[validate] random-click seed 5054  lost    safe  8/71  turns   4  reveals   4 noop   0 holds   0  0.0s
+[validate] random-click seed 5055  lost    safe 59/71  turns   7  reveals   7 noop   0 holds   0  0.0s
+[validate] random-click seed 5056  lost    safe 39/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5057  lost    safe 12/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5058  lost    safe 44/71  turns  12  reveals  12 noop   0 holds   0  0.0s
+[validate] random-click seed 5059  lost    safe 51/71  turns   6  reveals   6 noop   0 holds   0  0.0s
+[validate] random-click seed 5060  lost    safe 51/71  turns   5  reveals   5 noop   0 holds   0  0.0s
+[validate] random-click seed 5061  lost    safe 63/71  turns   6  reveals   6 noop   0 holds   0  0.0s
+[validate] random-click seed 5062  lost    safe  9/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5063  lost    safe 58/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5064  lost    safe 36/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5065  lost    safe 40/71  turns   4  reveals   4 noop   0 holds   0  0.0s
+[validate] random-click seed 5066  lost    safe 40/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5067  lost    safe 54/71  turns   4  reveals   4 noop   0 holds   0  0.0s
+[validate] random-click seed 5068  lost    safe 53/71  turns   3  reveals   3 noop   0 holds   0  0.0s
+[validate] random-click seed 5069  lost    safe 34/71  turns   8  reveals   8 noop   0 holds   0  0.0s
+[validate] random-click seed 5070  lost    safe 23/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5071  lost    safe 15/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5072  lost    safe 65/71  turns   5  reveals   5 noop   0 holds   0  0.0s
+[validate] random-click seed 5073  lost    safe 66/71  turns   5  reveals   5 noop   0 holds   0  0.0s
+[validate] random-click seed 5074  lost    safe 60/71  turns   7  reveals   7 noop   0 holds   0  0.0s
+[validate] random-click seed 5075  lost    safe 58/71  turns   5  reveals   5 noop   0 holds   0  0.0s
+[validate] random-click seed 5076  lost    safe 62/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5077  lost    safe 56/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5078  lost    safe  9/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5079  lost    safe 59/71  turns   4  reveals   4 noop   0 holds   0  0.0s
+[validate] random-click seed 5080  lost    safe 12/71  turns   5  reveals   5 noop   0 holds   0  0.0s
+[validate] random-click seed 5081  lost    safe 24/71  turns   8  reveals   8 noop   0 holds   0  0.0s
+[validate] random-click seed 5082  lost    safe 60/71  turns   7  reveals   7 noop   0 holds   0  0.0s
+[validate] random-click seed 5083  lost    safe 26/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5084  lost    safe 23/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5085  lost    safe 58/71  turns   3  reveals   3 noop   0 holds   0  0.0s
+[validate] random-click seed 5086  lost    safe 22/71  turns   4  reveals   4 noop   0 holds   0  0.0s
+[validate] random-click seed 5087  lost    safe 64/71  turns   4  reveals   4 noop   0 holds   0  0.0s
+[validate] random-click seed 5088  lost    safe 63/71  turns  10  reveals  10 noop   0 holds   0  0.0s
+[validate] random-click seed 5089  lost    safe  9/71  turns   3  reveals   3 noop   0 holds   0  0.0s
+[validate] random-click seed 5090  lost    safe 62/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5091  lost    safe 52/71  turns   4  reveals   4 noop   0 holds   0  0.0s
+[validate] random-click seed 5092  lost    safe 39/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5093  lost    safe 39/71  turns   4  reveals   4 noop   0 holds   0  0.0s
+[validate] random-click seed 5094  lost    safe 40/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5095  lost    safe 63/71  turns   3  reveals   3 noop   0 holds   0  0.0s
+[validate] random-click seed 5096  lost    safe 59/71  turns   6  reveals   6 noop   0 holds   0  0.0s
+[validate] random-click seed 5097  lost    safe 45/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] random-click seed 5098  lost    safe 55/71  turns   6  reveals   6 noop   0 holds   0  0.0s
+[validate] random-click seed 5099  lost    safe 19/71  turns   2  reveals   2 noop   0 holds   0  0.0s
+[validate] solver       seed 5000  won     safe 71/71  turns  26  reveals  16 noop   0 holds   0  0.0s
+[validate] solver       seed 5001  won     safe 71/71  turns  33  reveals  23 noop   0 holds   0  0.0s
+[validate] solver       seed 5002  won     safe 71/71  turns  26  reveals  16 noop   0 holds   0  0.0s
+[validate] solver       seed 5003  won     safe 71/71  turns  36  reveals  27 noop   0 holds   0  0.0s
+[validate] solver       seed 5004  won     safe 71/71  turns  22  reveals  14 noop   0 holds   0  0.0s
+[validate] solver       seed 5005  won     safe 71/71  turns  29  reveals  19 noop   0 holds   0  0.0s
+[validate] solver       seed 5006  won     safe 71/71  turns  34  reveals  24 noop   0 holds   0  0.0s
+[validate] solver       seed 5007  lost    safe 65/71  turns  17  reveals   9 noop   0 holds   0  0.0s
+[validate] solver       seed 5008  won     safe 71/71  turns  29  reveals  20 noop   0 holds   0  0.0s
+[validate] solver       seed 5009  won     safe 71/71  turns  24  reveals  15 noop   0 holds   0  0.0s
+[validate] solver       seed 5010  won     safe 71/71  turns  23  reveals  14 noop   0 holds   0  0.0s
+[validate] solver       seed 5011  won     safe 71/71  turns  29  reveals  20 noop   0 holds   0  0.0s
+[validate] solver       seed 5012  won     safe 71/71  turns  24  reveals  14 noop   0 holds   0  0.0s
+[validate] solver       seed 5013  won     safe 71/71  turns  30  reveals  21 noop   0 holds   0  0.0s
+[validate] solver       seed 5014  won     safe 71/71  turns  29  reveals  20 noop   0 holds   0  0.0s
+[validate] solver       seed 5015  won     safe 71/71  turns  22  reveals  13 noop   0 holds   0  0.0s
+[validate] solver       seed 5016  won     safe 71/71  turns  21  reveals  13 noop   0 holds   0  0.0s
+[validate] solver       seed 5017  won     safe 71/71  turns  23  reveals  16 noop   0 holds   0  0.0s
+[validate] solver       seed 5018  lost    safe 70/71  turns  20  reveals  11 noop   0 holds   0  0.0s
+[validate] solver       seed 5019  won     safe 71/71  turns  25  reveals  16 noop   0 holds   0  0.0s
+[validate] solver       seed 5020  won     safe 71/71  turns  23  reveals  14 noop   0 holds   0  0.0s
+[validate] solver       seed 5021  lost    safe 12/71  turns   5  reveals   5 noop   0 holds   0  0.0s
+[validate] solver       seed 5022  won     safe 71/71  turns  30  reveals  20 noop   0 holds   0  0.0s
+[validate] solver       seed 5023  won     safe 71/71  turns  34  reveals  25 noop   0 holds   0  0.0s
+[validate] solver       seed 5024  won     safe 71/71  turns  26  reveals  16 noop   0 holds   0  0.0s
+[validate] solver       seed 5025  won     safe 71/71  turns  23  reveals  13 noop   0 holds   0  0.0s
+[validate] solver       seed 5026  won     safe 71/71  turns  24  reveals  17 noop   0 holds   0  0.0s
+[validate] solver       seed 5027  won     safe 71/71  turns  35  reveals  26 noop   0 holds   0  0.0s
+[validate] solver       seed 5028  won     safe 71/71  turns  27  reveals  17 noop   0 holds   0  0.0s
+[validate] solver       seed 5029  won     safe 71/71  turns  23  reveals  13 noop   0 holds   0  0.0s
+[validate] solver       seed 5030  lost    safe 70/71  turns  23  reveals  14 noop   0 holds   0  0.0s
+[validate] solver       seed 5031  won     safe 71/71  turns  19  reveals  11 noop   0 holds   0  0.0s
+[validate] solver       seed 5032  won     safe 71/71  turns  23  reveals  14 noop   0 holds   0  0.0s
+[validate] solver       seed 5033  won     safe 71/71  turns  15  reveals   5 noop   0 holds   0  0.0s
+[validate] solver       seed 5034  lost    safe 66/71  turns  17  reveals  11 noop   0 holds   0  0.0s
+[validate] solver       seed 5035  won     safe 71/71  turns  24  reveals  16 noop   0 holds   0  0.0s
+[validate] solver       seed 5036  won     safe 71/71  turns  26  reveals  16 noop   0 holds   0  0.0s
+[validate] solver       seed 5037  won     safe 71/71  turns  28  reveals  18 noop   0 holds   0  0.0s
+[validate] solver       seed 5038  won     safe 71/71  turns  24  reveals  15 noop   0 holds   0  0.0s
+[validate] solver       seed 5039  lost    safe 70/71  turns  18  reveals   9 noop   0 holds   0  0.0s
+[validate] solver       seed 5040  won     safe 71/71  turns  27  reveals  17 noop   0 holds   0  0.0s
+[validate] solver       seed 5041  won     safe 71/71  turns  25  reveals  18 noop   0 holds   0  0.0s
+[validate] solver       seed 5042  won     safe 71/71  turns  22  reveals  13 noop   0 holds   0  0.0s
+[validate] solver       seed 5043  won     safe 71/71  turns  30  reveals  20 noop   0 holds   0  0.0s
+[validate] solver       seed 5044  won     safe 71/71  turns  28  reveals  19 noop   0 holds   0  0.0s
+[validate] solver       seed 5045  won     safe 71/71  turns  24  reveals  16 noop   0 holds   0  0.0s
+[validate] solver       seed 5046  won     safe 71/71  turns  32  reveals  23 noop   0 holds   0  0.0s
+[validate] solver       seed 5047  won     safe 71/71  turns  27  reveals  18 noop   0 holds   0  0.0s
+[validate] solver       seed 5048  won     safe 71/71  turns  30  reveals  20 noop   0 holds   0  0.0s
+[validate] solver       seed 5049  lost    safe 54/71  turns  15  reveals  12 noop   0 holds   0  0.0s
+[validate] solver       seed 5050  won     safe 71/71  turns  19  reveals   9 noop   0 holds   0  0.0s
+[validate] solver       seed 5051  won     safe 71/71  turns  23  reveals  14 noop   0 holds   0  0.0s
+[validate] solver       seed 5052  won     safe 71/71  turns  36  reveals  27 noop   0 holds   0  0.0s
+[validate] solver       seed 5053  won     safe 71/71  turns  33  reveals  23 noop   0 holds   0  0.0s
+[validate] solver       seed 5054  won     safe 71/71  turns  24  reveals  15 noop   0 holds   0  0.0s
+[validate] solver       seed 5055  won     safe 71/71  turns  33  reveals  25 noop   0 holds   0  0.0s
+[validate] solver       seed 5056  won     safe 71/71  turns  19  reveals  11 noop   0 holds   0  0.0s
+[validate] solver       seed 5057  won     safe 71/71  turns  34  reveals  25 noop   0 holds   0  0.0s
+[validate] solver       seed 5058  won     safe 71/71  turns  29  reveals  19 noop   0 holds   0  0.0s
+[validate] solver       seed 5059  won     safe 71/71  turns  26  reveals  16 noop   0 holds   0  0.0s
+[validate] solver       seed 5060  lost    safe 70/71  turns  27  reveals  18 noop   0 holds   0  0.0s
+[validate] solver       seed 5061  lost    safe 70/71  turns  26  reveals  17 noop   0 holds   0  0.0s
+[validate] solver       seed 5062  won     safe 71/71  turns  21  reveals  12 noop   0 holds   0  0.0s
+[validate] solver       seed 5063  won     safe 71/71  turns  11  reveals   5 noop   0 holds   0  0.0s
+[validate] solver       seed 5064  won     safe 71/71  turns  26  reveals  16 noop   0 holds   0  0.0s
+[validate] solver       seed 5065  won     safe 71/71  turns  35  reveals  26 noop   0 holds   0  0.0s
+[validate] solver       seed 5066  won     safe 71/71  turns  29  reveals  20 noop   0 holds   0  0.0s
+[validate] solver       seed 5067  won     safe 71/71  turns  27  reveals  17 noop   0 holds   0  0.0s
+[validate] solver       seed 5068  won     safe 71/71  turns  34  reveals  25 noop   0 holds   0  0.0s
+[validate] solver       seed 5069  won     safe 71/71  turns  16  reveals   6 noop   0 holds   0  0.0s
+[validate] solver       seed 5070  won     safe 71/71  turns  27  reveals  18 noop   0 holds   0  0.0s
+[validate] solver       seed 5071  won     safe 71/71  turns  31  reveals  22 noop   0 holds   0  0.0s
+[validate] solver       seed 5072  won     safe 71/71  turns  25  reveals  15 noop   0 holds   0  0.0s
+[validate] solver       seed 5073  won     safe 71/71  turns  20  reveals  11 noop   0 holds   0  0.0s
+[validate] solver       seed 5074  won     safe 71/71  turns  21  reveals  12 noop   0 holds   0  0.0s
+[validate] solver       seed 5075  won     safe 71/71  turns  20  reveals  12 noop   0 holds   0  0.0s
+[validate] solver       seed 5076  lost    safe 64/71  turns  12  reveals   6 noop   0 holds   0  0.0s
+[validate] solver       seed 5077  won     safe 71/71  turns  24  reveals  14 noop   0 holds   0  0.0s
+[validate] solver       seed 5078  won     safe 71/71  turns  14  reveals   6 noop   0 holds   0  0.0s
+[validate] solver       seed 5079  won     safe 71/71  turns  14  reveals   6 noop   0 holds   0  0.0s
+[validate] solver       seed 5080  won     safe 71/71  turns  27  reveals  17 noop   0 holds   0  0.0s
+[validate] solver       seed 5081  won     safe 71/71  turns  25  reveals  18 noop   0 holds   0  0.0s
+[validate] solver       seed 5082  won     safe 71/71  turns  38  reveals  28 noop   0 holds   0  0.0s
+[validate] solver       seed 5083  won     safe 71/71  turns  29  reveals  19 noop   0 holds   0  0.0s
+[validate] solver       seed 5084  lost    safe 66/71  turns  16  reveals  10 noop   0 holds   0  0.0s
+[validate] solver       seed 5085  won     safe 71/71  turns  24  reveals  14 noop   0 holds   0  0.0s
+[validate] solver       seed 5086  won     safe 71/71  turns  24  reveals  14 noop   0 holds   0  0.0s
+[validate] solver       seed 5087  won     safe 71/71  turns  27  reveals  17 noop   0 holds   0  0.0s
+[validate] solver       seed 5088  won     safe 71/71  turns  27  reveals  17 noop   0 holds   0  0.0s
+[validate] solver       seed 5089  won     safe 71/71  turns  27  reveals  17 noop   0 holds   0  0.0s
+[validate] solver       seed 5090  won     safe 71/71  turns  16  reveals   7 noop   0 holds   0  0.0s
+[validate] solver       seed 5091  won     safe 71/71  turns  39  reveals  30 noop   0 holds   0  0.0s
+[validate] solver       seed 5092  lost    safe 64/71  turns  18  reveals  14 noop   0 holds   0  0.0s
+[validate] solver       seed 5093  won     safe 71/71  turns  17  reveals   7 noop   0 holds   0  0.0s
+[validate] solver       seed 5094  won     safe 71/71  turns  42  reveals  32 noop   0 holds   0  0.0s
+[validate] solver       seed 5095  won     safe 71/71  turns  24  reveals  16 noop   0 holds   0  0.0s
+[validate] solver       seed 5096  lost    safe 54/71  turns  15  reveals  11 noop   0 holds   0  0.0s
+[validate] solver       seed 5097  won     safe 71/71  turns  25  reveals  16 noop   0 holds   0  0.0s
+[validate] solver       seed 5098  lost    safe 63/71  turns  18  reveals  13 noop   0 holds   0  0.0s
+[validate] solver       seed 5099  won     safe 71/71  turns  30  reveals  21 noop   0 holds   0  0.0s
+[validate] fly          seed 5000  lost    safe 58/71  turns  20  reveals   3 noop   0 holds   0  0.6s
+[validate] fly          seed 5001  lost    safe 54/71  turns  38  reveals   6 noop   0 holds   1  1.0s
+[validate] fly          seed 5002  lost    safe 57/71  turns  18  reveals   3 noop   1 holds   0  0.5s
+[validate] fly          seed 5003  lost    safe 57/71  turns 116  reveals  14 noop   7 holds   2  3.0s
+[validate] fly          seed 5004  lost    safe 54/71  turns  39  reveals   6 noop   0 holds   2  1.0s
+[validate] fly          seed 5005  lost    safe 44/71  turns  16  reveals   2 noop   0 holds   1  0.5s
+[validate] fly          seed 5006  lost    safe 59/71  turns   8  reveals   2 noop   0 holds   0  0.2s
+[validate] fly          seed 5007  lost    safe 55/71  turns  16  reveals   2 noop   0 holds   0  0.5s
+[validate] fly          seed 5008  lost    safe 34/71  turns  13  reveals   4 noop   0 holds   0  0.3s
+[validate] fly          seed 5009  lost    safe 59/71  turns  41  reveals   5 noop   1 holds   0  1.1s
+[validate] fly          seed 5010  lost    safe 48/71  turns  14  reveals   3 noop   0 holds   0  0.4s
+[validate] fly          seed 5011  lost    safe 64/71  turns  38  reveals   3 noop   4 holds   1  1.0s
+[validate] fly          seed 5012  lost    safe 36/71  turns  25  reveals   5 noop   1 holds   0  0.6s
+[validate] fly          seed 5013  lost    safe 37/71  turns  30  reveals   4 noop   1 holds   0  0.8s
+[validate] fly          seed 5014  lost    safe 63/71  turns  73  reveals   8 noop   4 holds   1  1.9s
+[validate] fly          seed 5015  lost    safe 50/71  turns  22  reveals   2 noop   1 holds   1  0.6s
+[validate] fly          seed 5016  lost    safe 66/71  turns 120  reveals   8 noop   8 holds   4  3.3s
+[validate] fly          seed 5017  lost    safe 30/71  turns  12  reveals   2 noop   0 holds   0  0.3s
+[validate] fly          seed 5018  lost    safe 39/71  turns  16  reveals   2 noop   0 holds   1  0.5s
+[validate] fly          seed 5019  lost    safe 51/71  turns  20  reveals   4 noop   0 holds   1  0.6s
+[validate] fly          seed 5020  lost    safe 42/71  turns  18  reveals   3 noop   1 holds   2  0.5s
+[validate] fly          seed 5021  lost    safe 58/71  turns   9  reveals   2 noop   0 holds   0  0.3s
+[validate] fly          seed 5022  lost    safe 59/71  turns  70  reveals   6 noop   7 holds   2  1.9s
+[validate] fly          seed 5023  lost    safe 22/71  turns  19  reveals   2 noop   1 holds   1  0.5s
+[validate] fly          seed 5024  lost    safe 58/71  turns  36  reveals   4 noop   2 holds   0  1.0s
+[validate] fly          seed 5025  lost    safe 60/71  turns  16  reveals   3 noop   0 holds   1  0.5s
+[validate] fly          seed 5026  lost    safe 52/71  turns  20  reveals   2 noop   0 holds   0  0.6s
+[validate] fly          seed 5027  lost    safe 60/71  turns  35  reveals   5 noop   0 holds   0  0.8s
+[validate] fly          seed 5028  lost    safe 65/71  turns 224  reveals  20 noop  14 holds   3  5.2s
+[validate] fly          seed 5029  lost    safe 55/71  turns  55  reveals   4 noop   2 holds   2  1.3s
+[validate] fly          seed 5030  lost    safe 65/71  turns  86  reveals   8 noop   2 holds   2  2.0s
+[validate] fly          seed 5031  lost    safe 62/71  turns  18  reveals   3 noop   0 holds   0  0.4s
+[validate] fly          seed 5032  lost    safe 39/71  turns  34  reveals   3 noop   0 holds   2  0.8s
+[validate] fly          seed 5033  lost    safe 63/71  turns  30  reveals   5 noop   3 holds   1  0.7s
+[validate] fly          seed 5034  lost    safe 57/71  turns  55  reveals   6 noop   1 holds   1  1.3s
+[validate] fly          seed 5035  lost    safe 21/71  turns  26  reveals   3 noop   1 holds   1  0.6s
+[validate] fly          seed 5036  lost    safe 41/71  turns   3  reveals   2 noop   0 holds   0  0.1s
+[validate] fly          seed 5037  lost    safe 31/71  turns  12  reveals   2 noop   0 holds   0  0.3s
+[validate] fly          seed 5038  lost    safe 60/71  turns  38  reveals   4 noop   0 holds   0  0.9s
+[validate] fly          seed 5039  lost    safe 40/71  turns   6  reveals   2 noop   0 holds   0  0.2s
+[validate] fly          seed 5040  lost    safe 53/71  turns  35  reveals   3 noop   0 holds   3  0.9s
+[validate] fly          seed 5041  lost    safe 58/71  turns  58  reveals   6 noop   3 holds   0  1.3s
+[validate] fly          seed 5042  lost    safe 55/71  turns  24  reveals   5 noop   0 holds   1  0.6s
+[validate] fly          seed 5043  lost    safe 62/71  turns  63  reveals   6 noop   4 holds   0  1.4s
+[validate] fly          seed 5044  lost    safe 39/71  turns  21  reveals   4 noop   1 holds   0  0.6s
+[validate] fly          seed 5045  lost    safe 61/71  turns  73  reveals   9 noop   1 holds   2  1.8s
+[validate] fly          seed 5046  lost    safe 57/71  turns  41  reveals   7 noop   3 holds   0  1.1s
+[validate] fly          seed 5047  lost    safe 63/71  turns  49  reveals   7 noop   1 holds   1  1.2s
+[validate] fly          seed 5048  lost    safe 49/71  turns  18  reveals   4 noop   0 holds   0  0.4s
+[validate] fly          seed 5049  lost    safe 50/71  turns  19  reveals   3 noop   0 holds   2  0.5s
+[validate] fly          seed 5050  lost    safe 60/71  turns  51  reveals   7 noop   0 holds   1  1.2s
+[validate] fly          seed 5051  lost    safe 63/71  turns  49  reveals   7 noop   2 holds   3  1.2s
+[validate] fly          seed 5052  lost    safe 39/71  turns  19  reveals   2 noop   3 holds   0  0.5s
+[validate] fly          seed 5053  lost    safe 53/71  turns  49  reveals   7 noop   1 holds   1  1.2s
+[validate] fly          seed 5054  lost    safe 54/71  turns  19  reveals   3 noop   0 holds   1  0.5s
+[validate] fly          seed 5055  lost    safe 36/71  turns  27  reveals   2 noop   0 holds   1  0.7s
+[validate] fly          seed 5056  lost    safe 63/71  turns  26  reveals   4 noop   0 holds   1  0.7s
+[validate] fly          seed 5057  lost    safe 55/71  turns  77  reveals  10 noop   6 holds   2  2.0s
+[validate] fly          seed 5058  lost    safe 31/71  turns  31  reveals   3 noop   0 holds   2  0.8s
+[validate] fly          seed 5059  lost    safe 61/71  turns  79  reveals   7 noop   2 holds   5  1.9s
+[validate] fly          seed 5060  lost    safe 62/71  turns  40  reveals   5 noop   0 holds   1  1.0s
+[validate] fly          seed 5061  lost    safe 66/71  turns 163  reveals  11 noop  11 holds   3  3.8s
+[validate] fly          seed 5062  lost    safe 57/71  turns  69  reveals   6 noop   4 holds   5  1.6s
+[validate] fly          seed 5063  lost    safe 67/71  turns  15  reveals   2 noop   0 holds   1  0.4s
+[validate] fly          seed 5064  lost    safe 56/71  turns  41  reveals   5 noop   0 holds   3  1.0s
+[validate] fly          seed 5065  lost    safe 39/71  turns  23  reveals   3 noop   0 holds   3  0.6s
+[validate] fly          seed 5066  lost    safe 12/71  turns  17  reveals   2 noop   1 holds   0  0.5s
+[validate] fly          seed 5067  lost    safe 63/71  turns 104  reveals   6 noop   5 holds   0  2.9s
+[validate] fly          seed 5068  lost    safe 44/71  turns  17  reveals   2 noop   0 holds   0  0.4s
+[validate] fly          seed 5069  lost    safe 36/71  turns  32  reveals   5 noop   1 holds   0  0.8s
+[validate] fly          seed 5070  lost    safe 32/71  turns  57  reveals   7 noop   2 holds   2  1.2s
+[validate] fly          seed 5071  lost    safe 53/71  turns  88  reveals   9 noop   4 holds   1  2.0s
+[validate] fly          seed 5072  lost    safe 13/71  turns  40  reveals   3 noop   0 holds   3  0.9s
+[validate] fly          seed 5073  lost    safe 64/71  turns  63  reveals   6 noop   1 holds   0  1.5s
+[validate] fly          seed 5074  lost    safe 69/71  turns 156  reveals   9 noop  13 holds   7  3.7s
+[validate] fly          seed 5075  lost    safe 63/71  turns  90  reveals   7 noop   6 holds   3  2.2s
+[validate] fly          seed 5076  lost    safe 59/71  turns  14  reveals   2 noop   0 holds   0  0.4s
+[validate] fly          seed 5077  lost    safe 60/71  turns  32  reveals   3 noop   0 holds   2  0.9s
+[validate] fly          seed 5078  lost    safe 39/71  turns  16  reveals   2 noop   0 holds   1  0.4s
+[validate] fly          seed 5079  lost    safe 58/71  turns  14  reveals   3 noop   0 holds   0  0.3s
+[validate] fly          seed 5080  lost    safe 55/71  turns  31  reveals   3 noop   2 holds   0  0.7s
+[validate] fly          seed 5081  lost    safe 58/71  turns  25  reveals   3 noop   0 holds   1  0.6s
+[validate] fly          seed 5082  lost    safe 58/71  turns  37  reveals   6 noop   2 holds   0  0.9s
+[validate] fly          seed 5083  lost    safe 66/71  turns  77  reveals   8 noop   2 holds   1  1.8s
+[validate] fly          seed 5084  lost    safe 57/71  turns  24  reveals   3 noop   1 holds   1  0.6s
+[validate] fly          seed 5085  lost    safe 19/71  turns  32  reveals   4 noop   0 holds   1  0.7s
+[validate] fly          seed 5086  lost    safe 60/71  turns  56  reveals   6 noop   1 holds   2  1.3s
+[validate] fly          seed 5087  lost    safe 63/71  turns  47  reveals   7 noop   2 holds   1  1.1s
+[validate] fly          seed 5088  lost    safe 61/71  turns  60  reveals   8 noop   8 holds   1  1.4s
+[validate] fly          seed 5089  lost    safe 61/71  turns  93  reveals  10 noop   2 holds   3  2.1s
+[validate] fly          seed 5090  lost    safe 64/71  turns  43  reveals   4 noop   0 holds   1  1.0s
+[validate] fly          seed 5091  lost    safe 20/71  turns  17  reveals   3 noop   1 holds   1  0.4s
+[validate] fly          seed 5092  lost    safe 53/71  turns  71  reveals  10 noop   1 holds   2  1.6s
+[validate] fly          seed 5093  lost    safe 65/71  turns 100  reveals   9 noop   4 holds   1  2.2s
+[validate] fly          seed 5094  lost    safe 34/71  turns  15  reveals   4 noop   0 holds   0  0.4s
+[validate] fly          seed 5095  lost    safe 50/71  turns  30  reveals   4 noop   1 holds   0  0.7s
+[validate] fly          seed 5096  lost    safe 55/71  turns  49  reveals   5 noop   1 holds   2  1.2s
+[validate] fly          seed 5097  lost    safe 54/71  turns  39  reveals   3 noop   0 holds   2  0.9s
+[validate] fly          seed 5098  lost    safe 61/71  turns  19  reveals   3 noop   2 holds   0  0.5s
+[validate] fly          seed 5099  lost    safe 52/71  turns  27  reveals   3 noop   1 holds   1  0.6s
+[validate] fly-blind    seed 5000  lost    safe 58/71  turns  41  reveals   5 noop   3 holds   2  0.8s
+[validate] fly-blind    seed 5001  lost    safe 60/71  turns  59  reveals   8 noop   6 holds   4  1.2s
+[validate] fly-blind    seed 5002  lost    safe 37/71  turns  33  reveals   5 noop   2 holds   1  0.8s
+[validate] fly-blind    seed 5003  lost    safe 49/71  turns  69  reveals  10 noop   5 holds   2  1.4s
+[validate] fly-blind    seed 5004  lost    safe 70/71  turns  48  reveals   3 noop   5 holds   3  1.0s
+[validate] fly-blind    seed 5005  lost    safe 60/71  turns  45  reveals   9 noop   2 holds   2  0.9s
+[validate] fly-blind    seed 5006  lost    safe 61/71  turns  19  reveals   2 noop   0 holds   1  0.4s
+[validate] fly-blind    seed 5007  lost    safe 68/71  turns  16  reveals   2 noop   1 holds   1  0.3s
+[validate] fly-blind    seed 5008  lost    safe 38/71  turns  69  reveals   4 noop   8 holds   2  1.4s
+[validate] fly-blind    seed 5009  lost    safe 20/71  turns  10  reveals   3 noop   1 holds   1  0.2s
+[validate] fly-blind    seed 5010  lost    safe 58/71  turns   3  reveals   2 noop   0 holds   0  0.1s
+[validate] fly-blind    seed 5011  lost    safe 44/71  turns  20  reveals   2 noop   2 holds   0  0.4s
+[validate] fly-blind    seed 5012  lost    safe 40/71  turns  10  reveals   2 noop   1 holds   1  0.2s
+[validate] fly-blind    seed 5013  lost    safe 45/71  turns  36  reveals   6 noop   4 holds   0  0.8s
+[validate] fly-blind    seed 5014  lost    safe 54/71  turns  57  reveals   5 noop   3 holds   1  1.1s
+[validate] fly-blind    seed 5015  lost    safe 59/71  turns  21  reveals   3 noop   3 holds   3  0.4s
+[validate] fly-blind    seed 5016  lost    safe 54/71  turns  35  reveals   3 noop   1 holds   2  0.7s
+[validate] fly-blind    seed 5017  lost    safe 58/71  turns  55  reveals   5 noop   5 holds   3  1.1s
+[validate] fly-blind    seed 5018  lost    safe 50/71  turns  34  reveals   3 noop   4 holds   3  0.7s
+[validate] fly-blind    seed 5019  lost    safe 23/71  turns  16  reveals   2 noop   1 holds   0  0.3s
+[validate] fly-blind    seed 5020  lost    safe 56/71  turns  23  reveals   3 noop   0 holds   0  0.5s
+[validate] fly-blind    seed 5021  lost    safe 33/71  turns  23  reveals   2 noop   1 holds   2  0.5s
+[validate] fly-blind    seed 5022  lost    safe 40/71  turns  66  reveals   9 noop   5 holds   4  1.3s
+[validate] fly-blind    seed 5023  lost    safe 41/71  turns  15  reveals   2 noop   2 holds   1  0.3s
+[validate] fly-blind    seed 5024  lost    safe 23/71  turns  25  reveals   3 noop   3 holds   1  0.5s
+[validate] fly-blind    seed 5025  lost    safe 64/71  turns  41  reveals   7 noop   0 holds   1  0.8s
+[validate] fly-blind    seed 5026  lost    safe 58/71  turns  10  reveals   2 noop   0 holds   1  0.2s
+[validate] fly-blind    seed 5027  lost    safe 59/71  turns  82  reveals  10 noop   6 holds   5  1.6s
+[validate] fly-blind    seed 5028  lost    safe 22/71  turns  12  reveals   2 noop   0 holds   0  0.3s
+[validate] fly-blind    seed 5029  lost    safe 58/71  turns  71  reveals   6 noop   5 holds   4  1.4s
+[validate] fly-blind    seed 5030  lost    safe 48/71  turns  48  reveals   5 noop   3 holds   2  0.9s
+[validate] fly-blind    seed 5031  lost    safe 42/71  turns  17  reveals   2 noop   1 holds   1  0.3s
+[validate] fly-blind    seed 5032  lost    safe 35/71  turns   9  reveals   2 noop   2 holds   0  0.2s
+[validate] fly-blind    seed 5033  lost    safe 58/71  turns  62  reveals   5 noop   7 holds   5  1.2s
+[validate] fly-blind    seed 5034  lost    safe 59/71  turns  30  reveals   4 noop   4 holds   2  0.6s
+[validate] fly-blind    seed 5035  lost    safe 53/71  turns  18  reveals   3 noop   2 holds   1  0.4s
+[validate] fly-blind    seed 5036  lost    safe 51/71  turns  18  reveals   3 noop   3 holds   0  0.4s
+[validate] fly-blind    seed 5037  lost    safe 36/71  turns  13  reveals   2 noop   2 holds   1  0.3s
+[validate] fly-blind    seed 5038  lost    safe 51/71  turns  23  reveals   4 noop   1 holds   1  0.5s
+[validate] fly-blind    seed 5039  lost    safe 60/71  turns  36  reveals   6 noop   1 holds   1  0.7s
+[validate] fly-blind    seed 5040  lost    safe 55/71  turns  35  reveals   6 noop   4 holds   0  0.7s
+[validate] fly-blind    seed 5041  lost    safe 54/71  turns  29  reveals   2 noop   3 holds   0  0.6s
+[validate] fly-blind    seed 5042  lost    safe 57/71  turns  19  reveals   3 noop   0 holds   2  0.4s
+[validate] fly-blind    seed 5043  lost    safe 38/71  turns   4  reveals   2 noop   0 holds   0  0.1s
+[validate] fly-blind    seed 5044  lost    safe 54/71  turns  37  reveals   4 noop   3 holds   5  0.7s
+[validate] fly-blind    seed 5045  lost    safe 54/71  turns  13  reveals   3 noop   1 holds   0  0.3s
+[validate] fly-blind    seed 5046  lost    safe 46/71  turns  32  reveals   4 noop   2 holds   4  0.7s
+[validate] fly-blind    seed 5047  lost    safe 61/71  turns  46  reveals   5 noop   2 holds   1  1.0s
+[validate] fly-blind    seed 5048  lost    safe 60/71  turns  18  reveals   2 noop   1 holds   1  0.4s
+[validate] fly-blind    seed 5049  lost    safe 55/71  turns  91  reveals   8 noop   8 holds   5  2.0s
+[validate] fly-blind    seed 5050  lost    safe 60/71  turns  23  reveals   2 noop   2 holds   1  0.5s
+[validate] fly-blind    seed 5051  lost    safe 37/71  turns  30  reveals   5 noop   2 holds   1  0.6s
+[validate] fly-blind    seed 5052  lost    safe  9/71  turns  15  reveals   2 noop   0 holds   0  0.3s
+[validate] fly-blind    seed 5053  lost    safe 58/71  turns  68  reveals   5 noop   9 holds   4  1.3s
+[validate] fly-blind    seed 5054  lost    safe 45/71  turns  13  reveals   2 noop   2 holds   3  0.3s
+[validate] fly-blind    seed 5055  lost    safe 53/71  turns  33  reveals   2 noop   4 holds   1  0.7s
+[validate] fly-blind    seed 5056  lost    safe 40/71  turns  25  reveals   3 noop   3 holds   3  0.5s
+[validate] fly-blind    seed 5057  lost    safe 53/71  turns  51  reveals   5 noop   5 holds   4  1.0s
+[validate] fly-blind    seed 5058  lost    safe 58/71  turns  40  reveals   4 noop   4 holds   4  0.8s
+[validate] fly-blind    seed 5059  lost    safe 58/71  turns  25  reveals   4 noop   0 holds   3  0.5s
+[validate] fly-blind    seed 5060  lost    safe 51/71  turns  44  reveals   4 noop   8 holds   2  0.9s
+[validate] fly-blind    seed 5061  lost    safe 65/71  turns  79  reveals   8 noop   8 holds   5  1.5s
+[validate] fly-blind    seed 5062  lost    safe 49/71  turns   9  reveals   2 noop   0 holds   1  0.2s
+[validate] fly-blind    seed 5063  lost    safe 60/71  turns  29  reveals   4 noop   3 holds   0  0.6s
+[validate] fly-blind    seed 5064  lost    safe 58/71  turns  35  reveals   6 noop   4 holds   1  0.7s
+[validate] fly-blind    seed 5065  lost    safe 43/71  turns  38  reveals   2 noop   1 holds   5  0.8s
+[validate] fly-blind    seed 5066  lost    safe 41/71  turns  30  reveals   4 noop   0 holds   0  0.6s
+[validate] fly-blind    seed 5067  lost    safe 55/71  turns  21  reveals   5 noop   0 holds   0  0.4s
+[validate] fly-blind    seed 5068  lost    safe 63/71  turns  46  reveals   4 noop   4 holds   3  0.9s
+[validate] fly-blind    seed 5069  lost    safe 56/71  turns  53  reveals   5 noop   5 holds   2  1.1s
+[validate] fly-blind    seed 5070  lost    safe 44/71  turns  60  reveals   5 noop   8 holds   2  1.2s
+[validate] fly-blind    seed 5071  lost    safe 15/71  turns  26  reveals   2 noop   2 holds   1  0.6s
+[validate] fly-blind    seed 5072  lost    safe 53/71  turns  18  reveals   2 noop   1 holds   1  0.4s
+[validate] fly-blind    seed 5073  lost    safe 64/71  turns  66  reveals   5 noop   5 holds   3  1.3s
+[validate] fly-blind    seed 5074  lost    safe 63/71  turns  26  reveals   4 noop   1 holds   0  0.5s
+[validate] fly-blind    seed 5075  lost    safe 58/71  turns  36  reveals   3 noop   3 holds   0  0.7s
+[validate] fly-blind    seed 5076  lost    safe 62/71  turns  43  reveals   4 noop   3 holds   4  0.9s
+[validate] fly-blind    seed 5077  lost    safe 58/71  turns  14  reveals   2 noop   0 holds   2  0.3s
+[validate] fly-blind    seed 5078  lost    safe 12/71  turns  38  reveals   2 noop   2 holds   2  0.8s
+[validate] fly-blind    seed 5079  lost    safe 66/71  turns   5  reveals   2 noop   0 holds   0  0.1s
+[validate] fly-blind    seed 5080  lost    safe 13/71  turns  50  reveals   6 noop   3 holds   2  1.1s
+[validate] fly-blind    seed 5081  lost    safe 57/71  turns   9  reveals   2 noop   1 holds   1  0.2s
+[validate] fly-blind    seed 5082  lost    safe 39/71  turns  39  reveals   7 noop   4 holds   3  0.9s
+[validate] fly-blind    seed 5083  lost    safe 59/71  turns  26  reveals   4 noop   0 holds   1  0.5s
+[validate] fly-blind    seed 5084  lost    safe 34/71  turns  49  reveals   6 noop   2 holds   0  1.0s
+[validate] fly-blind    seed 5085  lost    safe 46/71  turns  29  reveals   3 noop   4 holds   1  0.6s
+[validate] fly-blind    seed 5086  lost    safe 60/71  turns   9  reveals   3 noop   0 holds   0  0.2s
+[validate] fly-blind    seed 5087  lost    safe 56/71  turns  23  reveals   4 noop   3 holds   2  0.5s
+[validate] fly-blind    seed 5088  lost    safe 49/71  turns  53  reveals   5 noop   1 holds   2  1.1s
+[validate] fly-blind    seed 5089  lost    safe 43/71  turns  16  reveals   2 noop   0 holds   1  0.4s
+[validate] fly-blind    seed 5090  lost    safe 65/71  turns   7  reveals   2 noop   0 holds   0  0.2s
+[validate] fly-blind    seed 5091  lost    safe 40/71  turns  59  reveals   6 noop   2 holds   9  1.2s
+[validate] fly-blind    seed 5092  lost    safe 49/71  turns   5  reveals   2 noop   0 holds   0  0.1s
+[validate] fly-blind    seed 5093  lost    safe 65/71  turns  17  reveals   2 noop   3 holds   0  0.5s
+[validate] fly-blind    seed 5094  lost    safe 40/71  turns  31  reveals   2 noop   4 holds   4  0.7s
+[validate] fly-blind    seed 5095  lost    safe 49/71  turns  31  reveals   3 noop   4 holds   0  0.7s
+[validate] fly-blind    seed 5096  lost    safe 66/71  turns  74  reveals   5 noop   7 holds   3  1.5s
+[validate] fly-blind    seed 5097  lost    safe 45/71  turns   3  reveals   2 noop   0 holds   0  0.1s
+[validate] fly-blind    seed 5098  lost    safe 55/71  turns  40  reveals   5 noop   5 holds   4  0.8s
+[validate] fly-blind    seed 5099  lost    safe 39/71  turns  11  reveals   2 noop   2 holds   0  0.3s
+[validate] fly-mb weight state: {"games": 100, "dopamine_events_total": 0, "kc_mbon_edges": 59334, "edges_changed_vs_frozen": 55832, "total_abs_delta": 0.0, "mean_weight_ratio": 1.4495, "min_weight_ratio": 0.0, "max_weight_ratio": 5.0, "edges_at_floor": 5152, "edges_at_ceiling": 0, "mean_weight_ratio_by_game": [1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45, 1.45]}
+{
+  "fly-mb-alt": {
+    "games": 100,
+    "win_rate": 0.76,
+    "loss_rate": 0.22,
+    "timeout_rate": 0.02,
+    "mean_safe_revealed": 67.25,
+    "mean_cleared_fraction": 0.947,
+    "mean_turns": 107.2,
+    "mean_reveals": 15.0,
+    "mean_noop_reveals": 0.0,
+    "mean_holds": 0.0,
+    "sem_safe_revealed": 0.97,
+    "seconds": 366.9
+  },
+  "fly-mb": {
+    "games": 100,
+    "win_rate": 0.6,
+    "loss_rate": 0.4,
+    "timeout_rate": 0.0,
+    "mean_safe_revealed": 66.83,
+    "mean_cleared_fraction": 0.941,
+    "mean_turns": 70.8,
+    "mean_reveals": 14.4,
+    "mean_noop_reveals": 0.1,
+    "mean_holds": 0.0,
+    "sem_safe_revealed": 0.92,
+    "seconds": 141.1
+  },
+  "fly-mb-oracle-only": {
+    "games": 100,
+    "win_rate": 0.84,
+    "loss_rate": 0.16,
+    "timeout_rate": 0.0,
+    "mean_safe_revealed": 68.94,
+    "mean_cleared_fraction": 0.971,
+    "mean_turns": 50.7,
+    "mean_reveals": 16.2,
+    "mean_noop_reveals": 0.0,
+    "mean_holds": 0.0,
+    "sem_safe_revealed": 0.87,
+    "seconds": 0.9
+  },
+  "random-walk": {
+    "games": 100,
+    "win_rate": 0.0,
+    "loss_rate": 1.0,
+    "timeout_rate": 0.0,
+    "mean_safe_revealed": 50.1,
+    "mean_cleared_fraction": 0.706,
+    "mean_turns": 49.5,
+    "mean_reveals": 4.4,
+    "mean_noop_reveals": 3.7,
+    "mean_holds": 0.0,
+    "sem_safe_revealed": 1.35,
+    "seconds": 0.0
+  },
+  "random-click": {
+    "games": 100,
+    "win_rate": 0.0,
+    "loss_rate": 1.0,
+    "timeout_rate": 0.0,
+    "mean_safe_revealed": 41.09,
+    "mean_cleared_fraction": 0.579,
+    "mean_turns": 3.8,
+    "mean_reveals": 3.8,
+    "mean_noop_reveals": 0.0,
+    "mean_holds": 0.0,
+    "sem_safe_revealed": 1.73,
+    "seconds": 0.0
+  },
+  "solver": {
+    "games": 100,
+    "win_rate": 0.86,
+    "loss_rate": 0.14,
+    "timeout_rate": 0.0,
+    "mean_safe_revealed": 69.64,
+    "mean_cleared_fraction": 0.981,
+    "mean_turns": 24.9,
+    "mean_reveals": 16.2,
+    "mean_noop_reveals": 0.0,
+    "mean_holds": 0.0,
+    "sem_safe_revealed": 0.65,
+    "seconds": 0.2
+  },
+  "fly": {
+    "games": 100,
+    "win_rate": 0.0,
+    "loss_rate": 1.0,
+    "timeout_rate": 0.0,
+    "mean_safe_revealed": 51.65,
+    "mean_cleared_fraction": 0.727,
+    "mean_turns": 43.2,
+    "mean_reveals": 4.9,
+    "mean_noop_reveals": 1.7,
+    "mean_holds": 1.1,
+    "sem_safe_revealed": 1.3,
+    "seconds": 105.5
+  },
+  "fly-blind": {
+    "games": 100,
+    "win_rate": 0.0,
+    "loss_rate": 1.0,
+    "timeout_rate": 0.0,
+    "mean_safe_revealed": 49.63,
+    "mean_cleared_fraction": 0.699,
+    "mean_turns": 32.8,
+    "mean_reveals": 3.9,
+    "mean_noop_reveals": 2.6,
+    "mean_holds": 1.7,
+    "sem_safe_revealed": 1.31,
+    "seconds": 67.7
+  }
+}
+[validate] wrote outputs/validation/mb_round3 in 683s

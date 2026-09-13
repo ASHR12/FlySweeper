@@ -51,8 +51,9 @@ automatically. `?clearcache=1` wipes it, `?nocache=1` bypasses it.
 URL parameters: `?weights=round2|round1|frozen` (weight set; default = `web/weights/manifest.json`
 `"default"`), `?speed=0.5|1|4|0` (0 = as fast as the GPU allows), `?seed=1000` (first board seed),
 `?simseed=0` (GPU noise seed), `?human=1` (show the human-playable board, see below), `?data=<url>`
-(connectome base URL, see *Deploying*), `?v=<token>` (cache-busting version, set automatically when
-you switch weight sets).
+(connectome base URL, see *Deploying*), `?games=N` (finished games per session, default 100; 0 =
+unlimited), `?v=<token>` (cache-busting version, set automatically when you switch weight sets or
+restart a session).
 
 ### Trained weight sets (`web/weights/`)
 
@@ -161,8 +162,17 @@ markers hold the longer explanations (pool anatomy; anatomy vs. engineered; cons
   and a gold chip with the weight statistics; `flysweeper.facts()` prints the active facts.
   The fly's first reveal is made safe wherever it lands (the Python game places its mines on the first
   click): if it is on a mine, that mine is moved, as for the human's first click.
+* **Session of 100 games**: the simulation stops after `MAX_GAMES = 100` *finished* games
+  (abandoned games do not count; `?games=N` overrides, 0 = unlimited). The last board stays on screen
+  under a summary card — games, wins, win rate, mean safe cells, weight set / condition — the brain
+  stops stepping (LIVE dot reads *session complete*), and the pace / pause / new-game buttons are
+  disabled. The gold **Restart session** button reloads the page with the same `?weights=` and a new
+  `?v=` token: fresh GPU state, counters from zero, game 1 again. The Python spectator does the same
+  with `--max-games 100` (`/state.session`, `/control?restart=1`).
 * **Pace**: ½×, 1×, 4× real time, `max`, `pause` (space bar). Speed is the simulated time per wall
   second; at 1× a brain step happens every 20 ms.
+* **Credit**: the bottom line links to the source repository,
+  [github.com/ASHR12/FlySweeper](https://github.com/ASHR12/FlySweeper).
 * **Stats**: step count, simulated time, spikes in the last step and the corresponding mean firing
   rate, GPU compute per step (from WebGPU timestamp queries when available, otherwise wall time
   including the readback), realtime factor, the GPU adapter, the dynamics constants and input route.
@@ -357,10 +367,14 @@ fetched as bytes / text).
 
 * **Small files with the site, big files elsewhere.** Put the eight files of `web/data/` (including
   `manifest.json`) on a host that allows ~100 MB objects and sends CORS headers
-  (`Access-Control-Allow-Origin: *`): GitHub Release assets (2 GB limit per file; served from
-  `https://github.com/<owner>/<repo>/releases/download/<tag>/`), a Hugging Face dataset repo
-  (`https://huggingface.co/datasets/<owner>/<name>/resolve/main/`), or an S3/R2/GCS bucket with a CORS
-  rule. Then point the app at it, in one of three ways (highest precedence first):
+  (`Access-Control-Allow-Origin: *`) on browser `fetch()`: a **Hugging Face dataset repo**
+  (`https://huggingface.co/datasets/<owner>/<name>/resolve/main/`, recommended — 50 GB per file,
+  CORS on the `resolve/` URLs and on the CDN they redirect to), a **separate GitHub Pages data repo**
+  (`https://<owner>.github.io/<data-repo>/`; 100 MiB per file, no LFS — the two big files are 95.7 MiB
+  and fit), or an S3/R2/GCS bucket with a CORS rule. **GitHub Release assets do not work**: the
+  download redirects to a blob host that sends no CORS header, so the page cannot read the bytes
+  (fine for manual `curl` downloads only). See `docs/deploy.md` for a host-by-host table and a
+  `curl -I` check. Then point the app at it, in one of three ways (highest precedence first):
   `window.FLYSWEEPER_DATA_BASE = 'https://…/'` in `index.html` before the module script;
   `?data=https://…/` in the URL; or `"data_base": "https://…/"` in `web/config.json` (default
   `./data/`). The files are byte-verified against `manifest.json` and cached locally after the first

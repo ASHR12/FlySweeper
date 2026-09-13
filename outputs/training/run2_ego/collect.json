@@ -1,0 +1,89 @@
+{
+ "generated": "2026-09-13T05:08:34+00:00",
+ "config": {
+  "rows": 9,
+  "cols": 9,
+  "mines": 10,
+  "turn_steps": 15,
+  "max_turns": 400,
+  "settle_steps": 25,
+  "idle_steps": 500,
+  "reward_scale": 0.25
+ },
+ "preset": "flyai",
+ "route": "lamina",
+ "sensory_input": false,
+ "sim_params": {
+  "dt": 0.02,
+  "tau": 0.1,
+  "gain": 3.0,
+  "tonic": 0.14,
+  "noise_rate": 1.2,
+  "noise_amp": 0.22,
+  "threshold": 1.0,
+  "reset": 0.0,
+  "refractory_steps": 0,
+  "floor": -5.0
+ },
+ "encoder": {
+  "route": "lamina",
+  "retina_gain": 0.62,
+  "lum_weight": 0.45,
+  "temporal_weight": 1.6,
+  "color_weight": 0.25,
+  "cursor_flicker": 0.35,
+  "lum_hidden": 0.1,
+  "lum_number_base": 0.35,
+  "lum_number_step": 0.075,
+  "lum_flag": 0.55,
+  "lum_mine": 1.0,
+  "binocular": false,
+  "lamina_types": [
+   "L1",
+   "L2",
+   "L3"
+  ],
+  "danger_loom": true,
+  "loom_gain": 0.5,
+  "loom_threshold": 2,
+  "loom_types": [
+   "LC4",
+   "LPLC2"
+  ],
+  "egocentric": true,
+  "ego_radius": 4,
+  "lum_wall": 0.0
+ },
+ "decoder_mode": "argmax",
+ "seeds": [
+  30000,
+  30484
+ ],
+ "games": 485,
+ "turns": 32044,
+ "rows": 32529,
+ "explore": 0.25,
+ "explore_policy": "pool",
+ "explored_turns": 8159,
+ "jump_distance": 5,
+ "record_groups": [
+  "dn",
+  "vp",
+  "cx",
+  "mbon",
+  "t4",
+  "t5",
+  "kc",
+  "an"
+ ],
+ "n_cells": 33057,
+ "teacher_action_counts": {
+  "up": 5731,
+  "down": 6098,
+  "left": 6202,
+  "right": 5392,
+  "reveal": 8398,
+  "jump": 223
+ },
+ "seconds": 1003.7
+}
